@@ -46,3 +46,4 @@ graphify-out/
 conversations-resume.txt
 .claude/
 .gemini/
+.env
