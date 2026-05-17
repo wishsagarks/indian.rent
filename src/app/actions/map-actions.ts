@@ -77,7 +77,8 @@ export async function deployNode(formData: any) {
           category: formData.category,
           location: `POINT(${formData.lng} ${formData.lat})`,
           address: formData.address || 'Tactical Deployment Zone',
-          city: 'Hyderabad'
+          city: 'Hyderabad',
+          ip_hash: formData.ipHash || null,
         })
         .select()
         .single();
@@ -106,7 +107,14 @@ export async function deployNode(formData: any) {
         rent_amount: parseFloat(formData.rent.replace(/[^0-9.]/g, '')),
         no_broker_link: formData.noBrokerLink,
         contributor_name: formData.contributorName || 'Anonymous Node',
-        contributor_upi_id: formData.contributorUpi || ''
+        contributor_upi_id: formData.contributorUpi || '',
+        bhk: formData.bhk ? parseInt(formData.bhk) : null,
+        furnishing: formData.furnishing || null,
+        size_sqft: formData.sizeSqft ? parseInt(formData.sizeSqft) : null,
+        maintenance_included: formData.maintenanceIncluded || false,
+        availability_date: formData.availabilityDate || null,
+        flatmate_needed: formData.flatmateNeeded || false,
+        ip_hash: formData.ipHash || null,
       })
       .select()
       .single();
@@ -166,6 +174,164 @@ export async function flagIntel(flatId: string) {
     return { success: true };
   } catch (err: any) {
     console.error('Flagging Failure:', err.message);
+    return { error: err.message };
+  }
+}
+
+/**
+ * Drop a seeker pin (flat hunt mode)
+ */
+export async function dropSeekerPin(data: {
+  latitude: number;
+  longitude: number;
+  bhkPreference: string;
+  budget: string;
+  moveInTimeline: string;
+  foodPreference: string;
+  smokingPreference: string;
+  genderPreference: string;
+  email: string;
+  ipHash: string;
+}) {
+  const rateKey = `seeker:${data.ipHash}`;
+  const { allowed } = await checkRateLimit(rateKey, 3, 900);
+  if (!allowed) {
+    return { error: 'Rate limit exceeded. Please wait before adding more seeker pins.' };
+  }
+
+  try {
+    const { error } = await supabase.from('seeker_pins').insert({
+      latitude: data.latitude,
+      longitude: data.longitude,
+      bhk_preference: data.bhkPreference,
+      budget: data.budget ? parseFloat(data.budget) : null,
+      move_in_timeline: data.moveInTimeline,
+      food_preference: data.foodPreference,
+      smoking_preference: data.smokingPreference,
+      gender_preference: data.genderPreference,
+      email: data.email,
+      ip_hash: data.ipHash,
+    });
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.error('Seeker Pin Failure:', err.message);
+    return { error: err.message };
+  }
+}
+
+/**
+ * Get active seeker pins
+ */
+export async function getSeekerPins() {
+  const { data, error } = await supabase
+    .from('seeker_pins')
+    .select('id, latitude, longitude, bhk_preference, budget, move_in_timeline, created_at')
+    .gt('expires_at', new Date().toISOString())
+    .limit(100);
+
+  if (error) {
+    console.error('Seeker pins fetch failed:', error.message);
+    return [];
+  }
+  return data || [];
+}
+
+/**
+ * Submit a rating for a flat (IP-deduplicated)
+ */
+export async function submitRating(data: {
+  flatId: string;
+  localityScore: number;
+  builtQualityScore: number;
+  ipHash: string;
+}) {
+  try {
+    const { error } = await supabase.from('ratings').insert({
+      flat_id: data.flatId,
+      locality_score: data.localityScore,
+      built_quality_score: data.builtQualityScore,
+      ip_hash: data.ipHash,
+    });
+
+    if (error) {
+      if (error.code === '23505') {
+        return { error: 'You have already rated this listing.' };
+      }
+      throw error;
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.error('Rating Failure:', err.message);
+    return { error: err.message };
+  }
+}
+
+/**
+ * Get ratings for a flat
+ */
+export async function getFlatRatings(flatId: string) {
+  const { data, error } = await supabase.rpc('get_flat_ratings', { target_flat_id: flatId });
+  if (error) {
+    return { avg_locality: 0, avg_built_quality: 0, total_ratings: 0 };
+  }
+  return data?.[0] || { avg_locality: 0, avg_built_quality: 0, total_ratings: 0 };
+}
+
+/**
+ * Delete own pin (by IP hash)
+ */
+export async function deleteOwnPin(flatId: string, ipHash: string) {
+  try {
+    const { data, error } = await supabase.rpc('delete_own_pin', {
+      target_flat_id: flatId,
+      owner_ip_hash: ipHash,
+    });
+    if (error) throw error;
+    if (!data) return { error: 'This pin does not belong to you.' };
+    return { success: true };
+  } catch (err: any) {
+    console.error('Delete Pin Failure:', err.message);
+    return { error: err.message };
+  }
+}
+
+/**
+ * Get comments for a flat
+ */
+export async function getComments(flatId: string) {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('id, content, created_at')
+    .eq('flat_id', flatId)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) return [];
+  return data || [];
+}
+
+/**
+ * Add a comment to a flat
+ */
+export async function addComment(flatId: string, content: string, ipHash: string) {
+  const rateKey = `comment:${ipHash}`;
+  const { allowed } = await checkRateLimit(rateKey, 5, 300);
+  if (!allowed) {
+    return { error: 'Rate limit exceeded for commenting.' };
+  }
+
+  try {
+    const { error } = await supabase.from('comments').insert({
+      flat_id: flatId,
+      content: content.trim().slice(0, 500),
+      ip_hash: ipHash,
+    });
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.error('Comment Failure:', err.message);
     return { error: err.message };
   }
 }
