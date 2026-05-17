@@ -1,6 +1,6 @@
 import ListingDetail from "@/components/ListingDetail";
 
-export default async function FlatmatePage({ params }: { params: { id: string } }) {
+export default async function FlatmatePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   return <ListingDetail id={id} type="flatmate" />;
 }
