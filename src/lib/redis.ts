@@ -2,38 +2,38 @@ import { Redis } from '@upstash/redis';
 
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL || '';
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || '';
+const redisEnabled = process.env.REDIS_ENABLED !== 'false' && !!redisUrl && !!redisToken;
 
-if (!redisUrl || !redisToken) {
-  console.warn('Upstash Redis credentials missing. Caching will be disabled.');
+let redis: Redis | null = null;
+
+if (redisEnabled) {
+  redis = new Redis({ url: redisUrl, token: redisToken });
 }
 
-export const redis = new Redis({
-  url: redisUrl,
-  token: redisToken,
-});
+export { redis, redisEnabled };
 
 /**
- * Utility to cache map data (e.g. superclusters)
- * @param key The cache key (usually coordinate-bound based)
- * @param fetcher The function to fetch data if cache misses
- * @param ttl Time to live in seconds (default 1 hour)
+ * Rate limiter using Redis INCR with TTL window.
+ * Returns { allowed: true } if within limit, { allowed: false } if exceeded.
+ * When Redis is disabled, always allows the action.
  */
-export async function getCachedData<T>(key: string, fetcher: () => Promise<T>, ttl = 3600): Promise<T> {
-  if (!redisUrl || !redisToken) return fetcher();
+export async function checkRateLimit(
+  key: string,
+  maxAttempts: number,
+  windowSeconds: number
+): Promise<{ allowed: boolean; remaining: number }> {
+  if (!redisEnabled || !redis) {
+    return { allowed: true, remaining: maxAttempts };
+  }
 
   try {
-    const cached = await redis.get<T>(key);
-    if (cached) {
-      console.log(`Cache Hit: ${key}`);
-      return cached;
+    const current = await redis.incr(key);
+    if (current === 1) {
+      await redis.expire(key, windowSeconds);
     }
-    
-    const freshData = await fetcher();
-    await redis.set(key, freshData, { ex: ttl });
-    console.log(`Cache Miss - Stored: ${key}`);
-    return freshData;
-  } catch (error) {
-    console.error('Redis Error:', error);
-    return fetcher();
+    const allowed = current <= maxAttempts;
+    return { allowed, remaining: Math.max(0, maxAttempts - current) };
+  } catch {
+    return { allowed: true, remaining: maxAttempts };
   }
 }

@@ -1,19 +1,23 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Map as MapboxMap, NavigationControl as MapboxNavigationControl, Marker as MapboxMarker } from 'react-map-gl';
-import { APIProvider, Map as GoogleMap, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
+import { APIProvider, Map as GoogleMap, AdvancedMarker } from '@vis.gl/react-google-maps';
 import { motion, AnimatePresence } from 'framer-motion';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import useSupercluster from 'use-supercluster';
 import AddPropertyForm from './AddPropertyForm';
 import Link from 'next/link';
-import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Filter, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation } from 'lucide-react';
-import { getMapIntel, deployNode } from '@/app/actions/map-actions';
+import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation } from 'lucide-react';
+import { getMapIntel, deployNode, searchLocalities } from '@/app/actions/map-actions';
+import { createBrowserClient } from '@supabase/ssr';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 const MAP_PROVIDER = process.env.NEXT_PUBLIC_MAP_PROVIDER || 'mapbox';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 const MOCK_INTEL = [
   {
@@ -22,9 +26,9 @@ const MOCK_INTEL = [
     category: 'semi-gated',
     lat: 17.4156,
     lng: 78.4347,
-    rent: '₹45,000',
+    rent: '\u20B945,000',
     deposit: '2 Months',
-    reward: '₹2,500',
+    reward: '\u20B92,500',
     floor: '4th Floor',
     verified: true,
     user: { name: 'Rahul S.', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop' },
@@ -36,9 +40,9 @@ const MOCK_INTEL = [
     category: 'gated',
     lat: 17.4284,
     lng: 78.4121,
-    rent: '₹85,000',
+    rent: '\u20B985,000',
     deposit: '3 Months',
-    reward: '₹5,000',
+    reward: '\u20B95,000',
     floor: '12th Floor',
     verified: true,
     user: { name: 'Priya D.', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' },
@@ -52,7 +56,9 @@ export default function RefinedMapEngine() {
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [isAddingProperty, setIsAddingProperty] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
   const mapRef = useRef<any>(null);
   const [viewState, setViewState] = useState({
     longitude: 78.4347,
@@ -61,52 +67,78 @@ export default function RefinedMapEngine() {
     pitch: 45
   });
 
-  const fetchIntel = async () => {
+  const processIntelData = useCallback((data: any[]) => {
+    if (data && data.length > 0) {
+      const featurePoints = data.map((b: any) => ({
+        type: "Feature",
+        properties: {
+          cluster: false,
+          propertyId: b.id,
+          category: b.category,
+          name: b.name,
+          rent: b.floors?.[0]?.flats?.[0]?.rent_amount ? `\u20B9${b.floors[0].flats[0].rent_amount.toLocaleString()}` : '\u20B945,000',
+          updatedAt: b.updated_at || b.floors?.[0]?.flats?.[0]?.updated_at,
+          image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop',
+          user: { name: 'User', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [parseFloat(b.location.coordinates[0]), parseFloat(b.location.coordinates[1])]
+        }
+      }));
+      setPoints(featurePoints);
+    } else {
+      setPoints(MOCK_INTEL.map(m => ({
+        type: "Feature",
+        properties: { ...m, propertyId: m.id },
+        geometry: { type: "Point", coordinates: [m.lng, m.lat] }
+      })));
+    }
+  }, []);
+
+  const fetchIntel = useCallback(async () => {
     setLoading(true);
     try {
       const data = await getMapIntel();
-      if (data && data.length > 0) {
-        const featurePoints = data.map((b: any) => ({
-          type: "Feature",
-          properties: {
-            cluster: false,
-            propertyId: b.id,
-            category: b.category,
-            name: b.name,
-            rent: b.floors?.[0]?.flats?.[0]?.rent_amount ? `₹${b.floors[0].flats[0].rent_amount.toLocaleString()}` : '₹45,000',
-            updatedAt: b.updated_at || b.floors?.[0]?.flats?.[0]?.updated_at,
-            image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop',
-            user: { name: 'User', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }
-          },
-          geometry: {
-            type: "Point",
-            coordinates: [parseFloat(b.location.coordinates[0]), parseFloat(b.location.coordinates[1])]
-          }
-        }));
-        setPoints(featurePoints);
-      } else {
-          // Fallback to MOCK if DB empty for dev
-          setPoints(MOCK_INTEL.map(m => ({
-              type: "Feature",
-              properties: { ...m, propertyId: m.id },
-              geometry: { type: "Point", coordinates: [m.lng, m.lat] }
-          })));
-      }
+      processIntelData(data);
     } catch (err) {
       console.error('Intel Fetch Failed:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, [processIntelData]);
 
   useEffect(() => {
     fetchIntel();
-  }, []);
+  }, [fetchIntel]);
+
+  // Supabase Realtime: subscribe to map_snapshot changes for live updates
+  useEffect(() => {
+    if (!supabaseUrl || !supabaseAnonKey) return;
+
+    const client = createBrowserClient(supabaseUrl, supabaseAnonKey);
+    const channel = client
+      .channel('map-snapshot-changes')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'map_snapshot', filter: 'id=eq.1' },
+        (payload) => {
+          if (payload.new && (payload.new as any).data) {
+            processIntelData((payload.new as any).data);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [processIntelData]);
 
   const bounds = mapRef.current ? (
-      MAP_PROVIDER === 'mapbox' 
+      MAP_PROVIDER === 'mapbox'
       ? mapRef.current.getMap().getBounds().toArray().flat()
-      : null // Google bounds handled differently in useSupercluster usually
+      : null
   ) : null;
 
   const { clusters, supercluster } = useSupercluster({
@@ -131,24 +163,48 @@ export default function RefinedMapEngine() {
     });
   };
 
+  const handleSearchInput = async (value: string) => {
+    setSearchQuery(value);
+    if (value.length >= 2) {
+      const results = await searchLocalities(value);
+      setSearchResults(results);
+      setShowSearchResults(results.length > 0);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleSelectLocality = (locality: { name: string; latitude: number; longitude: number }) => {
+    setViewState({ ...viewState, longitude: locality.longitude, latitude: locality.latitude, zoom: 15 });
+    setSearchQuery(locality.name);
+    setShowSearchResults(false);
+  };
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery) return;
-    
-    try {
-      if (MAP_PROVIDER === 'mapbox') {
+
+    // First try local localities search (free, no API key needed)
+    const results = await searchLocalities(searchQuery);
+    if (results && results.length > 0) {
+      setViewState({ ...viewState, longitude: results[0].longitude, latitude: results[0].latitude, zoom: 15 });
+      setShowSearchResults(false);
+      return;
+    }
+
+    // Fallback to Mapbox geocoding only if local search returns nothing
+    if (MAP_PROVIDER === 'mapbox' && MAPBOX_TOKEN) {
+      try {
         const resp = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchQuery)}.json?access_token=${MAPBOX_TOKEN}&proximity=${viewState.longitude},${viewState.latitude}`);
         const data = await resp.json();
         if (data.features && data.features.length > 0) {
           const [lng, lat] = data.features[0].center;
           setViewState({ ...viewState, longitude: lng, latitude: lat, zoom: 16 });
         }
-      } else {
-          // Simple google geocode logic could go here
-          alert("Google Geocoding integration in progress.");
+      } catch (err) {
+        console.error("Geocoding failed:", err);
       }
-    } catch (err) {
-      console.error("Geocoding failed:", err);
     }
   };
 
@@ -176,8 +232,8 @@ export default function RefinedMapEngine() {
   const AliveMarker = ({ prop, onClick }: { prop: any, onClick: () => void }) => {
     const isStale = calculateDecay(prop.updatedAt);
     return (
-        <motion.button 
-            whileHover={{ scale: 1.05 }} 
+        <motion.button
+            whileHover={{ scale: 1.05 }}
             className={`group focus:outline-none ${isStale ? 'grayscale opacity-60' : ''}`}
             onClick={onClick}
         >
@@ -240,7 +296,7 @@ export default function RefinedMapEngine() {
               mapboxAccessToken={MAPBOX_TOKEN}
             >
               <MapboxNavigationControl position="top-right" />
-              
+
               {clusters.map((cluster) => {
                 const [longitude, latitude] = cluster.geometry.coordinates;
                 const { cluster: isCluster, point_count: pointCount } = cluster.properties;
@@ -263,15 +319,15 @@ export default function RefinedMapEngine() {
                 }
 
                 return (
-                  <MapboxMarker 
-                    key={`prop-${cluster.properties.propertyId}`} 
-                    longitude={longitude} 
-                    latitude={latitude} 
+                  <MapboxMarker
+                    key={`prop-${cluster.properties.propertyId}`}
+                    longitude={longitude}
+                    latitude={latitude}
                     anchor="bottom"
                   >
-                    <AliveMarker 
-                        prop={cluster.properties} 
-                        onClick={() => setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId })} 
+                    <AliveMarker
+                        prop={cluster.properties}
+                        onClick={() => setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId })}
                     />
                   </MapboxMarker>
                 );
@@ -300,9 +356,9 @@ export default function RefinedMapEngine() {
                             position={{ lat: p.geometry.coordinates[1], lng: p.geometry.coordinates[0] }}
                             onClick={() => setSelectedProperty({ ...p.properties, id: p.properties.propertyId })}
                         >
-                            <AliveMarker 
-                                prop={p.properties} 
-                                onClick={() => setSelectedProperty({ ...p.properties, id: p.properties.propertyId })} 
+                            <AliveMarker
+                                prop={p.properties}
+                                onClick={() => setSelectedProperty({ ...p.properties, id: p.properties.propertyId })}
                             />
                         </AdvancedMarker>
                     ))}
@@ -331,13 +387,31 @@ export default function RefinedMapEngine() {
             <div className="hidden md:flex items-center gap-4 flex-1 justify-center max-w-xl mx-12">
               <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface opacity-30" size={16} />
-                <input 
-                    className="w-full bg-white/5 border border-white/10 rounded-DEFAULT py-2.5 pl-10 pr-6 text-on-surface focus:bg-white/10 transition-all placeholder:text-on-surface-variant/40 font-medium text-xs tracking-wide uppercase outline-none" 
-                    placeholder={`Search ${MAP_PROVIDER} Grid...`} 
+                <input
+                    className="w-full bg-white/5 border border-white/10 rounded-DEFAULT py-2.5 pl-10 pr-6 text-on-surface focus:bg-white/10 transition-all placeholder:text-on-surface-variant/40 font-medium text-xs tracking-wide uppercase outline-none"
+                    placeholder="Search localities..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    type="text" 
+                    onChange={(e) => handleSearchInput(e.target.value)}
+                    onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
+                    onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+                    type="text"
                 />
+                {/* Locality search dropdown */}
+                {showSearchResults && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-white/10 rounded-lg shadow-2xl overflow-hidden z-[100]">
+                    {searchResults.map((loc, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        className="w-full px-4 py-3 text-left text-xs font-medium text-on-surface hover:bg-white/5 transition-colors flex items-center gap-3 border-b border-white/5 last:border-0"
+                        onMouseDown={() => handleSelectLocality(loc)}
+                      >
+                        <MapPinIcon size={14} className="text-primary shrink-0" />
+                        <span className="uppercase tracking-wider">{loc.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </form>
             </div>
             <div className="flex items-center gap-6">
@@ -354,7 +428,7 @@ export default function RefinedMapEngine() {
         {isAddingProperty && (
           <div className="fixed inset-0 z-[100] flex items-center justify-start pointer-events-none">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAddingProperty(false)} className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto" />
-            <motion.div 
+            <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
