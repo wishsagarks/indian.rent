@@ -135,6 +135,83 @@ export async function deployNode(formData: any) {
 }
 
 /**
+ * Fetch full details for a single flat by ID, joining building and floor info
+ */
+export async function getFlatDetails(flatId: string) {
+  const { data, error } = await supabase
+    .from('flats')
+    .select(`
+      id,
+      flat_number,
+      status,
+      rent_amount,
+      bhk,
+      furnishing,
+      size_sqft,
+      maintenance_included,
+      availability_date,
+      flatmate_needed,
+      no_broker_link,
+      flatmates_link,
+      contributor_name,
+      contributor_upi_id,
+      intel_flags,
+      ip_hash,
+      created_at,
+      updated_at,
+      floors (
+        floor_number,
+        buildings (
+          id,
+          name,
+          category,
+          address,
+          city,
+          ip_hash,
+          location
+        )
+      )
+    `)
+    .eq('id', flatId)
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error('getFlatDetails failed:', error?.message);
+    return null;
+  }
+
+  const floor = (data.floors as any);
+  const building = floor?.buildings;
+
+  return {
+    id: data.id,
+    flatNumber: data.flat_number,
+    status: data.status,
+    rentAmount: data.rent_amount,
+    bhk: data.bhk,
+    furnishing: data.furnishing,
+    sizeSqft: data.size_sqft,
+    maintenanceIncluded: data.maintenance_included,
+    availabilityDate: data.availability_date,
+    flatmateNeeded: data.flatmate_needed,
+    noBrokerLink: data.no_broker_link || data.flatmates_link,
+    contributorName: data.contributor_name,
+    contributorUpiId: data.contributor_upi_id,
+    intelFlags: data.intel_flags,
+    ipHash: data.ip_hash,
+    createdAt: data.created_at,
+    updatedAt: data.updated_at,
+    floorNumber: floor?.floor_number,
+    buildingId: building?.id,
+    buildingName: building?.name,
+    buildingCategory: building?.category,
+    buildingAddress: building?.address,
+    buildingCity: building?.city,
+    buildingIpHash: building?.ip_hash,
+  };
+}
+
+/**
  * Lock a flat with rate limiting (max 3 locks per 15 min)
  */
 export async function lockPlace(flatId: string) {
