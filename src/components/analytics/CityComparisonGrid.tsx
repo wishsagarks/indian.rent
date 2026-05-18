@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { CityMetricsUI } from '@/app/actions/analytics-actions';
+import { CityMetricsUI } from '@/lib/analytics-utils';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface CityComparisonGridProps {

@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { getCityMetrics, getOpportunityScores, transformMetrics, type CityMetricsUI } from '@/app/actions/analytics-actions';
+import { getCityMetrics, getOpportunityScores } from '@/app/actions/analytics-actions';
+import { transformMetrics, type CityMetricsUI } from '@/lib/analytics-utils';
 import KPICard from '@/components/analytics/KPICard';
 import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
 import OpportunityTable from '@/components/analytics/OpportunityTable';
