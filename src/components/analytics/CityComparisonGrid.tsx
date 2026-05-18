@@ -25,20 +25,21 @@ export default function CityComparisonGrid({
     );
   }
 
-  const rows = [
+  interface RowConfig {
+    category: string;
+    metric: string;
+    label: string;
+    getValue: (m?: CityMetricsUI) => number;
+    format: (v: number) => string;
+  }
+
+  const rows: RowConfig[] = [
     {
       category: 'Supply',
       metric: 'total_listings',
       label: 'Total Listings',
       getValue: (m?: CityMetricsUI) => m?.supply.count || 0,
       format: (v: number) => v.toLocaleString()
-    },
-    {
-      category: 'Supply',
-      metric: 'supply_trend',
-      label: 'Trend',
-      getValue: (m?: CityMetricsUI) => m?.supply.trend || '→',
-      format: (v: string) => v
     },
     {
       category: 'Demand',
@@ -110,7 +111,7 @@ export default function CityComparisonGrid({
                     <div>
                       <p className="text-xs text-on-surface-variant mb-1">🏙️ Bengaluru</p>
                       <p className="text-lg font-bold text-white">
-                        {row.format(blrValue as any)}
+                        {row.format(blrValue as number)}
                       </p>
                     </div>
 
@@ -118,7 +119,7 @@ export default function CityComparisonGrid({
                     <div>
                       <p className="text-xs text-on-surface-variant mb-1">🏙️ Hyderabad</p>
                       <p className="text-lg font-bold text-white">
-                        {row.format(hydValue as any)}
+                        {row.format(hydValue as number)}
                       </p>
                     </div>
 
