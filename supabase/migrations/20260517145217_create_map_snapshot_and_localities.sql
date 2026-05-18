@@ -61,63 +61,14 @@ CREATE POLICY "Localities are publicly readable"
   ON localities FOR SELECT
   USING (true);
 
--- Function to recompute the snapshot
+-- DEPRECATED: refresh_map_snapshot is now maintained in 00_APPLY_ALL_MIGRATIONS_AT_ONCE.sql
+-- The current version includes city field, all flat fields, and LIMIT 5000
+-- This stub is here only for backward compatibility
 CREATE OR REPLACE FUNCTION refresh_map_snapshot()
 RETURNS VOID AS $$
-DECLARE
-  snapshot JSONB;
 BEGIN
-  SELECT COALESCE(jsonb_agg(row_to_json(b_row)), '[]'::jsonb)
-  INTO snapshot
-  FROM (
-    SELECT
-      b.id,
-      b.name,
-      b.category,
-      jsonb_build_object(
-        'type', 'Point',
-        'coordinates', jsonb_build_array(
-          ST_X(b.location::geometry),
-          ST_Y(b.location::geometry)
-        )
-      ) AS location,
-      b.updated_at,
-      COALESCE(
-        (
-          SELECT jsonb_agg(
-            jsonb_build_object(
-              'id', f.id,
-              'floor_number', f.floor_number,
-              'flats', COALESCE(
-                (
-                  SELECT jsonb_agg(
-                    jsonb_build_object(
-                      'id', fl.id,
-                      'flat_number', fl.flat_number,
-                      'status', fl.status,
-                      'rent_amount', fl.rent_amount,
-                      'contributor_name', fl.contributor_name,
-                      'updated_at', fl.updated_at
-                    )
-                  )
-                  FROM flats fl
-                  WHERE fl.floor_id = f.id AND fl.status != 'occupied'
-                ), '[]'::jsonb
-              )
-            )
-          )
-          FROM floors f
-          WHERE f.building_id = b.id
-        ), '[]'::jsonb
-      ) AS floors
-    FROM buildings b
-    LIMIT 500
-  ) b_row;
-
-  INSERT INTO map_snapshot (id, data, updated_at)
-  VALUES (1, snapshot, NOW())
-  ON CONFLICT (id) DO UPDATE
-  SET data = EXCLUDED.data, updated_at = EXCLUDED.updated_at;
+  -- This will be overridden by 00_APPLY_ALL_MIGRATIONS_AT_ONCE.sql
+  RAISE NOTICE 'refresh_map_snapshot called - using version from 00_APPLY_ALL_MIGRATIONS_AT_ONCE.sql';
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -216,5 +167,5 @@ INSERT INTO localities (name, latitude, longitude) VALUES
   ('Botanical Garden Area', 17.4573, 78.3543)
 ON CONFLICT DO NOTHING;
 
--- Run initial snapshot computation
-SELECT refresh_map_snapshot();
+-- Snapshot computation moved to 00_APPLY_ALL_MIGRATIONS_AT_ONCE.sql
+-- to ensure all tables and fields are ready
