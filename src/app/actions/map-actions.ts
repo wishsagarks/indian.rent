@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * Fetch map markers from the pre-computed snapshot table.
+ * The component handles city-based filtering based on the city field.
  */
 export async function getMapIntel() {
   const supabase = await createClient();

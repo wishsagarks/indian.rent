@@ -182,7 +182,7 @@ export default function RefinedMapEngine() {
     } finally {
       setLoading(false);
     }
-  }, [processIntelData]);
+  }, [processIntelData, selectedCity]);
 
   useEffect(() => {
     if (consented) {
@@ -192,6 +192,12 @@ export default function RefinedMapEngine() {
       trackApiUsage(mapProvider as any);
     }
   }, [fetchIntel, consented]);
+
+  // Reset map bounds when city changes to ensure proper clustering
+  useEffect(() => {
+    const config = cityConfig[selectedCity];
+    setGoogleBounds([config.bounds[0][0], config.bounds[0][1], config.bounds[1][0], config.bounds[1][1]]);
+  }, [selectedCity]);
 
   useEffect(() => {
     if (!consented) return;
@@ -647,6 +653,7 @@ export default function RefinedMapEngine() {
             </MapboxMap>
           ) : (
             <GoogleMap
+              key={selectedCity}
               center={{ lat: viewState.latitude, lng: viewState.longitude }}
               zoom={viewState.zoom}
               mapId={mapId}
