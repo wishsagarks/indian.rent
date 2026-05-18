@@ -9,7 +9,7 @@ import useSupercluster from 'use-supercluster';
 import AddPropertyForm from './AddPropertyForm';
 import FilterPanel, { MapFilters, DEFAULT_FILTERS } from './FilterPanel';
 import MetroOverlay from './MetroOverlay';
-import AreaStatsModal from './AreaStatsModal';
+import CircleAreaSelector from './CircleAreaSelector';
 import LiveStatsPanel from './LiveStatsPanel';
 import SeekerPinForm from './SeekerPinForm';
 import ConsentSplash from './ConsentSplash';
@@ -48,9 +48,7 @@ export default function RefinedMapEngine() {
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   const [showMetro, setShowMetro] = useState(false);
   const [showAreaStats, setShowAreaStats] = useState(false);
-  const [areaStatsBounds, setAreaStatsBounds] = useState<any>(null);
-  const [areaStatsStep, setAreaStatsStep] = useState(0);
-  const [areaCorner1, setAreaCorner1] = useState<{ lat: number; lng: number } | null>(null);
+  const [areaStatsCenter, setAreaStatsCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [showLiveStats, setShowLiveStats] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
@@ -420,20 +418,13 @@ export default function RefinedMapEngine() {
   };
 
   const handleMapClick = (e: any) => {
-    if (areaStatsStep === 1) {
-      const lat = e.lngLat?.lat || e.detail?.latLng?.lat;
-      const lng = e.lngLat?.lng || e.detail?.latLng?.lng;
-      if (lat && lng) { setAreaCorner1({ lat, lng }); setAreaStatsStep(2); }
-    } else if (areaStatsStep === 2 && areaCorner1) {
-      const lat = e.lngLat?.lat || e.detail?.latLng?.lat;
-      const lng = e.lngLat?.lng || e.detail?.latLng?.lng;
-      if (lat && lng) {
-        setAreaStatsBounds({ minLat: Math.min(areaCorner1.lat, lat), maxLat: Math.max(areaCorner1.lat, lat), minLng: Math.min(areaCorner1.lng, lng), maxLng: Math.max(areaCorner1.lng, lng) });
-        setShowAreaStats(true);
-        setAreaStatsStep(0);
-        setAreaCorner1(null);
-      }
-    } else if (isSeekerMode) {
+    const lat = e.lngLat?.lat || e.detail?.latLng?.lat;
+    const lng = e.lngLat?.lng || e.detail?.latLng?.lng;
+
+    if (showAreaStats && lat && lng) {
+      // Already showing area stats - just update center
+      setAreaStatsCenter({ lat, lng });
+    } else if (isSeekerMode && lat && lng) {
       setShowSeekerForm(true);
     }
   };
@@ -762,10 +753,10 @@ export default function RefinedMapEngine() {
           )}
         </div>
 
-        {/* Area Stats Step Indicator */}
-        {areaStatsStep > 0 && (
+        {/* Area Stats Indicator */}
+        {showAreaStats && (
           <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary text-background px-4 py-2 rounded-lg font-technical text-[10px] font-black uppercase tracking-widest shadow-xl">
-            {areaStatsStep === 1 ? 'Tap to set first corner' : 'Tap again to set opposite corner'}
+            Click map to change area
           </div>
         )}
 
@@ -810,7 +801,7 @@ export default function RefinedMapEngine() {
               <div className="flex items-center gap-2 md:gap-4">
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
                 <button onClick={() => setShowMetro(!showMetro)} className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
-                <button onClick={() => { setAreaStatsStep(1); }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${areaStatsStep > 0 ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
+                <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
                 <div className="w-px h-4 bg-white/10 hidden md:block" />
@@ -853,7 +844,7 @@ export default function RefinedMapEngine() {
 
       {/* Area Stats Modal */}
       <AnimatePresence>
-        {showAreaStats && areaStatsBounds && <AreaStatsModal bounds={areaStatsBounds} onClose={() => { setShowAreaStats(false); setAreaStatsBounds(null); }} />}
+        {showAreaStats && areaStatsCenter && <CircleAreaSelector center={areaStatsCenter} onClose={() => setShowAreaStats(false)} />}
       </AnimatePresence>
 
       {/* Add Property Sidebar */}
@@ -1196,7 +1187,7 @@ export default function RefinedMapEngine() {
         <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 flex-1 transition-all active:scale-90">
           <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
         </button>
-        <button onClick={() => { setAreaStatsStep(areaStatsStep === 0 ? 1 : 0); }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${areaStatsStep > 0 ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title={areaStatsStep === 0 ? 'Tap map for area stats' : areaStatsStep === 1 ? 'Tap first corner' : 'Tap second corner'}><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
+        <button onClick={() => setShowAreaStats(!showAreaStats)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
         <button onClick={() => setShowFilters(!showFilters)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showFilters ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`}><SlidersHorizontal size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Filter</span></button>
       </nav>
     </div>
