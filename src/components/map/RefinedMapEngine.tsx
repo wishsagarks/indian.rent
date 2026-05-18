@@ -220,8 +220,36 @@ export default function RefinedMapEngine() {
       const isEmptyNode = props.isEmpty;
 
       // Filter by selected city
-      const buildingCity = props.city?.toLowerCase() || 'bengaluru';
-      if (buildingCity !== selectedCity) return null;
+      // If city field is missing, infer from building location based on proximity to city centers
+      let buildingCity = props.city?.toLowerCase();
+
+      // If no city data, try to infer from coordinates
+      if (!buildingCity && p.geometry?.coordinates) {
+        const [lng, lat] = p.geometry.coordinates;
+        const cities = {
+          bengaluru: { lat: 12.9716, lng: 77.5946 },
+          hyderabad: { lat: 17.3850, lng: 78.4867 },
+          bhubaneswar: { lat: 20.2961, lng: 85.8245 },
+          cuttack: { lat: 20.4625, lng: 85.8830 }
+        };
+
+        let closestCity = 'hyderabad';
+        let closestDist = Infinity;
+
+        Object.entries(cities).forEach(([city, center]) => {
+          const latDiff = Math.abs(lat - center.lat);
+          const lngDiff = Math.abs(lng - center.lng);
+          const dist = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestCity = city;
+          }
+        });
+
+        buildingCity = closestDist < 5 ? closestCity : null;
+      }
+
+      if (buildingCity && buildingCity !== selectedCity) return null;
 
       const matchedFlats = flats.filter((f: any) => {
         if (filters.bhk !== 'any') {

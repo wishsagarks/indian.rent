@@ -2,6 +2,11 @@
 
 import React, { useState } from 'react';
 import { Marker as MapboxMarker, Source, Layer } from 'react-map-gl';
+import { AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+
+// Detect map provider from environment
+const MAP_PROVIDER = typeof window !== 'undefined' ?
+  document.documentElement.getAttribute('data-map-provider') || 'google' : 'google';
 
 const METRO_LINES = {
   // Bengaluru Metro Lines
@@ -140,6 +145,46 @@ export default function MetroOverlay({ visible }: MetroOverlayProps) {
 
   if (!visible) return null;
 
+  // For Google Maps - render only markers
+  if (MAP_PROVIDER !== 'mapbox') {
+    return (
+      <>
+        {Object.entries(METRO_LINES).map(([lineId, line]) =>
+          line.stations.map((station, i) => {
+            const stationId = `${lineId}-${i}`;
+            const isHovered = hoveredStation === stationId;
+            return (
+              <AdvancedMarker
+                key={stationId}
+                position={{ lat: station.lat, lng: station.lng }}
+                title={station.name}
+              >
+                <button
+                  onMouseEnter={() => setHoveredStation(stationId)}
+                  onMouseLeave={() => setHoveredStation(null)}
+                  onClick={() => setHoveredStation(isHovered ? null : stationId)}
+                  className="group relative cursor-pointer p-1 rounded-full transition-transform hover:scale-125 active:scale-110"
+                  title={station.name}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full border-2 border-white shadow-lg"
+                    style={{ backgroundColor: line.color }}
+                  />
+                  {isHovered && (
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 border border-white/20 rounded text-[8px] font-bold text-white whitespace-nowrap z-50">
+                      {station.name}
+                    </div>
+                  )}
+                </button>
+              </AdvancedMarker>
+            );
+          })
+        )}
+      </>
+    );
+  }
+
+  // For Mapbox - render lines and markers
   return (
     <>
       {Object.entries(METRO_LINES).map(([lineId, line]) => {

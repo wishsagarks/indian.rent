@@ -16,6 +16,7 @@ export default function AnalyticsDashboardV2() {
   const [hyderabadMetrics, setHyderabadMetrics] = useState<CityMetricsUI | null>(null);
   const [opportunities, setOpportunities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'overall' | 'comparison' | 'opportunities'>('overall');
 
   useEffect(() => {
@@ -24,6 +25,7 @@ export default function AnalyticsDashboardV2() {
 
   const loadMetrics = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [blrRaw, hydRaw, opps] = await Promise.all([
         getCityMetrics('Bengaluru'),
@@ -31,11 +33,25 @@ export default function AnalyticsDashboardV2() {
         getOpportunityScores('Bengaluru')
       ]);
 
-      setBengaluruMetrics(transformMetrics(blrRaw));
-      setHyderabadMetrics(transformMetrics(hydRaw));
-      setOpportunities(opps);
-    } catch (error) {
+      if (!blrRaw || blrRaw.length === 0) {
+        setError('Analytics data not available. Ensure migrations are applied to Supabase.');
+        // Provide fallback data structure
+        const fallback = {
+          supply: { count: 0, trend: '→ Loading', change: 0 },
+          demand: { count: 0, ratio: 0, interpretation: 'Data unavailable' },
+          price: { median: 0, avg: 0, p25: 0, p75: 0, volatility: 0, premiumIndex: 0 },
+          quality: { transparencyScore: 0 }
+        };
+        setBengaluruMetrics(fallback);
+        setHyderabadMetrics(fallback);
+      } else {
+        setBengaluruMetrics(transformMetrics(blrRaw));
+        setHyderabadMetrics(transformMetrics(hydRaw));
+        setOpportunities(opps || []);
+      }
+    } catch (error: any) {
       console.error('Failed to load metrics:', error);
+      setError(`Error loading analytics: ${error?.message || 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -74,6 +90,21 @@ export default function AnalyticsDashboardV2() {
           </div>
         </div>
       </div>
+
+      {/* Error Alert */}
+      {error && (
+        <div className="max-w-7xl mx-auto px-4 md:px-8 pt-8">
+          <div className="p-4 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 text-sm">
+            ⚠️ {error}
+            <button
+              onClick={loadMetrics}
+              className="ml-4 px-3 py-1 rounded bg-red-500/20 hover:bg-red-500/30 transition"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
