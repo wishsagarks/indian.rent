@@ -34,6 +34,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${jetbrainsMono.variable} antialiased dark`}
       style={{ scrollBehavior: 'auto' }}
+      data-map-provider="google"
     >
       <head>
         <meta name="theme-color" content="#0066ff" />
