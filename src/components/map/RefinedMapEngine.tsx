@@ -14,7 +14,7 @@ import LiveStatsPanel from './LiveStatsPanel';
 import SeekerPinForm from './SeekerPinForm';
 import ConsentSplash from './ConsentSplash';
 import Link from 'next/link';
-import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel } from 'lucide-react';
+import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
 import { getMapIntel, deployNode, searchLocalities, getSeekerPins, dropSeekerPin, deleteOwnPin, subscribeToArea } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
@@ -22,6 +22,7 @@ import { getIpHash } from '@/utils/ip-hash';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSystemTheme } from '@/hooks/useSystemTheme';
 import { PlaceAutocomplete } from './PlaceAutocomplete';
+import { useDriverJS } from '@/hooks/useDriverJS';
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -34,6 +35,7 @@ const MOCK_INTEL = [
 
 export default function RefinedMapEngine() {
   const systemTheme = useSystemTheme();
+  useDriverJS('explore');
   const [consented, setConsented] = useState(false);
   const [points, setPoints] = useState<any[]>([]);
   const [seekerPins, setSeekerPins] = useState<any[]>([]);
@@ -58,7 +60,7 @@ export default function RefinedMapEngine() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>('');
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
-  const [showLegend, setShowLegend] = useState(false);
+  const [showLegend, setShowLegend] = useState(true);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
 
   const { getPosition, loading: geolocating } = useGeolocation();
@@ -120,7 +122,8 @@ export default function RefinedMapEngine() {
       });
       setPoints(featurePoints);
     } else {
-      setPoints(MOCK_INTEL.map(m => ({ type: "Feature", properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: m.rentNum }], rentNum: m.rentNum, bhk: m.bhk, furnishing: m.furnishing, flatmateNeeded: false, ipHash: '' }, geometry: { type: "Point", coordinates: [m.lng, m.lat] } })));
+      const rentNum = 45000;
+      setPoints(MOCK_INTEL.map(m => ({ type: "Feature", properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: rentNum }], rentNum, bhk: '2', furnishing: 'semi-furnished', flatmateNeeded: false, ipHash: '' }, geometry: { type: "Point", coordinates: [m.lng, m.lat] } })));
     }
   }, []);
 
@@ -400,37 +403,58 @@ export default function RefinedMapEngine() {
     }
   };
 
+  const getMarkerSizes = (zoom: number) => {
+    let scale = 1;
+    if (zoom < 12) scale = 0.7;
+    else if (zoom < 13) scale = 0.85;
+    else if (zoom < 14) scale = 0.95;
+    else if (zoom < 15) scale = 1;
+    else if (zoom < 16) scale = 1.1;
+    else if (zoom < 17) scale = 1.25;
+    else scale = 1.4;
+
+    return {
+      iconContainerSize: Math.round(28 * scale),
+      iconSize: Math.round(14 * scale),
+      textSize: Math.round(10 * scale),
+      badgeSize: Math.round(6.5 * scale),
+      gapPx: scale < 0.9 ? 4 : scale < 1.05 ? 6 : 8,
+      scale
+    };
+  };
+
   const AliveMarker = ({ prop, onClick }: { prop: any; onClick: () => void }) => {
     const isStale = calculateDecay(prop.updatedAt);
     const isOwn = prop.ipHash && prop.ipHash === ipHash;
     const colorClass = getMarkerColor(prop.category, prop.ipHash);
     const isEmpty = prop.isActuallyEmpty;
+    const sizes = getMarkerSizes(viewState.zoom);
 
     return (
-      <motion.button whileHover={{ scale: 1.05 }} className={`group focus:outline-none ${isStale && !isEmpty ? 'grayscale opacity-60' : ''} ${isEmpty ? 'opacity-40' : ''}`} onClick={onClick}>
+      <motion.button whileHover={{ scale: 1.05 }} className={`group focus:outline-none ${isStale && !isEmpty ? 'grayscale opacity-60' : ''} ${isEmpty ? 'opacity-40' : ''}`} onClick={onClick} style={{ transform: `scale(${sizes.scale})`, transformOrigin: 'top center' }}>
         <div className="flex flex-col items-center">
-          <div className={`flex items-center gap-1.5 p-1 pr-2.5 bg-surface rounded-full border ${isEmpty ? 'border-white/20' : colorClass} shadow-2xl transition-all group-hover:shadow-primary/40 group-hover:-translate-y-1 relative`}>
+          <div className={`flex items-center p-1 pr-2.5 bg-surface rounded-full border ${isEmpty ? 'border-white/20' : colorClass} shadow-2xl transition-all group-hover:shadow-primary/40 group-hover:-translate-y-1 relative`} style={{ gap: `${sizes.gapPx}px` }}>
             {prop.isStacked && (
-              <div className="absolute -top-2 -right-1 bg-primary text-on-primary text-[7px] font-black px-1.5 py-0.5 rounded-full border border-white/20 shadow-lg z-10 animate-pulse">
+              <div className="absolute -top-2 -right-1 bg-primary text-on-primary font-black px-1.5 py-0.5 rounded-full border border-white/20 shadow-lg z-10 animate-pulse" style={{ fontSize: `${sizes.badgeSize}px` }}>
                 +{prop.flatCount - 1} FLATS
               </div>
             )}
-            <div className={`w-7 h-7 rounded-full border-2 ${isEmpty ? 'border-white/10' : colorClass} flex items-center justify-center bg-background`}>
+            <div className={`rounded-full border-2 ${isEmpty ? 'border-white/10' : colorClass} flex items-center justify-center bg-background`} style={{ width: `${sizes.iconContainerSize}px`, height: `${sizes.iconContainerSize}px` }}>
               {(() => {
                 const Icon = isEmpty ? Landmark : getCategoryIcon(prop.category);
-                return <Icon size={14} className={isEmpty ? 'text-white/20' : 'text-on-surface opacity-80'} />;
+                return <Icon size={sizes.iconSize} className={isEmpty ? 'text-white/20' : 'text-on-surface opacity-80'} />;
               })()}
             </div>
             <div className="flex flex-col text-left">
-              <span className={`text-[10px] font-black leading-none font-technical ${isEmpty ? 'text-white/20' : 'text-on-surface'}`}>{prop.rent}</span>
+              <span className={`font-black leading-none font-technical ${isEmpty ? 'text-white/20' : 'text-on-surface'}`} style={{ fontSize: `${sizes.textSize}px` }}>{prop.rent}</span>
               {!isEmpty && (
                 <div className="flex items-center gap-1 mt-0.5">
-                  {prop.flatmateNeeded && <span className="text-[7px] bg-emerald-400/20 text-emerald-400 px-1 rounded font-black">FM</span>}
-                  {isOwn && <span className="text-[7px] bg-primary/20 text-primary px-1 rounded font-black">YOU</span>}
+                  {prop.flatmateNeeded && <span className="bg-emerald-400/20 text-emerald-400 px-1 rounded font-black" style={{ fontSize: `${sizes.badgeSize}px` }}>FM</span>}
+                  {isOwn && <span className="bg-primary/20 text-primary px-1 rounded font-black" style={{ fontSize: `${sizes.badgeSize}px` }}>YOU</span>}
                   {!prop.flatmateNeeded && !isOwn && (
                     <>
                       <div className={`w-1 h-1 rounded-full ${isStale ? 'bg-gray-500' : 'bg-secondary animate-pulse'}`} />
-                      <span className="text-[7px] uppercase font-black tracking-widest text-on-surface-variant opacity-40">{isStale ? 'Stale' : 'Live'}</span>
+                      <span className="uppercase font-black tracking-widest text-on-surface-variant opacity-40" style={{ fontSize: `${sizes.badgeSize}px` }}>{isStale ? 'Stale' : 'Live'}</span>
                     </>
                   )}
                 </div>
@@ -473,7 +497,7 @@ export default function RefinedMapEngine() {
     <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places']}>
       <div className="h-screen w-full overflow-hidden bg-background relative selection:bg-primary/20 selection:text-primary">
         {/* Map */}
-        <div className="absolute inset-0 z-0 bg-background">
+        <div id="map-container" className="absolute inset-0 z-0 bg-background">
           {MAP_PROVIDER === 'mapbox' ? (
             <MapboxMap {...viewState} ref={mapRef} onMove={evt => setViewState(evt.viewState)} onClick={handleMapClick} style={{ width: '100%', height: '100%' }} mapStyle="mapbox://styles/mapbox/dark-v11" mapboxAccessToken={MAPBOX_TOKEN} maxBounds={[[78.30, 17.25], [78.70, 17.55]]}>
               <MapboxNavigationControl position="top-right" />
@@ -683,9 +707,9 @@ export default function RefinedMapEngine() {
               </div>
               
               <div className="flex items-center gap-2 md:gap-4">
-                <button onClick={() => setShowFilters(!showFilters)} className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
+                <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
                 <button onClick={() => setShowMetro(!showMetro)} className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
-                <button onClick={() => { setAreaStatsStep(1); }} className={`p-2 rounded-lg transition-all ${areaStatsStep > 0 ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
+                <button onClick={() => { setAreaStatsStep(1); }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${areaStatsStep > 0 ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
                 <div className="w-px h-4 bg-white/10 hidden md:block" />
@@ -772,6 +796,17 @@ export default function RefinedMapEngine() {
               </div>
               <h3 className="text-xl font-black text-on-surface uppercase tracking-tighter mb-2">Pin Dropped!</h3>
               <p className="text-on-surface-variant text-sm mb-6">Help others find honest rents — share this with your groups</p>
+              <button
+                onClick={() => {
+                  const text = `Found indian.rent — real rents from real people, no brokers, no signup. Drop your rent intel: ${window.location.origin}/explore`;
+                  const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                  window.open(url, '_blank');
+                  setShowShareModal(false);
+                }}
+                className="w-full py-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 mb-3 transition-all hover:bg-emerald-500/20"
+              >
+                <MessageCircle size={14} /> Share on WhatsApp
+              </button>
               <button onClick={handleShare} className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 mb-3">
                 <Share2 size={14} /> Copy Share Message
               </button>
@@ -856,9 +891,18 @@ export default function RefinedMapEngine() {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="mb-3 bg-surface border border-white/10 rounded-lg p-4 shadow-xl min-w-[200px]"
+              className="mb-3 bg-surface border border-white/10 rounded-lg p-4 shadow-xl min-w-[220px]"
             >
-              <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-3 opacity-60">Map Legend</div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">Map Legend</div>
+                <button
+                  onClick={() => setShowLegend(false)}
+                  className="p-1 text-on-surface-variant hover:text-primary transition-colors"
+                  title="Close legend"
+                >
+                  <X size={14} />
+                </button>
+              </div>
               {[
                 { label: 'Gated Society',   Icon: Shield,      color: 'text-blue-400',   border: 'border-blue-400'   },
                 { label: 'Semi-Gated',      Icon: ShieldAlert, color: 'text-orange-400', border: 'border-orange-400' },
@@ -866,6 +910,9 @@ export default function RefinedMapEngine() {
                 { label: 'PG / Guest House',Icon: Home,        color: 'text-violet-400', border: 'border-violet-400' },
                 { label: 'Hostel',          Icon: Hotel,       color: 'text-amber-400',  border: 'border-amber-400'  },
                 { label: 'Your Pin',        Icon: Building2,   color: 'text-emerald-400',border: 'border-emerald-400'},
+                { label: 'Looking for Flat',Icon: Search,      color: 'text-emerald-400',border: 'border-emerald-400'},
+                { label: 'Multiple Listings',Icon: Users,      color: 'text-cyan-400',   border: 'border-cyan-400'   },
+                { label: 'May Be Stale',    Icon: AlertCircle, color: 'text-white/40',  border: 'border-white/20'   },
               ].map(({ label, Icon, color, border }) => (
                 <div key={label} className="flex items-center gap-3 py-1.5">
                   <div className={`w-7 h-7 rounded-full border-2 ${border} flex items-center justify-center bg-background flex-shrink-0`}>
@@ -934,9 +981,9 @@ export default function RefinedMapEngine() {
       {/* Detail Card */}
       <AnimatePresence>
         {selectedProperty && !isAddingProperty && !showSeekerForm && (
-          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="absolute right-4 md:right-8 top-24 w-[calc(100%-2rem)] md:w-[380px] bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
+          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-24 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[60vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
             <div className="bg-background/80 rounded-lg flex flex-col">
-              <div className="h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
+              <div className="h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
                 {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (
                   <img
                     key={`sv-${selectedProperty.id}`}
@@ -1018,6 +1065,16 @@ export default function RefinedMapEngine() {
                     <Link href={`/flat/${selectedProperty.id}`} className="block w-full mb-3">
                       <button className="w-full py-4 bg-primary text-on-primary rounded-lg font-black transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] shadow-lg border border-white/20 active:scale-[0.98]"><LinkIcon size={14} strokeWidth={3} /> View Details</button>
                     </Link>
+                    <button
+                      onClick={() => {
+                        const text = `Check out this rental on indian.rent — no broker fees! https://${window.location.hostname}/flat/${selectedProperty.id}`;
+                        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="w-full py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg font-black text-emerald-400 uppercase tracking-[0.2em] text-[10px] mb-3 flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/20"
+                    >
+                      <MessageCircle size={14} strokeWidth={2} /> Share on WhatsApp
+                    </button>
                     {selectedProperty.ipHash === ipHash && (
                       <button onClick={() => handleDeletePin(selectedProperty.id)} className="w-full py-3 bg-red-500/10 border border-red-500/20 rounded-lg font-black text-red-400 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 transition-all hover:bg-red-500/20">
                         <Trash2 size={12} /> Delete My Pin
@@ -1032,14 +1089,14 @@ export default function RefinedMapEngine() {
       </AnimatePresence>
 
       {/* Mobile Nav */}
-      <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[60] flex justify-around items-center p-1.5 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg">
-        <button onClick={handleLocateMe} className="flex flex-col items-center justify-center text-on-surface-variant p-2.5 flex-1 transition-all active:scale-90 rounded-lg hover:text-primary"><Navigation size={18} /><span className="font-technical text-[7px] mt-0.5 font-black uppercase tracking-widest opacity-40">Locate</span></button>
-        <button onClick={() => setIsSeekerMode(!isSeekerMode)} className={`flex flex-col items-center justify-center p-2.5 flex-1 transition-all active:scale-90 rounded-lg ${isSeekerMode ? 'text-emerald-400 bg-emerald-400/10' : 'text-on-surface-variant'}`}><Users size={18} /><span className="font-technical text-[7px] mt-0.5 font-black uppercase tracking-widest">Hunt</span></button>
-        <button onClick={() => setIsAddingProperty(true)} className="flex flex-col items-center justify-center text-on-surface-variant p-2.5 flex-1 transition-all active:scale-90">
-          <div className="w-9 h-9 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={18} strokeWidth={3} /></div>
+      <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] flex justify-around items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg">
+        <button onClick={handleLocateMe} className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg hover:text-primary hover:bg-white/5"><Navigation size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest opacity-60">Locate</span></button>
+        <button onClick={() => setIsSeekerMode(!isSeekerMode)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${isSeekerMode ? 'text-emerald-400 bg-emerald-400/10' : 'text-on-surface-variant hover:bg-white/5'}`}><Users size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Hunt</span></button>
+        <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 flex-1 transition-all active:scale-90">
+          <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
         </button>
-        <button onClick={() => setShowLiveStats(!showLiveStats)} className="flex flex-col items-center justify-center text-on-surface-variant p-2.5 flex-1 transition-all active:scale-90"><BarChart3 size={18} /><span className="font-technical text-[7px] mt-0.5 font-black uppercase tracking-widest opacity-40">Stats</span></button>
-        <button onClick={() => setShowFilters(!showFilters)} className="flex flex-col items-center justify-center text-on-surface-variant p-2.5 flex-1 transition-all active:scale-90"><SlidersHorizontal size={18} /><span className="font-technical text-[7px] mt-0.5 font-black uppercase tracking-widest opacity-40">Filter</span></button>
+        <button onClick={() => { setAreaStatsStep(areaStatsStep === 0 ? 1 : 0); }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${areaStatsStep > 0 ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title={areaStatsStep === 0 ? 'Tap map for area stats' : areaStatsStep === 1 ? 'Tap first corner' : 'Tap second corner'}><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
+        <button onClick={() => setShowFilters(!showFilters)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showFilters ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`}><SlidersHorizontal size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Filter</span></button>
       </nav>
     </div>
     </APIProvider>

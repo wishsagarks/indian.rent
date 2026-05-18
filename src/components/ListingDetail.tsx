@@ -8,6 +8,7 @@ import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { lockPlace, flagIntel, getFlatRatings, submitRating, getComments, addComment, getFlatDetails } from '@/app/actions/map-actions';
 import { getIpHash } from '@/utils/ip-hash';
 import UnifiedMenu from './UnifiedMenu';
+import { useDriverJS } from '@/hooks/useDriverJS';
 
 interface ListingPageProps {
   id: string;
@@ -36,6 +37,7 @@ function rewardFromRent(rent: number | null | undefined): number {
 
 export default function ListingDetail({ id, type }: ListingPageProps) {
   const { isCopied, copy } = useCopyToClipboard();
+  useDriverJS('listing');
 
   const [listing, setListing] = useState<any>(null);
   const [listingLoading, setListingLoading] = useState(true);
@@ -64,6 +66,12 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   }, [id]);
 
   const handleShare = () => copy(window.location.href);
+
+  const handleWhatsAppShare = () => {
+    const text = `Found a rental on indian.rent — no broker fees! Check it out: ${window.location.href}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  };
 
   const handleLockPlace = async () => {
     setIsLocking(true);
@@ -112,21 +120,26 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   );
 
   const navBar = (
-    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-4 md:px-8">
-      <div className="max-w-5xl flex justify-between items-center w-full">
-        <div className="flex items-center gap-3">
+    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-3 sm:px-4 md:px-8">
+      <div className="max-w-5xl flex justify-between items-center w-full gap-2">
+        <div className="flex items-center gap-1 sm:gap-3 min-w-0">
           <UnifiedMenu />
-          <Link href="/explore" className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
-            <ChevronLeft size={16} /> Back to Map
+          <Link href="/explore" className="hidden sm:flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical whitespace-nowrap">
+            <ChevronLeft size={16} /> Back
           </Link>
         </div>
-        <div className="flex flex-col items-center">
-          <Link href="/" className="font-display text-xl text-primary font-black tracking-tighter">indian.rent</Link>
-          <span className="text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black">by WishLabs</span>
+        <div className="flex flex-col items-center min-w-0">
+          <Link href="/" className="font-display text-lg sm:text-xl text-primary font-black tracking-tighter whitespace-nowrap">indian.rent</Link>
+          <span className="hidden sm:block text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black">by WishLabs</span>
         </div>
-        <button onClick={handleShare} className="p-2.5 rounded-lg text-primary hover:scale-110 active:scale-90 transition-all border border-white/10 relative">
-          {isCopied ? <Check size={18} /> : <Share2 size={18} />}
-        </button>
+        <div className="flex gap-2 min-w-fit">
+          <button onClick={handleShare} title="Copy link" className="p-2 sm:p-2.5 rounded-lg text-primary hover:scale-110 active:scale-90 transition-all border border-white/10 relative">
+            {isCopied ? <Check size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Share2 size={16} className="sm:w-[18px] sm:h-[18px]" />}
+          </button>
+          <button onClick={handleWhatsAppShare} title="Share on WhatsApp" className="p-2 sm:p-2.5 rounded-lg text-emerald-400 hover:scale-110 active:scale-90 transition-all border border-emerald-500/30 hover:border-emerald-400/60 relative">
+            <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+          </button>
+        </div>
       </div>
     </nav>
   );
@@ -197,16 +210,16 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     <div className="min-h-screen bg-background text-on-background pb-24 selection:bg-primary/30">
       {navBar}
 
-      <main className="pt-24 px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 text-left">
+      <main className="pt-24 px-3 sm:px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 text-left">
         {/* Left */}
         <div className="space-y-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="aspect-video w-full rounded-lg overflow-hidden border border-white/10 p-1.5 bg-surface">
+          <motion.div data-tour="listing-images" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="aspect-video w-full rounded-lg overflow-hidden border border-white/10 p-1.5 bg-surface">
             <img src={PLACEHOLDER_IMAGE} alt={listing.buildingName} className="w-full h-full object-cover rounded-md" />
           </motion.div>
 
-          <div className="bg-surface border border-white/10 rounded-lg p-8 space-y-6">
+          <div className="bg-surface border border-white/10 rounded-lg p-4 sm:p-6 md:p-8 space-y-6">
             <div>
-              <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tight leading-none mb-3 font-display">
+              <h1 data-tour="listing-title" className="text-2xl sm:text-3xl md:text-4xl font-black uppercase tracking-tight leading-none mb-3 font-display">
                 {listing.buildingName || `Flat ${listing.flatNumber}`}
               </h1>
               <div className="flex items-center gap-2 text-on-surface-variant font-bold uppercase tracking-widest text-[10px] opacity-60 font-technical">
@@ -236,23 +249,23 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4 border-t border-white/5 pt-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 border-t border-white/5 pt-6">
               {specs.map(item => (
-                <div key={item.label} className="bg-white/5 border border-white/5 rounded-lg p-4 text-center">
-                  <div className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black mb-1 opacity-50 font-technical">{item.label}</div>
-                  <div className="font-black text-primary uppercase text-xs tracking-widest">{item.value}</div>
+                <div key={item.label} className="bg-white/5 border border-white/5 rounded-lg p-3 sm:p-4 text-center">
+                  <div className="text-[8px] sm:text-[9px] uppercase tracking-widest text-on-surface-variant font-black mb-1 opacity-50 font-technical">{item.label}</div>
+                  <div className="font-black text-primary uppercase text-xs sm:text-xs tracking-widest">{item.value}</div>
                 </div>
               ))}
             </div>
 
             {extraSpecs.length > 0 && (
-              <div className="grid grid-cols-2 gap-3 border-t border-white/5 pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 border-t border-white/5 pt-4">
                 {extraSpecs.map(item => (
-                  <div key={item.label} className="flex items-center gap-3 bg-white/5 border border-white/5 rounded-lg p-3">
+                  <div key={item.label} className="flex items-center gap-2 sm:gap-3 bg-white/5 border border-white/5 rounded-lg p-2 sm:p-3">
                     <item.icon size={14} className="text-primary shrink-0 opacity-70" />
-                    <div>
-                      <div className="text-[8px] uppercase tracking-widest text-on-surface-variant font-black opacity-50">{item.label}</div>
-                      <div className="font-black text-on-surface text-xs">{item.value}</div>
+                    <div className="min-w-0">
+                      <div className="text-[8px] uppercase tracking-widest text-on-surface-variant font-black opacity-50 truncate">{item.label}</div>
+                      <div className="font-black text-on-surface text-xs truncate">{item.value}</div>
                     </div>
                   </div>
                 ))}
@@ -268,7 +281,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
           </div>
 
           {/* Community Rating */}
-          <div className="bg-surface border border-white/10 rounded-lg p-8 space-y-6">
+          <div className="bg-surface border border-white/10 rounded-lg p-4 sm:p-6 md:p-8 space-y-6">
             <div className="flex items-center gap-3">
               <Star size={18} className="text-amber-400" />
               <span className="font-technical text-[10px] text-on-surface font-black uppercase tracking-[0.2em]">Community Rating</span>
@@ -310,7 +323,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
           </div>
 
           {/* Comments */}
-          <div className="bg-surface border border-white/10 rounded-lg p-8 space-y-5">
+          <div className="bg-surface border border-white/10 rounded-lg p-4 sm:p-6 md:p-8 space-y-5">
             <div className="flex items-center gap-3">
               <MessageCircle size={18} className="text-primary" />
               <span className="font-technical text-[10px] text-on-surface font-black uppercase tracking-[0.2em]">Comments</span>
@@ -356,12 +369,12 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
         </div>
 
         {/* Right — Actions */}
-        <div className="lg:sticky lg:top-24 h-fit space-y-6 pb-12">
-          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }} className="bg-surface border border-white/10 rounded-lg p-8 shadow-2xl">
+        <div data-tour="listing-action-panel" className="lg:sticky lg:top-24 h-fit space-y-6 pb-8 lg:pb-12">
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.15 }} className="bg-surface border border-white/10 rounded-lg p-4 sm:p-6 md:p-8 shadow-2xl">
             <div className="grid grid-cols-2 gap-6 mb-8">
               <div className="bg-white/5 border border-white/5 rounded-lg p-5">
                 <div className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black mb-1 opacity-50 font-technical text-left">Monthly Rent</div>
-                <div className="text-3xl font-black text-primary tracking-tighter text-left">
+                <div className="text-2xl sm:text-3xl font-black text-primary tracking-tighter text-left">
                   {rent}<span className="text-[10px] text-on-surface-variant font-normal ml-1">/mo</span>
                 </div>
               </div>
@@ -415,6 +428,13 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
               >
                 <CheckCircle2 size={16} strokeWidth={3} />
                 {isLocking ? 'Processing...' : listing.status === 'occupied' ? 'Already Locked' : 'I Have Locked This Place'}
+              </button>
+
+              <button
+                onClick={handleWhatsAppShare}
+                className="w-full py-5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-emerald-400 flex items-center justify-center gap-3 transition-all active:scale-[0.98] hover:bg-emerald-500/20"
+              >
+                <MessageCircle size={16} strokeWidth={3} /> Share on WhatsApp
               </button>
 
               <button

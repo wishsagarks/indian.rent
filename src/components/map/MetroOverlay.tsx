@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Marker as MapboxMarker, Source, Layer } from 'react-map-gl';
 
 const METRO_LINES = {
@@ -87,6 +87,8 @@ interface MetroOverlayProps {
 }
 
 export default function MetroOverlay({ visible }: MetroOverlayProps) {
+  const [hoveredStation, setHoveredStation] = useState<string | null>(null);
+
   if (!visible) return null;
 
   return (
@@ -112,16 +114,28 @@ export default function MetroOverlay({ visible }: MetroOverlayProps) {
                 }}
               />
             </Source>
-            {line.stations.map((station, i) => (
-              <MapboxMarker key={`${lineId}-${i}`} longitude={station.lng} latitude={station.lat} anchor="center">
-                <div className="group relative cursor-pointer">
-                  <div className="w-3 h-3 rounded-full border-2 border-white" style={{ backgroundColor: line.color }} />
-                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-surface/95 border border-white/10 rounded text-[8px] font-black text-on-surface whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl">
-                    {station.name}
-                  </div>
-                </div>
-              </MapboxMarker>
-            ))}
+            {line.stations.map((station, i) => {
+              const stationId = `${lineId}-${i}`;
+              const isHovered = hoveredStation === stationId;
+              return (
+                <MapboxMarker key={stationId} longitude={station.lng} latitude={station.lat} anchor="center">
+                  <button
+                    onMouseEnter={() => setHoveredStation(stationId)}
+                    onMouseLeave={() => setHoveredStation(null)}
+                    onClick={() => setHoveredStation(isHovered ? null : stationId)}
+                    className="group relative cursor-pointer p-2 rounded-full transition-transform hover:scale-125 active:scale-110"
+                    title={station.name}
+                  >
+                    <div className="w-4 h-4 rounded-full border-2 border-white shadow-lg" style={{ backgroundColor: line.color }} />
+                    {isHovered && (
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-2.5 py-1.5 bg-surface/95 border border-white/20 rounded-lg text-[9px] sm:text-[10px] font-black text-on-surface whitespace-nowrap opacity-100 transition-opacity pointer-events-none shadow-xl z-20">
+                        {station.name}
+                      </div>
+                    )}
+                  </button>
+                </MapboxMarker>
+              );
+            })}
           </React.Fragment>
         );
       })}

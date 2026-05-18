@@ -52,14 +52,14 @@ export default function LiveStatsPanel({ points, onClose }: LiveStatsPanelProps)
       initial={{ opacity: 0, x: 50 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 50 }}
-      className="absolute right-4 top-24 w-[340px] bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl z-40 overflow-hidden"
+      className="fixed lg:absolute right-2 lg:right-4 left-2 lg:left-auto top-20 lg:top-24 w-auto lg:w-[340px] max-h-[70vh] lg:max-h-none bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl z-40 overflow-y-auto"
     >
-      <div className="p-5 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="p-3 sm:p-5 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
           <BarChart3 size={16} className="text-primary" />
-          <span className="font-technical text-[10px] text-primary font-black uppercase tracking-[0.2em]">Live Stats</span>
+          <span className="font-technical text-[9px] sm:text-[10px] text-primary font-black uppercase tracking-[0.2em]">Live Stats</span>
         </div>
-        <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5 text-on-surface-variant"><X size={16} /></button>
+        <button onClick={onClose} className="p-1 sm:p-1.5 rounded-lg hover:bg-white/5 text-on-surface-variant"><X size={16} /></button>
       </div>
 
       {/* Tabs */}
@@ -72,7 +72,7 @@ export default function LiveStatsPanel({ points, onClose }: LiveStatsPanelProps)
         </button>
       </div>
 
-      <div className="p-5 space-y-5 max-h-[55vh] overflow-y-auto custom-scrollbar">
+      <div className="p-3 sm:p-5 space-y-5 max-h-[55vh] overflow-y-auto custom-scrollbar">
         {/* Summary */}
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/5 border border-white/5 rounded-lg p-4 text-center">

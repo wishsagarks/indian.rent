@@ -61,9 +61,11 @@ import { Plus } from 'lucide-react';
 import type { PlatformStatsData } from './PlatformStats';
 import { formatRentMapped } from './PlatformStats';
 import UnifiedMenu from './UnifiedMenu';
+import { useDriverJS } from '@/hooks/useDriverJS';
 
 export default function LandingPage({ platformStats }: { platformStats?: PlatformStatsData }) {
   const mainRef = useRef(null);
+  useDriverJS('landing');
 
   useGSAP(() => {
     // Parallax background effect
@@ -119,7 +121,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
       <TracingBeam>
         {/* Hero Section */}
-        <section className="relative min-h-screen flex items-center justify-center pt-24 px-mobile md:px-desktop overflow-hidden w-full">
+        <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-24 px-mobile md:px-desktop overflow-hidden w-full">
           <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mx-auto">
             <div className="flex flex-col gap-10">
               <div className="space-y-4">
@@ -137,7 +139,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
               </p>
               <div className="flex gap-4 items-center mt-6">
                 <MagneticButton>
-                  <Link href="/explore">
+                  <Link href="/explore" data-tour="explore-button">
                     <StickerButton>
                        <div className="flex items-center gap-4">
                         <span className="font-black uppercase tracking-[0.3em] text-[11px]">Deploy Interface</span>

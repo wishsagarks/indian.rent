@@ -44,22 +44,22 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
-      className="absolute left-4 top-24 w-[320px] bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl z-40 overflow-hidden"
+      className="fixed lg:absolute left-2 lg:left-4 right-2 lg:right-auto top-20 lg:top-24 w-auto lg:w-[320px] max-h-[70vh] lg:max-h-none bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl z-40 overflow-y-auto"
     >
-      <div className="p-5 border-b border-white/5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="p-3 sm:p-5 border-b border-white/5 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
           <SlidersHorizontal size={16} className="text-primary" />
-          <span className="font-technical text-[10px] text-primary font-black uppercase tracking-[0.2em]">Filters</span>
+          <span className="font-technical text-[9px] sm:text-[10px] text-primary font-black uppercase tracking-[0.2em]">Filters</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {hasActiveFilters && (
-            <button onClick={resetFilters} className="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors">Reset</button>
+            <button onClick={resetFilters} className="text-[8px] sm:text-[9px] font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors">Reset</button>
           )}
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/5 text-on-surface-variant transition-colors"><X size={16} /></button>
+          <button onClick={onClose} className="p-1 sm:p-1.5 rounded-lg hover:bg-white/5 text-on-surface-variant transition-colors"><X size={16} /></button>
         </div>
       </div>
 
-      <div className="p-5 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+      <div className="p-3 sm:p-5 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
         {/* BHK */}
         <div className="space-y-3">
           <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">BHK</label>

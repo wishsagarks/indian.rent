@@ -36,20 +36,41 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
     {
       title: "Value Mapped",
       value: formatCurrency(stats.totalRentMapped),
-      sub: "P2P Economy",
+      sub: "Monthly P2P Flow",
       icon: Banknote,
       color: "text-emerald-400",
       bg: "bg-emerald-400/10",
       description: "Total monthly rental volume bypasssed from traditional brokerage fees."
     },
     {
-      title: "Active Seekers",
-      value: stats.totalSeekerPins.toLocaleString(),
-      sub: "Network Demand",
-      icon: Users,
-      color: "text-amber-400",
-      bg: "bg-amber-400/10",
-      description: "Live seeker pins identifying high-demand sectors in the community."
+      title: "Brokerage Bypassed",
+      value: formatCurrency(stats.totalRentMapped * 1.2), // Derived: ~1.2x monthly rent (1mo fee + admin)
+      sub: "Economy Thwarted",
+      icon: Zap,
+      color: "text-primary",
+      bg: "bg-primary/10",
+      description: "Cumulative capital retained by seekers and contributors by bypassing middlemen."
+    }
+  ];
+
+  const systemMetrics = [
+    {
+      label: "Intelligence Tokens",
+      value: "84,292",
+      limit: "100,000",
+      percent: 84.3,
+      sub: "Monthly Token Usage Limit",
+      icon: Activity,
+      color: "text-secondary"
+    },
+    {
+      label: "Network Sync",
+      value: "99.98%",
+      limit: "Real-time",
+      percent: 99.9,
+      sub: "Grid Latency Status",
+      icon: Globe,
+      color: "text-primary"
     }
   ];
 
@@ -101,6 +122,37 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
           </p>
         </header>
 
+        {/* Resource Telemetry */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+          {systemMetrics.map((m, i) => (
+            <motion.div 
+              key={i}
+              initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="glass-plate border border-white/5 p-6 rounded-lg flex flex-col gap-4"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <m.icon className={m.color} size={18} />
+                  <span className="font-technical text-[10px] font-black uppercase tracking-widest">{m.label}</span>
+                </div>
+                <div className="text-[10px] font-technical opacity-40 uppercase tracking-widest">
+                  {m.value} / {m.limit}
+                </div>
+              </div>
+              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${m.percent}%` }}
+                  transition={{ duration: 1.5, ease: "circOut" }}
+                  className={`h-full ${m.color === 'text-secondary' ? 'bg-secondary shadow-[0_0_10px_rgba(47,248,1,0.5)]' : 'bg-primary shadow-[0_0_10px_rgba(0,102,255,0.5)]'}`}
+                />
+              </div>
+              <p className="font-technical text-[8px] uppercase tracking-[0.3em] opacity-30">{m.sub}</p>
+            </motion.div>
+          ))}
+        </div>
+
         {/* Bento Grid Analytics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           {cards.map((card, i) => (
@@ -148,7 +200,10 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
             
             <div className="h-64 w-full flex items-end gap-2 px-2">
                {[40, 60, 45, 70, 90, 85, 100, 110, 130, 150, 140, 180].map((h, i) => (
-                 <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
+                 <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-white/10 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest z-10 whitespace-nowrap">
+                       {Math.round(h * 1.2)} Nodes
+                    </div>
                     <motion.div 
                       initial={{ height: 0 }}
                       animate={{ height: `${h}%` }}
@@ -169,28 +224,36 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
             transition={{ delay: 0.6 }}
             className="glass-plate border border-white/5 p-8 rounded-lg flex flex-col"
           >
-            <h3 className="text-xl font-black uppercase tracking-tight mb-8">Network Status</h3>
+            <h3 className="text-xl font-black uppercase tracking-tight mb-8">Grid Distribution</h3>
             <div className="space-y-6 flex-1">
                {[
-                 { label: 'Satellite Uplink', status: 'Optimal', icon: Globe, color: 'text-secondary' },
-                 { label: 'Blockchain Cache', status: 'Synced', icon: Zap, color: 'text-primary' },
-                 { label: 'Community Trust', status: 'High', icon: Shield, color: 'text-emerald-400' },
-                 { label: 'Sector Coverage', status: '84%', icon: Target, color: 'text-amber-400' },
-                 { label: 'API Latency', status: '42ms', icon: Activity, color: 'text-secondary' }
+                 { label: 'Banjara Hills', value: '32%', color: 'bg-primary' },
+                 { label: 'Gachibowli', value: '28%', color: 'bg-secondary' },
+                 { label: 'Jubilee Hills', value: '18%', color: 'bg-emerald-400' },
+                 { label: 'Kondapur', value: '14%', color: 'bg-amber-400' },
+                 { label: 'Miyapur', value: '8%', color: 'bg-orange-400' }
                ].map((item, i) => (
-                 <div key={i} className="flex items-center justify-between group">
-                    <div className="flex items-center gap-4">
-                       <item.icon size={16} className={`${item.color} opacity-40 group-hover:opacity-100 transition-opacity`} />
+                 <div key={i} className="space-y-2">
+                    <div className="flex items-center justify-between">
                        <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">{item.label}</span>
+                       <span className="text-[10px] font-technical font-black uppercase tracking-widest opacity-40">{item.value}</span>
                     </div>
-                    <span className={`text-[10px] font-technical font-black uppercase tracking-widest ${item.color}`}>{item.status}</span>
+                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                       <motion.div 
+                         initial={{ width: 0 }}
+                         animate={{ width: item.value }}
+                         transition={{ delay: 1 + (i * 0.1), duration: 1 }}
+                         className={`h-full ${item.color}`}
+                       />
+                    </div>
                  </div>
                ))}
             </div>
             <div className="mt-8 pt-8 border-t border-white/5">
-               <p className="font-technical text-[8px] uppercase tracking-[0.5em] opacity-20 leading-relaxed">
-                 Next telemetry sweep in 04:22:15. Protocol version 1.0.2 active.
-               </p>
+               <div className="flex items-center gap-4 group">
+                  <Activity size={16} className="text-secondary opacity-40 group-hover:opacity-100 transition-opacity" />
+                  <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">System Resilience: High</span>
+               </div>
             </div>
           </motion.div>
         </div>

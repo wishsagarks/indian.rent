@@ -1,14 +1,18 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Shield } from 'lucide-react';
+import UnifiedMenu from '@/components/UnifiedMenu';
 
 export default function TermsPage() {
   return (
     <div className="min-h-screen bg-background text-on-background font-sans p-6 md:p-24 selection:bg-primary/20">
       <div className="max-w-3xl mx-auto">
-        <Link href="/" className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] mb-12 hover:scale-105 transition-transform">
-          <ChevronLeft size={16} /> Back to HQ
-        </Link>
+        <div className="flex items-center gap-4 mb-12">
+          <UnifiedMenu />
+          <Link href="/" className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
+            <ChevronLeft size={16} /> Back to HQ
+          </Link>
+        </div>
         
         <header className="mb-16">
           <div className="flex items-center gap-3 mb-6">
