@@ -277,8 +277,9 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                         </div>
                       ))
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-on-surface-variant/40 font-technical">
-                        No deployment data yet — be the first to add a listing!
+                      <div className="w-full h-full flex flex-col items-center justify-center gap-3 text-center">
+                        <div className="text-on-surface-variant/50 font-technical text-[10px] uppercase tracking-widest font-black">📊 No data yet</div>
+                        <div className="text-on-surface-variant/40 font-technical text-[9px] leading-relaxed">Add your first listing to see<br/>deployment velocity trends</div>
                       </div>
                     )}
                   </div>
@@ -319,8 +320,9 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                         </div>
                       ))
                     ) : (
-                      <div className="text-center py-8 text-on-surface-variant/40 font-technical text-[9px]">
-                        Add listings to see area breakdown
+                      <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
+                        <div className="text-on-surface-variant/50 font-technical text-[10px] uppercase tracking-widest font-black">📍 No areas yet</div>
+                        <div className="text-on-surface-variant/40 font-technical text-[9px] leading-relaxed">Add listings to see<br/>geographic distribution</div>
                       </div>
                     )}
                   </div>
