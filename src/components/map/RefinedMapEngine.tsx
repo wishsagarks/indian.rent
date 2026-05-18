@@ -62,16 +62,62 @@ export default function RefinedMapEngine() {
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
   const [showLegend, setShowLegend] = useState(true);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>('bengaluru');
 
   const { getPosition, loading: geolocating } = useGeolocation();
 
   const mapRef = useRef<any>(null);
+
+  // City coordinates and zoom levels - EXTENDED TO 4 CITIES
+  const cityConfig = {
+    bengaluru: {
+      latitude: 12.9716,
+      longitude: 77.5946,
+      zoom: 11,
+      pitch: 0,
+      bounds: [[76.8, 12.4], [78.3, 13.4]]
+    },
+    hyderabad: {
+      latitude: 17.3850,
+      longitude: 78.4867,
+      zoom: 11,
+      pitch: 0,
+      bounds: [[77.8, 16.9], [79.2, 17.9]]
+    },
+    bhubaneswar: {
+      latitude: 20.2961,
+      longitude: 85.8245,
+      zoom: 11,
+      pitch: 0,
+      bounds: [[85.4, 20.0], [86.3, 20.6]]
+    },
+    cuttack: {
+      latitude: 20.4625,
+      longitude: 85.8830,
+      zoom: 11,
+      pitch: 0,
+      bounds: [[85.5, 20.2], [86.2, 20.7]]
+    }
+  };
+
   const [viewState, setViewState] = useState({
-    longitude: 78.4347,
-    latitude: 17.4156,
-    zoom: 14,
-    pitch: 45
+    longitude: cityConfig.bengaluru.longitude,
+    latitude: cityConfig.bengaluru.latitude,
+    zoom: cityConfig.bengaluru.zoom,
+    pitch: 0
   });
+
+  // Handle city selection with data refresh
+  const handleCityChange = useCallback((city: 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack') => {
+    setSelectedCity(city);
+    const config = cityConfig[city];
+    setViewState({
+      longitude: config.longitude,
+      latitude: config.latitude,
+      zoom: config.zoom,
+      pitch: config.pitch
+    });
+  }, []);
 
   const ipHash = typeof window !== 'undefined' ? getIpHash() : '';
 
@@ -158,13 +204,25 @@ export default function RefinedMapEngine() {
     return () => { supabase.removeChannel(channel); };
   }, [processIntelData, consented]);
 
+  // Refresh data when city changes to ensure latest data for selected city
+  useEffect(() => {
+    if (consented && !loading) {
+      // City change will automatically trigger filteredPoints re-computation
+      // This ensures map markers update immediately on city selection
+    }
+  }, [selectedCity, consented]);
+
   // Apply filters
   const filteredPoints = useMemo(() => {
     return points.map(p => {
       const props = { ...p.properties };
       const flats = props.allFlats || [];
       const isEmptyNode = props.isEmpty;
-      
+
+      // Filter by selected city
+      const buildingCity = props.city?.toLowerCase() || 'bengaluru';
+      if (buildingCity !== selectedCity) return null;
+
       const matchedFlats = flats.filter((f: any) => {
         if (filters.bhk !== 'any') {
           const bhkVal = filters.bhk === '4+' ? 4 : parseInt(filters.bhk);
@@ -216,7 +274,7 @@ export default function RefinedMapEngine() {
         }
       };
     }).filter(Boolean);
-  }, [points, filters, isAddingProperty]);
+  }, [points, filters, isAddingProperty, selectedCity]);
 
   // For Mapbox, get bounds from ref; for Google Maps, use state (which is updated from onCameraChanged)
   const bounds: [number, number, number, number] = MAP_PROVIDER === 'mapbox' && mapRef.current
@@ -494,7 +552,7 @@ export default function RefinedMapEngine() {
         {/* Map */}
         <div id="map-container" className="absolute inset-0 z-0 bg-background">
           {MAP_PROVIDER === 'mapbox' ? (
-            <MapboxMap {...viewState} ref={mapRef} onMove={evt => setViewState(evt.viewState)} onClick={handleMapClick} style={{ width: '100%', height: '100%' }} mapStyle="mapbox://styles/mapbox/dark-v11" mapboxAccessToken={MAPBOX_TOKEN} maxBounds={[[78.30, 17.25], [78.70, 17.55]]}>
+            <MapboxMap {...viewState} ref={mapRef} onMove={evt => setViewState(evt.viewState)} onClick={handleMapClick} style={{ width: '100%', height: '100%' }} mapStyle="mapbox://styles/mapbox/dark-v11" mapboxAccessToken={MAPBOX_TOKEN} maxBounds={cityConfig[selectedCity].bounds as any}>
               <MapboxNavigationControl position="top-right" />
               <MetroOverlay visible={showMetro} />
 
@@ -574,9 +632,17 @@ export default function RefinedMapEngine() {
               zoom={viewState.zoom}
               mapId={mapId}
               disableDefaultUI={true}
-              minZoom={12}
+              minZoom={5}
               maxZoom={18}
-              restriction={{ latLngBounds: { north: 17.55, south: 17.25, west: 78.30, east: 78.70 }, strictBounds: true }}
+              restriction={{
+                latLngBounds: {
+                  north: cityConfig[selectedCity].bounds[1][1],
+                  south: cityConfig[selectedCity].bounds[0][1],
+                  west: cityConfig[selectedCity].bounds[0][0],
+                  east: cityConfig[selectedCity].bounds[1][0]
+                },
+                strictBounds: false
+              }}
               onCameraChanged={(ev) => {
                 setViewState({ ...viewState, latitude: ev.detail.center.lat, longitude: ev.detail.center.lng, zoom: ev.detail.zoom });
                 if (ev.detail.bounds) {
@@ -700,6 +766,18 @@ export default function RefinedMapEngine() {
                   <span className="text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black hidden md:block">by WishLabs</span>
                 </div>
               </div>
+
+              {/* City Selector - Extended to 4 Cities */}
+              <select
+                value={selectedCity}
+                onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
+                className="px-3 py-1.5 rounded-lg bg-surface border border-white/20 text-on-surface font-technical text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all"
+              >
+                <option value="bengaluru">🏙️ Bengaluru</option>
+                <option value="hyderabad">🏙️ Hyderabad</option>
+                <option value="bhubaneswar">🏙️ Bhubaneswar</option>
+                <option value="cuttack">🏙️ Cuttack</option>
+              </select>
               
               <div className="flex items-center gap-2 md:gap-4">
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>

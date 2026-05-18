@@ -4,6 +4,55 @@ import React, { useState } from 'react';
 import { Marker as MapboxMarker, Source, Layer } from 'react-map-gl';
 
 const METRO_LINES = {
+  // Bengaluru Metro Lines
+  blr_purple: {
+    name: 'Bengaluru Purple Line (YPR - JP Nagar)',
+    color: '#a855f7',
+    stations: [
+      { name: 'Yaswantpur', lat: 13.0033, lng: 77.5740 },
+      { name: 'Rajajinagar', lat: 13.0037, lng: 77.5641 },
+      { name: 'Kuvempu Road', lat: 12.9970, lng: 77.5490 },
+      { name: 'Dr. Ambedkar Veedhi', lat: 12.9850, lng: 77.5370 },
+      { name: 'Vidhana Soudha', lat: 12.9850, lng: 77.5945 },
+      { name: 'Cubbon Park', lat: 12.9840, lng: 77.5945 },
+      { name: 'MG Road', lat: 12.9352, lng: 77.6287 },
+      { name: 'Lavelle Road', lat: 12.9500, lng: 77.5900 },
+      { name: 'Indiranagar', lat: 12.9716, lng: 77.6412 },
+      { name: 'Trinity', lat: 12.9735, lng: 77.6430 },
+      { name: 'JP Nagar', lat: 12.8808, lng: 77.6086 },
+    ],
+  },
+  blr_green: {
+    name: 'Bengaluru Green Line (WH - Nagavara)',
+    color: '#22c55e',
+    stations: [
+      { name: 'Whitefield', lat: 12.9698, lng: 77.7499 },
+      { name: 'Hoodi', lat: 12.9680, lng: 77.7200 },
+      { name: 'Indiranagar', lat: 12.9716, lng: 77.6412 },
+      { name: 'CV Raman Nagar', lat: 12.9640, lng: 77.6430 },
+      { name: 'Silk Board', lat: 12.8450, lng: 77.6330 },
+      { name: 'Jayadeva', lat: 12.8490, lng: 77.6240 },
+      { name: 'Domlur', lat: 12.9800, lng: 77.6400 },
+      { name: 'Nagavara', lat: 13.0050, lng: 77.6400 },
+    ],
+  },
+  blr_red: {
+    name: 'Bengaluru Red Line (Dum Dum - Chikballapur)',
+    color: '#ef4444',
+    stations: [
+      { name: 'Peenya', lat: 13.0235, lng: 77.5307 },
+      { name: 'Yeshwantpur', lat: 13.0185, lng: 77.5800 },
+      { name: 'Malleswaram', lat: 13.0015, lng: 77.6000 },
+      { name: 'Vijayanagar', lat: 13.0056, lng: 77.5735 },
+      { name: 'Rashtriya Vidyapeeth', lat: 13.0050, lng: 77.5900 },
+      { name: 'Majestic', lat: 12.9850, lng: 77.5945 },
+      { name: 'MG Road', lat: 12.9352, lng: 77.6287 },
+      { name: 'Koramangala', lat: 12.9352, lng: 77.6245 },
+      { name: 'Sankey Road', lat: 13.0000, lng: 77.5800 },
+    ],
+  },
+
+  // Hyderabad Metro Lines (existing)
   red: {
     name: 'Red Line (Miyapur - LB Nagar)',
     color: '#ef4444',

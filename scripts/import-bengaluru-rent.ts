@@ -1,5 +1,9 @@
+import dotenv from 'dotenv';
+import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
+
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
 const SOURCE_NAME = 'bengaluru.rent';
 const SOURCE_API = 'https://mpnjtkqklmwczowhodfh.supabase.co/functions/v1/get-pins';
@@ -88,7 +92,11 @@ async function runImport() {
   let failed = 0;
   const errors: Array<{ id: string; error: string }> = [];
 
-  for (const pin of pins) {
+  for (let i = 0; i < pins.length; i++) {
+    const pin = pins[i];
+    if ((i + 1) % 100 === 0) {
+      console.log(`[import] Processing pin ${i + 1}/${pins.length}...`);
+    }
     try {
       const { data, error } = await supabase.rpc('import_bengaluru_pin', {
         p_source:               SOURCE_NAME,
@@ -126,7 +134,16 @@ async function runImport() {
       }
     } catch (err: unknown) {
       failed++;
-      const message = err instanceof Error ? err.message : String(err);
+      let message = 'Unknown error';
+      if (err instanceof Error) {
+        message = err.message;
+      } else if (typeof err === 'object' && err !== null && 'message' in err) {
+        message = String((err as any).message);
+      } else if (typeof err === 'object' && err !== null && 'error' in err) {
+        message = String((err as any).error);
+      } else {
+        message = JSON.stringify(err);
+      }
       errors.push({ id: pin.id, error: message });
       console.error(`[import] Failed pin ${pin.id}: ${message}`);
     }

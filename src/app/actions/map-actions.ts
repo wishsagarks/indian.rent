@@ -69,17 +69,37 @@ export async function deployNode(formData: any) {
     return { error: 'Rate limit exceeded. Please wait before adding more listings.' };
   }
 
-  // Geofence: must be within 150 km of Hyderabad city center
-  const HYD_LAT = 17.385, HYD_LNG = 78.4867;
-  const latDiff = (formData.lat - HYD_LAT) * 111;
-  const lngDiff = (formData.lng - HYD_LNG) * 105;
-  if (Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) > 150) {
-    return { error: 'Pin is outside Hyderabad. Only Hyderabad listings are supported right now.' };
+  // Geofence: must be within major Indian cities (4 supported cities)
+  const cities = [
+    { name: 'Hyderabad', lat: 17.385, lng: 78.4867 },
+    { name: 'Bengaluru', lat: 12.9716, lng: 77.5946 },
+    { name: 'Bhubaneswar', lat: 20.2961, lng: 85.8245 },
+    { name: 'Cuttack', lat: 20.4625, lng: 85.8830 }
+  ];
+
+  let nearestCity: string | null = null;
+  let minDistance = Infinity;
+
+  for (const c of cities) {
+    const latDiff = (formData.lat - c.lat) * 111;
+    const lngDiff = (formData.lng - c.lng) * 105;
+    const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+    if (distance < minDistance) {
+      minDistance = distance;
+      nearestCity = c.name;
+    }
+  }
+
+  if (!nearestCity || minDistance > 150) {
+    return { error: 'Pin is outside supported cities. Only Hyderabad, Bengaluru, Bhubaneswar, and Cuttack are supported.' };
   }
 
   const supabase = await createClient();
   try {
     let buildingId = formData.existingBuildingId;
+
+    // City is already determined by nearest city geofence check
+    const city = nearestCity;
 
     if (!buildingId) {
       const { data: building, error: bError } = await supabase
@@ -89,7 +109,7 @@ export async function deployNode(formData: any) {
           category: formData.category,
           location: `POINT(${formData.lng} ${formData.lat})`,
           address: formData.address || 'Tactical Deployment Zone',
-          city: 'Hyderabad',
+          city,
           ip_hash: formData.ipHash || null,
         })
         .select()
