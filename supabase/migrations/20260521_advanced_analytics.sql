@@ -140,13 +140,15 @@ BEGIN
     jsonb_build_object('unit', 'percentage')
   UNION ALL SELECT
     'rent_volatility'::TEXT,
-    CASE WHEN v_avg_rent > 0 THEN (STDDEV_POP(f.rent_amount) / v_avg_rent * 100) ELSE 0 END,
+    CASE WHEN v_avg_rent > 0 THEN (
+      SELECT COALESCE(STDDEV_POP(f.rent_amount), 0) / v_avg_rent * 100
+      FROM flats f
+      JOIN floors fl ON f.floor_id = fl.id
+      JOIN buildings b ON fl.building_id = b.id
+      WHERE b.city = p_city AND f.status != 'occupied' AND f.rent_amount > 0
+    ) ELSE 0 END,
     'price'::TEXT,
-    jsonb_build_object('unit', 'percentage', 'calculation', 'stddev/avg')
-  FROM flats f
-  JOIN floors fl ON f.floor_id = fl.id
-  JOIN buildings b ON fl.building_id = b.id
-  WHERE b.city = p_city AND f.status != 'occupied';
+    jsonb_build_object('unit', 'percentage', 'calculation', 'stddev/avg');
 END;
 $$ LANGUAGE plpgsql IMMUTABLE;
 
@@ -207,13 +209,13 @@ BEGIN
   SELECT
     p_bhk,
     p_furnishing,
-    COUNT(*),
+    COUNT(*)::BIGINT,
     0::BIGINT,
     PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY f.rent_amount),
     AVG(f.rent_amount),
     MIN(f.rent_amount),
     MAX(f.rent_amount),
-    STDDEV_POP(f.rent_amount) / AVG(f.rent_amount) * 100,
+    CASE WHEN AVG(f.rent_amount) > 0 THEN (STDDEV_POP(f.rent_amount) / AVG(f.rent_amount) * 100) ELSE 0 END,
     PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY (NOW()::DATE - f.updated_at::DATE))::BIGINT,
     0::NUMERIC
   FROM flats f
@@ -266,13 +268,13 @@ BEGIN
   CROSS JOIN LATERAL (
     SELECT
       CASE WHEN metrics.demand_count > 0 AND metrics.supply_count > 0 THEN (metrics.demand_count::NUMERIC / metrics.supply_count) ELSE 0 END as demand_growth,
-      CASE WHEN metrics.prev_price > 0 THEN ((metrics.avg_price - metrics.prev_price) / metrics.prev_price * 100) ELSE 0 END as price_momentum,
+      0::NUMERIC as price_momentum,
       CASE WHEN metrics.supply_count > 100 THEN 1.0 WHEN metrics.supply_count > 50 THEN 0.7 ELSE 0.4 END as supply_trend,
       CASE WHEN metrics.avg_price > 0 THEN (metrics.avg_price - (SELECT AVG(f.rent_amount) FROM flats f JOIN floors fl ON f.floor_id = fl.id JOIN buildings b ON fl.building_id = b.id WHERE b.city = p_city)) / (SELECT AVG(f.rent_amount) FROM flats f JOIN floors fl ON f.floor_id = fl.id JOIN buildings b ON fl.building_id = b.id WHERE b.city = p_city) * 100 ELSE 0 END as price_change,
       ((CASE WHEN metrics.demand_count > 0 AND metrics.supply_count > 0 THEN (metrics.demand_count::NUMERIC / metrics.supply_count) ELSE 0 END +
         CASE WHEN metrics.supply_count > 100 THEN 1.0 WHEN metrics.supply_count > 50 THEN 0.7 ELSE 0.4 END +
-        CASE WHEN metrics.prev_price > 0 THEN ((metrics.avg_price - metrics.prev_price) / metrics.prev_price) ELSE 0 END) / 3 * 100)::NUMERIC as opportunity_score
-  ) scores ON TRUE
+        0::NUMERIC) / 3 * 100)::NUMERIC as opportunity_score
+  ) scores
   WHERE l.city = p_city
   ORDER BY scores.opportunity_score DESC
   LIMIT 20;
