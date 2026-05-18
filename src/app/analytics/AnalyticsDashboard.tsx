@@ -110,12 +110,15 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
 
       <main className="relative z-10 pt-32 pb-24 px-6 max-w-7xl mx-auto">
         <header className="mb-16">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="font-technical text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-4"
+            className="font-technical text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-4 flex items-center gap-3"
           >
             System Metrics // Data Visualization
+            <Link href="/analytics/v2" className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 border border-secondary/30 rounded-full hover:bg-secondary/20 transition-all group">
+              <span className="text-[8px] font-black uppercase text-secondary">✨ NEW: v2</span>
+            </Link>
           </motion.div>
           <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none font-display mb-6">
             Network <br/> Intelligence
