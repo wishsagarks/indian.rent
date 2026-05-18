@@ -6,20 +6,12 @@ import { MapPin, Banknote, Link as LinkIcon, Share2, CircleCheck as CheckCircle2
 import Link from 'next/link';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { lockPlace, flagIntel, getFlatRatings, submitRating, getComments, addComment, getFlatDetails } from '@/app/actions/map-actions';
+import { getIpHash } from '@/utils/ip-hash';
+import UnifiedMenu from './UnifiedMenu';
 
 interface ListingPageProps {
   id: string;
   type: 'flat' | 'flatmate';
-}
-
-function getIpHash(): string {
-  if (typeof window === 'undefined') return '';
-  let hash = localStorage.getItem('ir_ip_hash');
-  if (!hash) {
-    hash = 'u_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-    localStorage.setItem('ir_ip_hash', hash);
-  }
-  return hash;
 }
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop';
@@ -120,12 +112,18 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   );
 
   const navBar = (
-    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/5 backdrop-blur-xl border-b border-white/10 shadow-2xl px-4 md:px-8">
+    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-4 md:px-8">
       <div className="max-w-5xl flex justify-between items-center w-full">
-        <Link href="/explore" className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
-          <ChevronLeft size={16} /> Back to Map
-        </Link>
-        <Link href="/" className="font-display text-xl text-primary font-black tracking-tighter">indian.rent</Link>
+        <div className="flex items-center gap-3">
+          <UnifiedMenu />
+          <Link href="/explore" className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
+            <ChevronLeft size={16} /> Back to Map
+          </Link>
+        </div>
+        <div className="flex flex-col items-center">
+          <Link href="/" className="font-display text-xl text-primary font-black tracking-tighter">indian.rent</Link>
+          <span className="text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black">by WishLabs</span>
+        </div>
         <button onClick={handleShare} className="p-2.5 rounded-lg text-primary hover:scale-110 active:scale-90 transition-all border border-white/10 relative">
           {isCopied ? <Check size={18} /> : <Share2 size={18} />}
         </button>
@@ -178,7 +176,8 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
   const rent = listing.rentAmount ? `₹${Number(listing.rentAmount).toLocaleString()}` : '—';
   const reward = rewardFromRent(listing.rentAmount);
-  const contactLink = listing.noBrokerLink || '#';
+  const noBrokerLink = listing.noBrokerLink || null;
+  const flatmatesLink = (listing as any).flatmatesLink || null;
   const isOwn = listing.ipHash && listing.ipHash === (typeof window !== 'undefined' ? localStorage.getItem('ir_ip_hash') : '');
 
   const specs = [
@@ -389,14 +388,21 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
             </p>
 
             <div className="space-y-4">
-              {contactLink !== '#' ? (
-                <Link href={contactLink} target="_blank" rel="noopener noreferrer" className="block">
+              {noBrokerLink ? (
+                <Link href={noBrokerLink} target="_blank" rel="noopener noreferrer" className="block">
                   <button className="w-full py-5 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] shadow-lg flex items-center justify-center gap-3 border border-white/20 transition-all hover:shadow-xl active:scale-[0.98]">
-                    <LinkIcon size={16} strokeWidth={3} />
-                    {type === 'flat' ? 'Get No Broker Contact' : 'Get Flatmate Contact'}
+                    <LinkIcon size={16} strokeWidth={3} /> View on NoBroker
                   </button>
                 </Link>
-              ) : (
+              ) : null}
+              {flatmatesLink ? (
+                <Link href={flatmatesLink} target="_blank" rel="noopener noreferrer" className="block">
+                  <button className="w-full py-5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] shadow-lg flex items-center justify-center gap-3 transition-all hover:bg-emerald-500/20 active:scale-[0.98]">
+                    <LinkIcon size={16} strokeWidth={3} /> Find Flatmates
+                  </button>
+                </Link>
+              ) : null}
+              {!noBrokerLink && !flatmatesLink && (
                 <button disabled className="w-full py-5 bg-white/5 border border-white/10 text-on-surface-variant rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 opacity-40 cursor-not-allowed">
                   <LinkIcon size={16} strokeWidth={3} /> Contact Not Available
                 </button>

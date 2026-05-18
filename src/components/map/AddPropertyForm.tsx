@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShieldAlert, Building2, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users } from 'lucide-react';
+import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users } from 'lucide-react';
 import { findNearbyBuildings } from '@/app/actions/map-actions';
 
 interface AddPropertyFormProps {
@@ -10,31 +10,54 @@ interface AddPropertyFormProps {
   onSubmit: (data: any) => void;
   lat: number;
   lng: number;
+  initialData?: {
+    buildingName?: string;
+    address?: string;
+    existingBuildingId?: string | null;
+    category?: string;
+  } | null;
 }
 
-export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddPropertyFormProps) {
+export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialData }: AddPropertyFormProps) {
   const [step, setStep] = useState(1);
   const [nearbyBuildings, setNearbyBuildings] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
 
   const [formData, setFormData] = useState({
-    category: '',
+    category: initialData?.category || '',
     floor: '',
     flatNumber: '',
     status: 'vacant',
     rent: '',
     noBrokerLink: '',
+    flatmatesLink: '',
     contributorName: '',
     contributorUpi: '',
-    existingBuildingId: null as string | null,
-    buildingName: '',
+    existingBuildingId: initialData?.existingBuildingId || null as string | null,
+    buildingName: initialData?.buildingName || '',
+    address: initialData?.address || '',
     bhk: '' as string,
     furnishing: '' as string,
     sizeSqft: '',
-    maintenanceIncluded: false,
+    maintenanceIncluded: '' as string,
     availabilityDate: '',
     flatmateNeeded: false,
   });
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(prev => ({
+        ...prev,
+        buildingName: initialData.buildingName || prev.buildingName,
+        address: initialData.address || prev.address,
+        existingBuildingId: initialData.existingBuildingId !== undefined ? initialData.existingBuildingId : prev.existingBuildingId,
+        category: initialData.category || prev.category
+      }));
+      if (initialData.existingBuildingId) {
+        setStep(2); // Jump to vertical identification if building is selected
+      }
+    }
+  }, [initialData]);
 
   useEffect(() => {
     async function loadNearby() {
@@ -79,6 +102,19 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddProp
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+              {formData.buildingName && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between gap-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary rounded flex items-center justify-center shadow-lg"><Check size={16} className="text-on-primary" strokeWidth={3} /></div>
+                    <div>
+                      <div className="text-[10px] font-black text-primary uppercase tracking-widest">Node Identified</div>
+                      <div className="text-xs font-bold text-on-surface uppercase truncate max-w-[200px]">{formData.buildingName}</div>
+                    </div>
+                  </div>
+                  <button onClick={() => { updateData({ buildingName: '', address: '', existingBuildingId: null }); }} className="text-[8px] uppercase tracking-widest text-on-surface-variant hover:text-white font-black">Reset</button>
+                </motion.div>
+              )}
+
               <div className="space-y-4">
                 <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Nearby Grid Nodes</label>
                 {loadingNearby ? (
@@ -118,10 +154,12 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddProp
                   { id: 'gated', label: 'Gated Protocol', icon: Shield, desc: 'High security community' },
                   { id: 'semi-gated', label: 'Semi-Gated', icon: ShieldAlert, desc: 'Partial access control' },
                   { id: 'standalone', label: 'Standalone Node', icon: Building2, desc: 'Independent infrastructure' },
+                  { id: 'pg', label: 'PG / Paying Guest', icon: Home, desc: 'Shared accommodation' },
+                  { id: 'hostel', label: 'Hostel', icon: Hotel, desc: 'Dormitory or hostel' },
                 ].map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => { updateData({ category: cat.id, existingBuildingId: null }); setStep(2); }}
+                    onClick={() => { updateData({ category: cat.id, existingBuildingId: null }); }}
                     className={`flex items-center gap-6 p-5 rounded-lg transition-all text-left border ${
                       formData.category === cat.id && !formData.existingBuildingId ? 'border-primary bg-primary/5 shadow-lg' : 'border-white/5 bg-white/5 hover:border-white/20'
                     }`}
@@ -135,6 +173,26 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddProp
                   </button>
                 ))}
               </div>
+
+              {formData.category && !formData.existingBuildingId && (
+                <div className="space-y-4 mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Building Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Banjara Heights, Jubilee Towers"
+                    value={formData.buildingName}
+                    onChange={(e) => updateData({ buildingName: e.target.value })}
+                    className="w-full bg-surface border border-white/10 rounded-lg px-4 py-3 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary outline-none focus:bg-surface-container-high transition-all text-sm font-medium"
+                  />
+                  <button
+                    onClick={() => { if (formData.buildingName.trim()) setStep(2); }}
+                    disabled={!formData.buildingName.trim()}
+                    className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] disabled:opacity-40 transition-all"
+                  >
+                    Continue →
+                  </button>
+                </div>
+              )}
             </motion.div>
           )}
 
@@ -157,19 +215,18 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddProp
                   ))}
                 </div>
               </div>
-              <div className="space-y-5 text-left">
+              <div className="space-y-3 text-left">
                 <div className="flex items-center gap-3">
                   <Hash size={16} className="text-primary" />
-                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Flat Identifier</label>
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Flat / Unit Identifier</label>
                 </div>
-                <div className="grid grid-cols-4 gap-3">
-                  {['101', '102', '201', '202', '301', '302', '401', 'Custom'].map((num) => (
-                    <button key={num} onClick={() => updateData({ flatNumber: num === 'Custom' ? '' : num })} className={`py-3.5 rounded-lg font-black transition-all border text-xs ${formData.flatNumber === num ? 'bg-primary text-background border-primary shadow-lg scale-105' : 'bg-white/5 border-white/5 text-on-surface hover:bg-primary/5'}`}>{num}</button>
-                  ))}
-                </div>
-                {formData.flatNumber === '' && (
-                  <input type="text" placeholder="Enter identifier..." autoFocus className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" onChange={e => updateData({ flatNumber: e.target.value })} />
-                )}
+                <input
+                  type="text"
+                  placeholder="e.g. 101, A-3, Ground Floor, Shop 2..."
+                  value={formData.flatNumber}
+                  onChange={e => updateData({ flatNumber: e.target.value })}
+                  className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none transition-colors"
+                />
               </div>
             </motion.div>
           )}
@@ -199,42 +256,80 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddProp
                 </div>
               </div>
 
-              {/* Size */}
+              {/* Size - OPTIONAL */}
               <div className="space-y-4 text-left">
                 <div className="flex items-center gap-2 ml-2">
-                  <Ruler size={14} className="text-primary" />
-                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Size (sq.ft)</label>
+                  <Ruler size={14} className="text-primary opacity-60" />
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface-variant font-black">Size (sq.ft) <span className="text-primary/40 text-[9px]">Optional</span></label>
                 </div>
-                <input type="number" placeholder="e.g. 1200" value={formData.sizeSqft} onChange={e => updateData({ sizeSqft: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                <input type="number" placeholder="e.g. 1200" value={formData.sizeSqft} onChange={e => updateData({ sizeSqft: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none transition-colors" />
               </div>
 
-              {/* Availability Date */}
+              {/* Availability Date - OPTIONAL with checkbox */}
               <div className="space-y-4 text-left">
-                <div className="flex items-center gap-2 ml-2">
-                  <Calendar size={14} className="text-primary" />
-                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Available From</label>
-                </div>
-                <input type="date" value={formData.availabilityDate} onChange={e => updateData({ availabilityDate: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface font-bold focus:border-primary outline-none" />
+                <button
+                  onClick={() => {
+                    if (formData.availabilityDate) {
+                      updateData({ availabilityDate: '' });
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 p-4 rounded-lg border transition-all bg-surface-container-low/50 hover:border-primary/40 border-white/5"
+                >
+                  <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all border-2 ${formData.availabilityDate ? 'bg-primary border-primary' : 'border-white/20'}`}>
+                    {formData.availabilityDate && <Check size={14} className="text-background font-black" />}
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={14} className="text-on-surface-variant" />
+                      <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Specify Available From Date</label>
+                    </div>
+                  </div>
+                </button>
+                {formData.availabilityDate && (
+                  <input
+                    type="date"
+                    value={formData.availabilityDate}
+                    onChange={e => updateData({ availabilityDate: e.target.value })}
+                    className="w-full bg-primary/5 border border-primary/20 rounded-lg p-4 text-on-surface font-bold focus:border-primary outline-none transition-colors"
+                  />
+                )}
               </div>
 
-              {/* Toggles */}
-              <div className="space-y-3">
-                <button onClick={() => updateData({ maintenanceIncluded: !formData.maintenanceIncluded })} className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${formData.maintenanceIncluded ? 'border-primary bg-primary/5' : 'border-white/5 bg-white/5'}`}>
-                  <span className="font-black text-xs uppercase tracking-wider">Maintenance Included in Rent</span>
-                  <div className={`w-10 h-5 rounded-full transition-all relative ${formData.maintenanceIncluded ? 'bg-primary' : 'bg-white/20'}`}>
-                    <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${formData.maintenanceIncluded ? 'left-5.5' : 'left-0.5'}`} />
-                  </div>
-                </button>
-                <button onClick={() => updateData({ flatmateNeeded: !formData.flatmateNeeded })} className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${formData.flatmateNeeded ? 'border-emerald-400 bg-emerald-400/5' : 'border-white/5 bg-white/5'}`}>
-                  <div className="flex items-center gap-3">
-                    <Users size={16} className={formData.flatmateNeeded ? 'text-emerald-400' : 'text-on-surface-variant'} />
-                    <span className="font-black text-xs uppercase tracking-wider">Flatmate Needed</span>
-                  </div>
-                  <div className={`w-10 h-5 rounded-full transition-all relative ${formData.flatmateNeeded ? 'bg-emerald-400' : 'bg-white/20'}`}>
-                    <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${formData.flatmateNeeded ? 'left-5.5' : 'left-0.5'}`} />
-                  </div>
-                </button>
+              {/* Maintenance - Fixed or Variable */}
+              <div className="space-y-4 text-left">
+                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Maintenance (Optional)</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => updateData({ maintenanceIncluded: 'none' })}
+                    className={`py-4 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all text-center ${formData.maintenanceIncluded === 'none' ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}
+                  >
+                    Not Included
+                  </button>
+                  <button
+                    onClick={() => updateData({ maintenanceIncluded: 'fixed' })}
+                    className={`py-4 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all text-center ${formData.maintenanceIncluded === 'fixed' ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}
+                  >
+                    Fixed Charge
+                  </button>
+                  <button
+                    onClick={() => updateData({ maintenanceIncluded: 'variable' })}
+                    className={`py-4 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all text-center ${formData.maintenanceIncluded === 'variable' ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}
+                  >
+                    Variable
+                  </button>
+                </div>
               </div>
+
+              {/* Flatmate Needed */}
+              <button onClick={() => updateData({ flatmateNeeded: !formData.flatmateNeeded })} className={`w-full flex items-center justify-between p-5 rounded-lg border transition-all ${formData.flatmateNeeded ? 'border-emerald-400 bg-emerald-400/5' : 'border-white/5 bg-white/5 hover:border-emerald-400/40'}`}>
+                <div className="flex items-center gap-3">
+                  <Users size={16} className={formData.flatmateNeeded ? 'text-emerald-400' : 'text-on-surface-variant'} />
+                  <span className="font-black text-xs uppercase tracking-wider">Flatmate Needed</span>
+                </div>
+                <div className={`w-10 h-5 rounded-full transition-all relative ${formData.flatmateNeeded ? 'bg-emerald-400' : 'bg-white/20'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${formData.flatmateNeeded ? 'left-5.5' : 'left-0.5'}`} />
+                </div>
+              </button>
             </motion.div>
           )}
 
@@ -246,9 +341,17 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng }: AddProp
               </div>
 
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Contact Link</label>
+                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">NoBroker Link</label>
                 <div className="relative">
-                  <input type="text" placeholder="No Broker or Flatmates Link" value={formData.noBrokerLink} onChange={e => updateData({ noBrokerLink: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-5 pl-14 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                  <input type="text" placeholder="nobroker.in/..." value={formData.noBrokerLink} onChange={e => updateData({ noBrokerLink: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-5 pl-14 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                  <LinkIcon size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-on-surface opacity-30" />
+                </div>
+              </div>
+
+              <div className="space-y-4 text-left">
+                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Flatmates Link</label>
+                <div className="relative">
+                  <input type="text" placeholder="flatmates.in/..." value={formData.flatmatesLink} onChange={e => updateData({ flatmatesLink: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-5 pl-14 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
                   <LinkIcon size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-on-surface opacity-30" />
                 </div>
               </div>

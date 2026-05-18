@@ -50,9 +50,10 @@ export default function ConsentSplash({ onAccept }: ConsentSplashProps) {
               <span className="font-technical text-[10px] text-primary font-black uppercase tracking-[0.3em]">Live Protocol</span>
             </div>
 
-            <h1 className="text-4xl md:text-6xl font-black text-on-background uppercase tracking-tighter leading-none font-display mb-6">
+            <h1 className="text-4xl md:text-6xl font-black text-on-background uppercase tracking-tighter leading-none font-display mb-2">
               indian.rent
             </h1>
+            <div className="font-technical text-[10px] text-primary/60 font-black uppercase tracking-[0.5em] mb-6">by WishLabs</div>
             <p className="text-on-surface-variant text-sm md:text-base leading-relaxed max-w-lg mx-auto">
               Crowdsourced rental map for Hyderabad. Real rents submitted by actual renters.
               No signup, no app, no broker fees, no ads.

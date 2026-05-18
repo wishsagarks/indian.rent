@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -57,7 +57,12 @@ function StickerButton({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function LandingPage() {
+import { Plus } from 'lucide-react';
+import type { PlatformStatsData } from './PlatformStats';
+import { formatRentMapped } from './PlatformStats';
+import UnifiedMenu from './UnifiedMenu';
+
+export default function LandingPage({ platformStats }: { platformStats?: PlatformStatsData }) {
   const mainRef = useRef(null);
 
   useGSAP(() => {
@@ -75,7 +80,7 @@ export default function LandingPage() {
   }, { scope: mainRef });
 
   return (
-    <div ref={mainRef} className="bg-background text-on-background min-h-screen overflow-x-hidden antialiased font-sans relative selection:bg-primary/20 selection:text-primary">
+    <div ref={mainRef} className="bg-background text-on-background overflow-x-hidden antialiased font-sans relative selection:bg-primary/20 selection:text-primary">
       {/* Dynamic Background - Dark Tactical */}
       <div className="fixed inset-0 z-0 bg-parallax opacity-20 pointer-events-none">
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
@@ -83,16 +88,23 @@ export default function LandingPage() {
       </div>
 
       {/* TopNavBar - DESIGN.md Centered Layout */}
-      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/5 backdrop-blur-xl border-b border-white/10 shadow-2xl px-mobile md:px-desktop">
+      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-mobile md:px-desktop">
         <div className="max-w-container w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
-             <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shadow-lg glow-primary">
-                <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
-             </div>
-            <span className="font-display text-2xl md:text-3xl text-primary font-black tracking-tighter uppercase">indian.rent</span>
+            <UnifiedMenu />
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center gap-4">
+                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shadow-lg glow-primary">
+                    <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
+                </div>
+                <span className="font-display text-2xl md:text-3xl text-primary font-black tracking-tighter uppercase">indian.rent</span>
+              </div>
+              <div className="font-technical text-[8px] uppercase tracking-[0.6em] text-primary/50 font-black ml-12 hidden md:block">WishLabs Intelligence</div>
+            </div>
           </div>
           <div className="hidden md:flex items-center gap-12 font-technical">
             <Link href="/explore" className="text-primary font-bold border-b-2 border-primary pb-1 transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]">Interface</Link>
+            <Link href="/analytics" className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]">Intelligence</Link>
             <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]" href="#">Community</a>
             <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]" href="#">Node Map</a>
           </div>
@@ -170,8 +182,8 @@ export default function LandingPage() {
         <section className="py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
            <div className="max-w-container mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
               {[
-                { label: 'Active Satellite Nodes', value: '1,240', sub: 'Hyderabad' },
-                { label: 'P2P Value Exchange', value: '₹4.2M', sub: 'Good Faith' },
+                { label: 'Active Satellite Nodes', value: platformStats?.totalBuildings ? platformStats.totalBuildings.toLocaleString() : '—', sub: 'Hyderabad' },
+                { label: 'P2P Value Exchange', value: platformStats?.totalRentMapped ? formatRentMapped(platformStats.totalRentMapped) : '—', sub: 'Good Faith' },
                 { label: 'Network Latency', value: '<200ms', sub: 'Edge Sync' },
                 { label: 'Direct Listings', value: '100%', sub: 'Verified' }
               ].map((stat, i) => (
@@ -209,18 +221,22 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="py-24 px-mobile md:px-desktop border-t border-white/5 relative z-10 bg-background">
          <div className="max-w-container mx-auto flex flex-col md:flex-row justify-between items-center gap-12 w-full text-center md:text-left">
-           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
+           <div className="flex flex-col items-center md:items-start gap-1">
+             <div className="flex items-center gap-3">
+               <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
+                  <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
+               </div>
+               <span className="font-display text-xl text-on-surface font-black tracking-tighter uppercase">indian.rent</span>
              </div>
-             <span className="font-display text-xl text-on-surface font-black tracking-tighter uppercase">indian.rent</span>
+             <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary opacity-60 ml-1 font-black">Product of WishLabs.in</div>
            </div>
            <div className="flex gap-12 font-technical text-technical-sm uppercase tracking-widest opacity-40">
              <a href="#" className="hover:text-primary transition-colors">Documentation</a>
              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+             <Link href="/terms" className="hover:text-primary transition-colors">T&C</Link>
              <a href="#" className="hover:text-primary transition-colors">HQ Support</a>
            </div>
-           <div className="font-technical text-[9px] uppercase tracking-[0.6em] opacity-20 font-black">&copy; 2026 Direct Rental Protocol</div>
+           <div className="font-technical text-[9px] uppercase tracking-[0.6em] opacity-20 font-black">&copy; 2026 Direct Rental Protocol • A WishLabs Production</div>
          </div>
       </footer>
     </div>

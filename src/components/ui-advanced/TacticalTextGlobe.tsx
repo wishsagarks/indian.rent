@@ -28,8 +28,8 @@ function TextSphere() {
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       // Draw text multiple times for wrap-around effect
-      ctx.fillText('indian.rent', canvas.width / 2, canvas.height / 2);
       ctx.fillText('indian.rent', canvas.width / 2, canvas.height / 4);
+      ctx.fillText('WISHLABS.IN', canvas.width / 2, canvas.height / 2);
       ctx.fillText('indian.rent', canvas.width / 2, (canvas.height * 3) / 4);
     }
 

@@ -92,9 +92,9 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
         {/* Society Type */}
         <div className="space-y-3">
           <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Society Type</label>
-          <div className="grid grid-cols-3 gap-2">
-            {[{ id: 'any', label: 'All' }, { id: 'gated', label: 'Gated' }, { id: 'standalone', label: 'Non-Gated' }].map(c => (
-              <button key={c.id} onClick={() => update('category', c.id)} className={`py-2.5 rounded-md font-black text-[9px] uppercase tracking-wider border transition-all ${filters.category === c.id ? 'bg-primary text-background border-primary' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{c.label}</button>
+          <div className="flex flex-wrap gap-2">
+            {[{ id: 'any', label: 'All' }, { id: 'gated', label: 'Gated' }, { id: 'standalone', label: 'Non-Gated' }, { id: 'pg', label: 'PG' }, { id: 'hostel', label: 'Hostel' }].map(c => (
+              <button key={c.id} onClick={() => update('category', c.id)} className={`flex-1 min-w-[60px] py-2.5 rounded-md font-black text-[9px] uppercase tracking-wider border transition-all ${filters.category === c.id ? 'bg-primary text-background border-primary' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{c.label}</button>
             ))}
           </div>
         </div>

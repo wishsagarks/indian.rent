@@ -1,4 +1,5 @@
 # indian.rent 🛰️
+### A Product of [wishlabs.in](https://wishlabs.in)
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
@@ -7,7 +8,7 @@
 
 ### Tactical Digital Command Center for Peer-to-Peer Rentals
 
-**indian.rent** is a high-end, community-driven rental intelligence platform designed to bypass brokers and return market value to seekers and contributors. Built with a "Dark Tactical" HUD aesthetic, it transforms the house-hunting experience into a precise, mission-driven operation.
+**indian.rent** is a high-end, community-driven rental intelligence platform designed by **WishLabs** to bypass brokers and return market value to seekers and contributors. Built with a "Dark Tactical" HUD aesthetic, it transforms the house-hunting experience into a precise, mission-driven operation.
 
 ---
 

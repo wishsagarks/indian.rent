@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, ChartBar as BarChart3 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/client';
 
 interface AreaStatsModalProps {
   bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number };
@@ -18,6 +18,14 @@ interface AreaStats {
   avg_rent_3bhk: number | null;
   gated_count: number;
   non_gated_count: number;
+  total_flats_gated: number;
+  total_flats_non_gated: number;
+  avg_rent_1bhk_gated: number | null;
+  avg_rent_2bhk_gated: number | null;
+  avg_rent_3bhk_gated: number | null;
+  avg_rent_1bhk_non_gated: number | null;
+  avg_rent_2bhk_non_gated: number | null;
+  avg_rent_3bhk_non_gated: number | null;
 }
 
 export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps) {
@@ -28,6 +36,7 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
   useEffect(() => {
     async function fetchStats() {
       setLoading(true);
+      const supabase = createClient();
       const { data, error } = await supabase.rpc('get_area_stats', {
         min_lat: bounds.minLat,
         min_lng: bounds.minLng,
@@ -77,7 +86,9 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
 
             {/* Total Count */}
             <div className="bg-white/5 border border-white/5 rounded-lg p-4 text-center">
-              <div className="text-3xl font-black text-on-surface tracking-tighter">{stats.total_flats}</div>
+              <div className="text-3xl font-black text-on-surface tracking-tighter">
+                {filter === 'gated' ? stats.total_flats_gated : filter === 'non-gated' ? stats.total_flats_non_gated : stats.total_flats}
+              </div>
               <div className="font-technical text-[9px] text-on-surface-variant uppercase tracking-widest mt-1">
                 Total Flats {filter === 'gated' ? '(Gated)' : filter === 'non-gated' ? '(Non-Gated)' : ''}
               </div>
@@ -88,9 +99,18 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
               <div className="font-technical text-[9px] text-on-surface-variant uppercase tracking-widest">Average Rent by BHK</div>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { label: '1 BHK', value: stats.avg_rent_1bhk },
-                  { label: '2 BHK', value: stats.avg_rent_2bhk },
-                  { label: '3 BHK', value: stats.avg_rent_3bhk },
+                  {
+                    label: '1 BHK',
+                    value: filter === 'gated' ? stats.avg_rent_1bhk_gated : filter === 'non-gated' ? stats.avg_rent_1bhk_non_gated : stats.avg_rent_1bhk,
+                  },
+                  {
+                    label: '2 BHK',
+                    value: filter === 'gated' ? stats.avg_rent_2bhk_gated : filter === 'non-gated' ? stats.avg_rent_2bhk_non_gated : stats.avg_rent_2bhk,
+                  },
+                  {
+                    label: '3 BHK',
+                    value: filter === 'gated' ? stats.avg_rent_3bhk_gated : filter === 'non-gated' ? stats.avg_rent_3bhk_non_gated : stats.avg_rent_3bhk,
+                  },
                 ].map(item => (
                   <div key={item.label} className="bg-white/5 border border-white/5 rounded-lg p-3 text-center">
                     <div className="text-lg font-black text-primary tracking-tighter">{item.value ? `₹${(item.value / 1000).toFixed(0)}k` : '—'}</div>

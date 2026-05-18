@@ -1,4 +1,4 @@
-export type PropertyCategory = 'gated' | 'semi-gated' | 'standalone';
+export type PropertyCategory = 'gated' | 'semi-gated' | 'standalone' | 'pg' | 'hostel';
 
 export interface Building {
   id: string;

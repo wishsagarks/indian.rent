@@ -1,12 +1,13 @@
 'use server';
 
 import { checkRateLimit } from '@/lib/redis';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@/utils/supabase/server';
 
 /**
  * Fetch map markers from the pre-computed snapshot table.
  */
 export async function getMapIntel() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('map_snapshot')
     .select('data')
@@ -27,6 +28,7 @@ export async function getMapIntel() {
 export async function searchLocalities(query: string) {
   if (!query || query.length < 2) return [];
 
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('search_localities', { query });
 
   if (error) {
@@ -41,6 +43,7 @@ export async function searchLocalities(query: string) {
  * Find buildings within a certain radius of coordinates
  */
 export async function findNearbyBuildings(lat: number, lng: number, radiusMeters = 50) {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .rpc('get_nearby_buildings', {
       t_lat: lat,
@@ -66,6 +69,15 @@ export async function deployNode(formData: any) {
     return { error: 'Rate limit exceeded. Please wait before adding more listings.' };
   }
 
+  // Geofence: must be within 150 km of Hyderabad city center
+  const HYD_LAT = 17.385, HYD_LNG = 78.4867;
+  const latDiff = (formData.lat - HYD_LAT) * 111;
+  const lngDiff = (formData.lng - HYD_LNG) * 105;
+  if (Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) > 150) {
+    return { error: 'Pin is outside Hyderabad. Only Hyderabad listings are supported right now.' };
+  }
+
+  const supabase = await createClient();
   try {
     let buildingId = formData.existingBuildingId;
 
@@ -105,7 +117,8 @@ export async function deployNode(formData: any) {
         flat_number: formData.flatNumber,
         status: 'vacant',
         rent_amount: parseFloat(formData.rent.replace(/[^0-9.]/g, '')),
-        no_broker_link: formData.noBrokerLink,
+        no_broker_link: formData.noBrokerLink || null,
+        flatmates_link: formData.flatmatesLink || null,
         contributor_name: formData.contributorName || 'Anonymous Node',
         contributor_upi_id: formData.contributorUpi || '',
         bhk: formData.bhk ? parseInt(formData.bhk) : null,
@@ -138,6 +151,7 @@ export async function deployNode(formData: any) {
  * Fetch full details for a single flat by ID, joining building and floor info
  */
 export async function getFlatDetails(flatId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('flats')
     .select(`
@@ -194,7 +208,8 @@ export async function getFlatDetails(flatId: string) {
     maintenanceIncluded: data.maintenance_included,
     availabilityDate: data.availability_date,
     flatmateNeeded: data.flatmate_needed,
-    noBrokerLink: data.no_broker_link || data.flatmates_link,
+    noBrokerLink: data.no_broker_link,
+    flatmatesLink: data.flatmates_link,
     contributorName: data.contributor_name,
     contributorUpiId: data.contributor_upi_id,
     intelFlags: data.intel_flags,
@@ -221,6 +236,7 @@ export async function lockPlace(flatId: string) {
     return { error: 'Rate limit exceeded for this listing.' };
   }
 
+  const supabase = await createClient();
   try {
     const { error: updateError } = await supabase
       .from('flats')
@@ -245,6 +261,7 @@ export async function flagIntel(flatId: string) {
     return { error: 'Rate limit exceeded for flagging.' };
   }
 
+  const supabase = await createClient();
   try {
     const { error: incError } = await supabase.rpc('increment_intel_flags', { target_id: flatId });
     if (incError) throw incError;
@@ -276,6 +293,7 @@ export async function dropSeekerPin(data: {
     return { error: 'Rate limit exceeded. Please wait before adding more seeker pins.' };
   }
 
+  const supabase = await createClient();
   try {
     const { error } = await supabase.from('seeker_pins').insert({
       latitude: data.latitude,
@@ -302,6 +320,7 @@ export async function dropSeekerPin(data: {
  * Get active seeker pins
  */
 export async function getSeekerPins() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('seeker_pins')
     .select('id, latitude, longitude, bhk_preference, budget, move_in_timeline, created_at')
@@ -324,6 +343,7 @@ export async function submitRating(data: {
   builtQualityScore: number;
   ipHash: string;
 }) {
+  const supabase = await createClient();
   try {
     const { error } = await supabase.from('ratings').insert({
       flat_id: data.flatId,
@@ -349,6 +369,7 @@ export async function submitRating(data: {
  * Get ratings for a flat
  */
 export async function getFlatRatings(flatId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_flat_ratings', { target_flat_id: flatId });
   if (error) {
     return { avg_locality: 0, avg_built_quality: 0, total_ratings: 0 };
@@ -360,6 +381,7 @@ export async function getFlatRatings(flatId: string) {
  * Delete own pin (by IP hash)
  */
 export async function deleteOwnPin(flatId: string, ipHash: string) {
+  const supabase = await createClient();
   try {
     const { data, error } = await supabase.rpc('delete_own_pin', {
       target_flat_id: flatId,
@@ -378,6 +400,7 @@ export async function deleteOwnPin(flatId: string, ipHash: string) {
  * Get comments for a flat
  */
 export async function getComments(flatId: string) {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('comments')
     .select('id, content, created_at')
@@ -399,6 +422,7 @@ export async function addComment(flatId: string, content: string, ipHash: string
     return { error: 'Rate limit exceeded for commenting.' };
   }
 
+  const supabase = await createClient();
   try {
     const { error } = await supabase.from('comments').insert({
       flat_id: flatId,
@@ -411,4 +435,115 @@ export async function addComment(flatId: string, content: string, ipHash: string
     console.error('Comment Failure:', err.message);
     return { error: err.message };
   }
+}
+
+/**
+ * Get all listings belonging to the current user (by IP hash)
+ */
+export async function getMyListings(ipHash: string) {
+  if (!ipHash) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('flats')
+    .select(`
+      id, flat_number, status, rent_amount, bhk, flatmate_needed, intel_flags, created_at,
+      floors ( floor_number, buildings ( name, category, address ) )
+    `)
+    .eq('ip_hash', ipHash)
+    .order('created_at', { ascending: false });
+
+  if (error) return [];
+  return (data || []).map((d: any) => ({
+    id: d.id,
+    flatNumber: d.flat_number,
+    status: d.status,
+    rentAmount: d.rent_amount,
+    bhk: d.bhk,
+    flatmateNeeded: d.flatmate_needed,
+    intelFlags: d.intel_flags,
+    createdAt: d.created_at,
+    floorNumber: d.floors?.floor_number,
+    buildingName: d.floors?.buildings?.name,
+    buildingCategory: d.floors?.buildings?.category,
+    buildingAddress: d.floors?.buildings?.address,
+  }));
+}
+
+/**
+ * Get all seeker pins belonging to the current user (by IP hash)
+ */
+export async function getMySeekerPins(ipHash: string) {
+  if (!ipHash) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from('seeker_pins')
+    .select('id, bhk_preference, budget, move_in_timeline, expires_at, created_at')
+    .eq('ip_hash', ipHash)
+    .gt('expires_at', new Date().toISOString())
+    .order('created_at', { ascending: false });
+
+  if (error) return [];
+  return data || [];
+}
+
+/**
+ * Update rent amount or flatmate status on a listing the user owns
+ */
+export async function updateMyListing(
+  flatId: string,
+  ipHash: string,
+  updates: { rentAmount?: number; flatmateNeeded?: boolean }
+) {
+  if (!ipHash) return { error: 'Not authenticated.' };
+  const supabase = await createClient();
+  const payload: Record<string, any> = {};
+  if (updates.rentAmount !== undefined) payload.rent_amount = updates.rentAmount;
+  if (updates.flatmateNeeded !== undefined) payload.flatmate_needed = updates.flatmateNeeded;
+  const { error } = await supabase
+    .from('flats')
+    .update(payload)
+    .eq('id', flatId)
+    .eq('ip_hash', ipHash);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
+ * Delete a seeker pin owned by the user
+ */
+export async function deleteMySeekerPin(pinId: string, ipHash: string) {
+  if (!ipHash) return { error: 'Not authenticated.' };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from('seeker_pins')
+    .delete()
+    .eq('id', pinId)
+    .eq('ip_hash', ipHash);
+
+  if (error) return { error: error.message };
+  return { success: true };
+}
+
+/**
+ * Subscribe to area notifications
+ */
+export async function subscribeToArea(
+  email: string,
+  lat: number,
+  lng: number,
+  radiusKm: number,
+  locality?: string
+) {
+  if (!email || !email.includes('@')) return { error: 'Valid email required.' };
+  const supabase = await createClient();
+  const { error } = await supabase.from('notification_subscriptions').insert({
+    email,
+    latitude: lat,
+    longitude: lng,
+    radius_km: radiusKm,
+    locality: locality || null,
+  });
+  if (error) return { error: error.message };
+  return { success: true };
 }
