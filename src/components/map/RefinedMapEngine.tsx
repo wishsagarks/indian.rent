@@ -14,7 +14,7 @@ import LiveStatsPanel from './LiveStatsPanel';
 import SeekerPinForm from './SeekerPinForm';
 import ConsentSplash from './ConsentSplash';
 import Link from 'next/link';
-import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark } from 'lucide-react';
+import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
 import { getMapIntel, deployNode, searchLocalities, getSeekerPins, dropSeekerPin, deleteOwnPin, subscribeToArea } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
@@ -58,6 +58,8 @@ export default function RefinedMapEngine() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>('');
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
+  const [showLegend, setShowLegend] = useState(false);
+  const [streetViewFailed, setStreetViewFailed] = useState(false);
 
   const { getPosition, loading: geolocating } = useGeolocation();
 
@@ -387,6 +389,17 @@ export default function RefinedMapEngine() {
     return 'border-orange-400';
   };
 
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'gated':      return Shield;
+      case 'semi-gated': return ShieldAlert;
+      case 'standalone': return Building2;
+      case 'pg':         return Home;
+      case 'hostel':     return Hotel;
+      default:           return Building2;
+    }
+  };
+
   const AliveMarker = ({ prop, onClick }: { prop: any; onClick: () => void }) => {
     const isStale = calculateDecay(prop.updatedAt);
     const isOwn = prop.ipHash && prop.ipHash === ipHash;
@@ -402,12 +415,11 @@ export default function RefinedMapEngine() {
                 +{prop.flatCount - 1} FLATS
               </div>
             )}
-            <div className={`w-7 h-7 rounded-full overflow-hidden border-2 ${isEmpty ? 'border-white/10' : colorClass} flex items-center justify-center bg-background`}>
-              {isEmpty ? (
-                <Landmark size={14} className="text-white/20" />
-              ) : (
-                <img src={prop.user.image} alt="" className="w-full h-full object-cover" />
-              )}
+            <div className={`w-7 h-7 rounded-full border-2 ${isEmpty ? 'border-white/10' : colorClass} flex items-center justify-center bg-background`}>
+              {(() => {
+                const Icon = isEmpty ? Landmark : getCategoryIcon(prop.category);
+                return <Icon size={14} className={isEmpty ? 'text-white/20' : 'text-on-surface opacity-80'} />;
+              })()}
             </div>
             <div className="flex flex-col text-left">
               <span className={`text-[10px] font-black leading-none font-technical ${isEmpty ? 'text-white/20' : 'text-on-surface'}`}>{prop.rent}</span>
@@ -518,8 +530,8 @@ export default function RefinedMapEngine() {
                     latitude={latitude} 
                     anchor="bottom"
                   >
-                    <AliveMarker 
-                      prop={cluster.properties} 
+                    <AliveMarker
+                      prop={cluster.properties}
                       onClick={() => {
                         if (isAddingProperty) {
                           setAddFormInitialData({
@@ -528,9 +540,10 @@ export default function RefinedMapEngine() {
                             category: cluster.properties.category
                           });
                         } else {
-                          setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId });
+                          setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                          setStreetViewFailed(false);
                         }
-                      }} 
+                      }}
                     />
                   </MapboxMarker>
                 );
@@ -586,28 +599,31 @@ export default function RefinedMapEngine() {
                   <AdvancedMarker
                     key={`prop-${cluster.properties.propertyId}`}
                     position={{ lat: latitude, lng: longitude }}
-                    onClick={() => {
-                      if (isAddingProperty) {
-                        setAddFormInitialData({
-                          existingBuildingId: cluster.properties.propertyId,
-                          buildingName: cluster.properties.name,
-                          category: cluster.properties.category
-                        });
-                      } else {
-                        setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId });
-                      }
-                    }}
                   >
                     {viewState.zoom >= 15.5 ? (
                       <AliveMarker
                         prop={cluster.properties}
-                        onClick={() => {}} // Handled by AdvancedMarker onClick
+                        onClick={() => {
+                          if (isAddingProperty) {
+                            setAddFormInitialData({
+                              existingBuildingId: cluster.properties.propertyId,
+                              buildingName: cluster.properties.name,
+                              category: cluster.properties.category
+                            });
+                          } else {
+                            setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                            setStreetViewFailed(false);
+                          }
+                        }}
                       />
                     ) : (
                       <motion.div
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         whileHover={{ scale: 1.1 }}
+                        onClick={() => {
+                          if (!isAddingProperty) setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                        }}
                         className={`px-2 py-1 rounded-full bg-surface border-2 text-[10px] font-black text-on-surface shadow-lg whitespace-nowrap cursor-pointer transition-all ${getMarkerColor(cluster.properties.category, cluster.properties.ipHash)}`}
                       >
                         {cluster.properties.isEmpty ? '·' : cluster.properties.rent}
@@ -832,6 +848,46 @@ export default function RefinedMapEngine() {
         )}
       </AnimatePresence>
 
+      {/* Map Legend */}
+      <div className="hidden lg:block fixed bottom-12 left-12 z-50">
+        <AnimatePresence>
+          {showLegend && (
+            <motion.div
+              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              className="mb-3 bg-surface border border-white/10 rounded-lg p-4 shadow-xl min-w-[200px]"
+            >
+              <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-3 opacity-60">Map Legend</div>
+              {[
+                { label: 'Gated Society',   Icon: Shield,      color: 'text-blue-400',   border: 'border-blue-400'   },
+                { label: 'Semi-Gated',      Icon: ShieldAlert, color: 'text-orange-400', border: 'border-orange-400' },
+                { label: 'Standalone',      Icon: Building2,   color: 'text-orange-400', border: 'border-orange-400' },
+                { label: 'PG / Guest House',Icon: Home,        color: 'text-violet-400', border: 'border-violet-400' },
+                { label: 'Hostel',          Icon: Hotel,       color: 'text-amber-400',  border: 'border-amber-400'  },
+                { label: 'Your Pin',        Icon: Building2,   color: 'text-emerald-400',border: 'border-emerald-400'},
+              ].map(({ label, Icon, color, border }) => (
+                <div key={label} className="flex items-center gap-3 py-1.5">
+                  <div className={`w-7 h-7 rounded-full border-2 ${border} flex items-center justify-center bg-background flex-shrink-0`}>
+                    <Icon size={13} className={color} />
+                  </div>
+                  <span className="font-technical text-[10px] text-on-surface font-black uppercase tracking-widest">{label}</span>
+                </div>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setShowLegend(v => !v)}
+          className={`w-11 h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
+          title="Map Legend"
+        >
+          <Info size={18} />
+        </motion.button>
+      </div>
+
       {/* Floating Action Buttons */}
       {!isAddingProperty && !showSeekerForm && (
         <div className="hidden lg:flex fixed bottom-12 right-12 z-50 flex-col gap-3">
@@ -881,7 +937,20 @@ export default function RefinedMapEngine() {
           <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="absolute right-4 md:right-8 top-24 w-[calc(100%-2rem)] md:w-[380px] bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
             <div className="bg-background/80 rounded-lg flex flex-col">
               <div className="h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
-                <img alt={selectedProperty.name} className="w-full h-full object-cover" src={selectedProperty.image} />
+                {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (
+                  <img
+                    key={`sv-${selectedProperty.id}`}
+                    alt={selectedProperty.name}
+                    className="w-full h-full object-cover"
+                    src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${selectedProperty.lat},${selectedProperty.lng}&fov=80&key=${GOOGLE_MAPS_API_KEY}`}
+                    onError={() => setStreetViewFailed(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-surface-container to-background">
+                    {(() => { const Icon = getCategoryIcon(selectedProperty.category); return <Icon size={52} className="text-white/10" />; })()}
+                    <span className="font-technical text-[9px] uppercase tracking-[0.4em] text-white/20 font-black">No Street View</span>
+                  </div>
+                )}
                 <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md border border-white/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
                   <span className={`w-2 h-2 rounded-full ${calculateDecay(selectedProperty.updatedAt) ? 'bg-gray-500' : 'bg-secondary animate-pulse'}`} />
                   <span className="font-technical text-[8px] text-on-surface uppercase font-black tracking-widest">{calculateDecay(selectedProperty.updatedAt) ? 'Stale' : 'Live'}</span>
