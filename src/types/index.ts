@@ -27,7 +27,22 @@ export interface Flat {
   rent_amount?: number;
   bhk?: number;
   furnishing?: 'furnished' | 'semi-furnished' | 'unfurnished';
+  size_sqft?: number;
+  maintenance_extra?: boolean;
+  maintenance_amount?: number | null;
+  tenant_preference?: 'any' | 'bachelors' | 'family';
+  pets_allowed?: boolean;
+  deposit_months?: number;
+  is_transparency_pin?: boolean;
+  is_removed?: boolean;
+  availability_date?: string;
+  flatmate_needed?: boolean;
   no_broker_link?: string;
   flatmates_link?: string;
+  contributor_name?: string;
+  contributor_upi_id?: string;
+  intel_flags?: number;
+  ip_hash?: string;
   created_at: string;
+  updated_at?: string;
 }

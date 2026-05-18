@@ -83,8 +83,16 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const handleFlagIntel = async () => {
     if (window.confirm('Are you sure this listing is fake or stale?')) {
       const result = await flagIntel(id);
-      if (result.success) alert('Listing flagged. Thank you for keeping the map honest.');
-      else alert(result.error || 'Flagging failed.');
+      if (result.success) {
+        if (result.removed) {
+          alert('This listing has been removed after 3 community flags. Thank you for keeping the map honest.');
+          window.location.href = '/explore';
+        } else {
+          alert('Listing flagged. Thank you for keeping the map honest.');
+        }
+      } else {
+        alert(result.error || 'Flagging failed.');
+      }
     }
   };
 
@@ -202,6 +210,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const extraSpecs = [
     listing.furnishing && { label: 'Furnishing', value: FURNISHING_LABELS[listing.furnishing] || listing.furnishing, icon: Sofa },
     listing.sizeSqft && { label: 'Size', value: `${listing.sizeSqft} sq.ft`, icon: Ruler },
+    listing.maintenanceExtra && { label: 'Maintenance', value: listing.maintenanceAmount ? `₹${listing.maintenanceAmount.toLocaleString()}/mo` : 'Variable', icon: Banknote },
     listing.availabilityDate && { label: 'Available', value: new Date(listing.availabilityDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), icon: Calendar },
     listing.flatmateNeeded && { label: 'Flatmate', value: 'Needed', icon: Users },
   ].filter(Boolean) as { label: string; value: string; icon: any }[];
@@ -228,6 +237,18 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
               </div>
             </div>
 
+            {listing.isTransparencyPin && (
+              <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg p-4 flex items-center gap-3">
+                <span className="text-lg">🏠</span>
+                <div>
+                  <div className="font-technical text-[9px] uppercase tracking-widest text-amber-400 font-black">Transparency Pin</div>
+                  <div className="text-xs text-on-surface-variant font-medium mt-0.5">
+                    Resident added this building for transparency — not currently renting.
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2">
               <span className="bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle2 size={12} /> Verified
@@ -242,9 +263,19 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                   Your Listing
                 </span>
               )}
-              {listing.maintenanceIncluded && (
-                <span className="bg-white/5 border border-white/10 text-on-surface-variant px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                  Maint. Included
+              {listing.tenantPreference === 'bachelors' && (
+                <span className="bg-blue-400/10 border border-blue-400/20 text-blue-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  🎓 Bachelors
+                </span>
+              )}
+              {listing.tenantPreference === 'family' && (
+                <span className="bg-purple-400/10 border border-purple-400/20 text-purple-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  👨‍👩‍👧 Family Only
+                </span>
+              )}
+              {listing.petsAllowed && (
+                <span className="bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
+                  🐕 Pets OK
                 </span>
               )}
             </div>
@@ -380,7 +411,9 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
               </div>
               <div className="bg-white/5 border border-white/5 rounded-lg p-5 text-right">
                 <div className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black mb-1 opacity-50 font-technical">Deposit</div>
-                <div className="text-2xl font-black text-on-surface tracking-tighter">2 Months</div>
+                <div className="text-2xl font-black text-on-surface tracking-tighter">
+                  {listing.depositMonths ?? 2} Months
+                </div>
               </div>
             </div>
 
@@ -421,28 +454,34 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                 </button>
               )}
 
-              <button
-                onClick={handleLockPlace}
-                disabled={isLocking || listing.status === 'occupied'}
-                className="w-full py-5 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-30"
-              >
-                <CheckCircle2 size={16} strokeWidth={3} />
-                {isLocking ? 'Processing...' : listing.status === 'occupied' ? 'Already Locked' : 'I Have Locked This Place'}
-              </button>
+              {!listing.isTransparencyPin && (
+                <>
+                  <button
+                    onClick={handleLockPlace}
+                    disabled={isLocking || listing.status === 'occupied'}
+                    className="w-full py-5 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-3 transition-all active:scale-[0.98] disabled:opacity-30"
+                  >
+                    <CheckCircle2 size={16} strokeWidth={3} />
+                    {isLocking ? 'Processing...' : listing.status === 'occupied' ? 'Already Locked' : 'I Have Locked This Place'}
+                  </button>
 
-              <button
-                onClick={handleWhatsAppShare}
-                className="w-full py-5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-emerald-400 flex items-center justify-center gap-3 transition-all active:scale-[0.98] hover:bg-emerald-500/20"
-              >
-                <MessageCircle size={16} strokeWidth={3} /> Share on WhatsApp
-              </button>
+                  <button
+                    onClick={handleWhatsAppShare}
+                    className="w-full py-5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-emerald-400 flex items-center justify-center gap-3 transition-all active:scale-[0.98] hover:bg-emerald-500/20"
+                  >
+                    <MessageCircle size={16} strokeWidth={3} /> Share on WhatsApp
+                  </button>
+                </>
+              )}
 
-              <button
-                onClick={handleFlagIntel}
-                className="w-full py-3 bg-red-500/5 text-red-400 rounded-lg font-black uppercase tracking-[0.2em] text-[9px] flex items-center justify-center gap-2 border border-red-500/20 opacity-40 hover:opacity-100 transition-all"
-              >
-                <ShieldAlert size={12} /> Report Fake or Stale
-              </button>
+              {!listing.isRemoved && (
+                <button
+                  onClick={handleFlagIntel}
+                  className="w-full py-3 bg-red-500/5 text-red-400 rounded-lg font-black uppercase tracking-[0.2em] text-[9px] flex items-center justify-center gap-2 border border-red-500/20 opacity-40 hover:opacity-100 transition-all"
+                >
+                  <ShieldAlert size={12} /> Report Fake or Stale
+                </button>
+              )}
             </div>
           </motion.div>
         </div>

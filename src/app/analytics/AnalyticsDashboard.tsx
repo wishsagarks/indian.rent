@@ -53,22 +53,25 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
     }
   ];
 
+  const dbSizeMB = Math.round((stats.dbSizeBytes || 0) / 1024 / 1024);
+  const dbPercent = Math.min((dbSizeMB / 500) * 100, 100);
+
   const systemMetrics = [
     {
-      label: "Intelligence Tokens",
-      value: "84,292",
-      limit: "100,000",
-      percent: 84.3,
-      sub: "Monthly Token Usage Limit",
+      label: "DB Storage",
+      value: dbSizeMB.toLocaleString(),
+      limit: "500 MB",
+      percent: dbPercent,
+      sub: "Supabase Free Tier",
       icon: Activity,
       color: "text-secondary"
     },
     {
-      label: "Network Sync",
-      value: "99.98%",
+      label: "Snapshot Sync",
+      value: stats.totalListings > 0 ? '99.9%' : '—',
       limit: "Real-time",
       percent: 99.9,
-      sub: "Grid Latency Status",
+      sub: "Realtime Updates",
       icon: Globe,
       color: "text-primary"
     }
@@ -179,7 +182,52 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* API Quotas Section */}
+        <div className="mt-12 glass-plate border border-white/5 p-8 rounded-lg">
+          <h3 className="text-xl font-black uppercase tracking-tight mb-8">API Quotas (This Month)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {(() => {
+              const API_QUOTAS = {
+                google_maps: { label: 'Google Maps', monthly: 28_500 },
+                mapbox: { label: 'Mapbox', monthly: 50_000 },
+                supabase_reads: { label: 'Supabase Reads', monthly: 500_000 },
+              };
+              const apiUsage = stats.apiUsage || {};
+
+              return Object.entries(API_QUOTAS).map(([key, quota]) => {
+                const used = apiUsage[key] || 0;
+                const percent = Math.min((used / quota.monthly) * 100, 100);
+                return (
+                  <div key={key} className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-technical text-[10px] uppercase tracking-widest font-black opacity-60">
+                        {quota.label}
+                      </span>
+                      <span className="text-[10px] font-technical font-black opacity-40">
+                        {used.toLocaleString()} / {quota.monthly.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${percent}%` }}
+                        transition={{ delay: 1.2, duration: 1 }}
+                        className={`h-full rounded-full ${
+                          percent > 80 ? 'bg-red-400' : percent > 50 ? 'bg-amber-400' : 'bg-primary'
+                        }`}
+                      />
+                    </div>
+                    <div className="text-[8px] text-on-surface-variant/50 font-technical uppercase tracking-widest">
+                      {percent.toFixed(1)}% used
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-12">
           {/* Growth Chart Mockup */}
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -187,74 +235,107 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
             transition={{ delay: 0.5 }}
             className="lg:col-span-2 glass-plate border border-white/5 p-8 rounded-lg"
           >
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Deployment Velocity</h3>
-                <p className="font-technical text-[9px] uppercase tracking-[0.3em] opacity-40">Monthly growth trajectory</p>
-              </div>
-              <div className="flex items-center gap-2 px-3 py-1 bg-secondary/10 border border-secondary/20 rounded-full">
-                <ArrowUpRight size={12} className="text-secondary" />
-                <span className="text-secondary font-technical text-[9px] font-black tracking-widest">+12.4%</span>
-              </div>
-            </div>
-            
-            <div className="h-64 w-full flex items-end gap-2 px-2">
-               {[40, 60, 45, 70, 90, 85, 100, 110, 130, 150, 140, 180].map((h, i) => (
-                 <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-white/10 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest z-10 whitespace-nowrap">
-                       {Math.round(h * 1.2)} Nodes
+            {/* Velocity Chart */}
+            {(() => {
+              const velocityData = stats.monthlyVelocity || [];
+              const maxCount = Math.max(...(velocityData.map(v => v.count) || [1]), 1);
+              const growth = velocityData.length >= 2
+                ? (((velocityData[velocityData.length - 1].count - velocityData[velocityData.length - 2].count) / Math.max(velocityData[velocityData.length - 2].count, 1)) * 100).toFixed(1)
+                : '0.0';
+
+              return (
+                <>
+                  <div className="flex justify-between items-center mb-8">
+                    <div>
+                      <h3 className="text-xl font-black uppercase tracking-tight">Deployment Velocity</h3>
+                      <p className="font-technical text-[9px] uppercase tracking-[0.3em] opacity-40">Monthly growth trajectory</p>
                     </div>
-                    <motion.div 
-                      initial={{ height: 0 }}
-                      animate={{ height: `${h}%` }}
-                      transition={{ delay: 0.8 + (i * 0.05), duration: 1, ease: "circOut" }}
-                      className="w-full bg-primary/20 group-hover:bg-primary/50 transition-colors rounded-t-sm relative"
-                    >
-                      <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_10px_rgba(179,197,255,0.8)]" />
-                    </motion.div>
-                    <span className="text-[7px] font-technical font-black opacity-20 uppercase tracking-tighter">M{i+1}</span>
-                 </div>
-               ))}
-            </div>
+                    {velocityData.length > 0 && (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-secondary/10 border border-secondary/20 rounded-full">
+                        <ArrowUpRight size={12} className="text-secondary" />
+                        <span className="text-secondary font-technical text-[9px] font-black tracking-widest">+{growth}%</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="h-64 w-full flex items-end gap-2 px-2">
+                    {velocityData.length > 0 ? (
+                      velocityData.map((v, i) => (
+                        <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative">
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background border border-white/10 px-2 py-1 rounded text-[8px] font-black uppercase tracking-widest z-10 whitespace-nowrap">
+                            {v.count} Nodes
+                          </div>
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${(v.count / maxCount) * 100}%` }}
+                            transition={{ delay: 0.8 + (i * 0.05), duration: 1, ease: "circOut" }}
+                            className="w-full bg-primary/20 group-hover:bg-primary/50 transition-colors rounded-t-sm relative"
+                          >
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_10px_rgba(179,197,255,0.8)]" />
+                          </motion.div>
+                          <span className="text-[7px] font-technical font-black opacity-20 uppercase tracking-tighter">{v.month.slice(5)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-on-surface-variant/40 font-technical">
+                        No deployment data yet — be the first to add a listing!
+                      </div>
+                    )}
+                  </div>
+                </>
+              );
+            })()}
           </motion.div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
             className="glass-plate border border-white/5 p-8 rounded-lg flex flex-col"
           >
             <h3 className="text-xl font-black uppercase tracking-tight mb-8">Grid Distribution</h3>
-            <div className="space-y-6 flex-1">
-               {[
-                 { label: 'Banjara Hills', value: '32%', color: 'bg-primary' },
-                 { label: 'Gachibowli', value: '28%', color: 'bg-secondary' },
-                 { label: 'Jubilee Hills', value: '18%', color: 'bg-emerald-400' },
-                 { label: 'Kondapur', value: '14%', color: 'bg-amber-400' },
-                 { label: 'Miyapur', value: '8%', color: 'bg-orange-400' }
-               ].map((item, i) => (
-                 <div key={i} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                       <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">{item.label}</span>
-                       <span className="text-[10px] font-technical font-black uppercase tracking-widest opacity-40">{item.value}</span>
+            {(() => {
+              const areaData = (stats.areaDistribution || []).slice(0, 6);
+              const colors = ['bg-primary', 'bg-secondary', 'bg-emerald-400', 'bg-amber-400', 'bg-orange-400', 'bg-violet-400'];
+
+              return (
+                <>
+                  <div className="space-y-6 flex-1">
+                    {areaData.length > 0 ? (
+                      areaData.map((item, i) => (
+                        <div key={i} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">{item.area}</span>
+                            <span className="text-[10px] font-technical font-black uppercase tracking-widest opacity-40">{item.pct.toFixed(1)}%</span>
+                          </div>
+                          <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${item.pct}%` }}
+                              transition={{ delay: 1 + (i * 0.1), duration: 1 }}
+                              className={`h-full ${colors[i]}`}
+                            />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-on-surface-variant/40 font-technical text-[9px]">
+                        Add listings to see area breakdown
+                      </div>
+                    )}
+                  </div>
+
+                  {areaData.length > 0 && (
+                    <div className="mt-8 pt-8 border-t border-white/5">
+                      <div className="flex items-center gap-4 group">
+                        <Activity size={16} className="text-secondary opacity-40 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">System Resilience: High</span>
+                      </div>
                     </div>
-                    <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-                       <motion.div 
-                         initial={{ width: 0 }}
-                         animate={{ width: item.value }}
-                         transition={{ delay: 1 + (i * 0.1), duration: 1 }}
-                         className={`h-full ${item.color}`}
-                       />
-                    </div>
-                 </div>
-               ))}
-            </div>
-            <div className="mt-8 pt-8 border-t border-white/5">
-               <div className="flex items-center gap-4 group">
-                  <Activity size={16} className="text-secondary opacity-40 group-hover:opacity-100 transition-opacity" />
-                  <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">System Resilience: High</span>
-               </div>
-            </div>
+                  )}
+                </>
+              );
+            })()}
           </motion.div>
         </div>
 

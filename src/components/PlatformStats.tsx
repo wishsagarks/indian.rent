@@ -5,6 +5,11 @@ export interface PlatformStatsData {
   totalListings: number;
   totalRentMapped: number;
   totalSeekerPins: number;
+  monthlyVelocity?: Array<{ month: string; count: number }>;
+  areaDistribution?: Array<{ area: string; count: number; pct: number }>;
+  dbSizeBytes?: number;
+  totalActions?: number;
+  apiUsage?: Record<string, number>;
 }
 
 export function formatRentMapped(value: number): string {

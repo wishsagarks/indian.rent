@@ -11,6 +11,8 @@ export interface MapFilters {
   furnishing: string;
   category: string;
   flatmateNeeded: boolean;
+  tenantPreference: 'any' | 'bachelors' | 'family';
+  petsAllowed: boolean;
   postedWithin: string;
 }
 
@@ -27,6 +29,8 @@ export const DEFAULT_FILTERS: MapFilters = {
   furnishing: 'any',
   category: 'any',
   flatmateNeeded: false,
+  tenantPreference: 'any',
+  petsAllowed: false,
   postedWithin: 'all',
 };
 
@@ -99,11 +103,29 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
           </div>
         </div>
 
+        {/* Tenant Preference */}
+        <div className="space-y-3">
+          <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Tenant Type</label>
+          <div className="grid grid-cols-3 gap-2">
+            {[{ id: 'any', label: '🏠 Any' }, { id: 'bachelors', label: '🎓 Bachelors' }, { id: 'family', label: '👨‍👩‍👧 Family' }].map(t => (
+              <button key={t.id} onClick={() => update('tenantPreference', t.id as any)} className={`py-2.5 rounded-md font-black text-[9px] uppercase tracking-wider border transition-all ${filters.tenantPreference === t.id ? 'bg-primary text-background border-primary' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{t.label}</button>
+            ))}
+          </div>
+        </div>
+
         {/* Flatmate Toggle */}
         <button onClick={() => update('flatmateNeeded', !filters.flatmateNeeded)} className={`w-full flex items-center justify-between p-3.5 rounded-lg border transition-all ${filters.flatmateNeeded ? 'border-emerald-400 bg-emerald-400/5' : 'border-white/5 bg-white/5'}`}>
           <span className="font-black text-[10px] uppercase tracking-wider">Flatmate Wanted Only</span>
           <div className={`w-9 h-4.5 rounded-full transition-all relative ${filters.flatmateNeeded ? 'bg-emerald-400' : 'bg-white/20'}`}>
             <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-[2px] transition-all ${filters.flatmateNeeded ? 'left-[18px]' : 'left-[2px]'}`} />
+          </div>
+        </button>
+
+        {/* Pets Allowed Toggle */}
+        <button onClick={() => update('petsAllowed', !filters.petsAllowed)} className={`w-full flex items-center justify-between p-3.5 rounded-lg border transition-all ${filters.petsAllowed ? 'border-emerald-400 bg-emerald-400/5' : 'border-white/5 bg-white/5'}`}>
+          <span className="font-black text-[10px] uppercase tracking-wider">🐕 Pets Allowed</span>
+          <div className={`w-9 h-4.5 rounded-full transition-all relative ${filters.petsAllowed ? 'bg-emerald-400' : 'bg-white/20'}`}>
+            <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-[2px] transition-all ${filters.petsAllowed ? 'left-[18px]' : 'left-[2px]'}`} />
           </div>
         </button>
 

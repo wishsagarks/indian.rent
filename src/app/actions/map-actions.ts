@@ -124,7 +124,12 @@ export async function deployNode(formData: any) {
         bhk: formData.bhk ? parseInt(formData.bhk) : null,
         furnishing: formData.furnishing || null,
         size_sqft: formData.sizeSqft ? parseInt(formData.sizeSqft) : null,
-        maintenance_included: formData.maintenanceIncluded || false,
+        maintenance_extra: formData.maintenanceExtra || false,
+        maintenance_amount: formData.maintenanceAmount ? parseInt(formData.maintenanceAmount) : null,
+        tenant_preference: formData.tenantPreference || 'any',
+        pets_allowed: formData.petsAllowed || false,
+        deposit_months: formData.depositMonths ? parseInt(formData.depositMonths) : 2,
+        is_transparency_pin: formData.isTransparencyPin || false,
         availability_date: formData.availabilityDate || null,
         flatmate_needed: formData.flatmateNeeded || false,
         ip_hash: formData.ipHash || null,
@@ -162,7 +167,13 @@ export async function getFlatDetails(flatId: string) {
       bhk,
       furnishing,
       size_sqft,
-      maintenance_included,
+      maintenance_extra,
+      maintenance_amount,
+      tenant_preference,
+      pets_allowed,
+      deposit_months,
+      is_transparency_pin,
+      is_removed,
       availability_date,
       flatmate_needed,
       no_broker_link,
@@ -205,7 +216,13 @@ export async function getFlatDetails(flatId: string) {
     bhk: data.bhk,
     furnishing: data.furnishing,
     sizeSqft: data.size_sqft,
-    maintenanceIncluded: data.maintenance_included,
+    maintenanceExtra: data.maintenance_extra,
+    maintenanceAmount: data.maintenance_amount,
+    tenantPreference: data.tenant_preference,
+    petsAllowed: data.pets_allowed,
+    depositMonths: data.deposit_months,
+    isTransparencyPin: data.is_transparency_pin,
+    isRemoved: data.is_removed,
     availabilityDate: data.availability_date,
     flatmateNeeded: data.flatmate_needed,
     noBrokerLink: data.no_broker_link,
@@ -265,10 +282,33 @@ export async function flagIntel(flatId: string) {
   try {
     const { error: incError } = await supabase.rpc('increment_intel_flags', { target_id: flatId });
     if (incError) throw incError;
-    return { success: true };
+
+    // Check if the flat is now removed (3+ flags triggered removal)
+    const { data: flat } = await supabase
+      .from('flats')
+      .select('is_removed, intel_flags')
+      .eq('id', flatId)
+      .maybeSingle();
+
+    return { success: true, removed: flat?.is_removed === true };
   } catch (err: any) {
     console.error('Flagging Failure:', err.message);
     return { error: err.message };
+  }
+}
+
+/**
+ * Track API usage for quota monitoring (Google Maps, Mapbox, Supabase reads)
+ */
+export async function trackApiUsage(service: 'google_maps' | 'mapbox' | 'supabase_reads') {
+  const supabase = await createClient();
+  const month = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+
+  try {
+    await supabase.rpc('increment_api_usage', { p_service: service, p_month: month });
+  } catch (err: any) {
+    // Silent fail — don't interrupt UX for analytics tracking
+    console.warn('API usage tracking failed:', err.message);
   }
 }
 

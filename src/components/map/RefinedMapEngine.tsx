@@ -16,7 +16,7 @@ import ConsentSplash from './ConsentSplash';
 import Link from 'next/link';
 import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
-import { getMapIntel, deployNode, searchLocalities, getSeekerPins, dropSeekerPin, deleteOwnPin, subscribeToArea } from '@/app/actions/map-actions';
+import { getMapIntel, deployNode, searchLocalities, getSeekerPins, dropSeekerPin, deleteOwnPin, subscribeToArea, trackApiUsage } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
 import { getIpHash } from '@/utils/ip-hash';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -141,7 +141,12 @@ export default function RefinedMapEngine() {
   }, [processIntelData]);
 
   useEffect(() => {
-    if (consented) fetchIntel();
+    if (consented) {
+      fetchIntel();
+      // Track API usage for quota monitoring
+      const mapProvider = MAP_PROVIDER === 'google' ? 'google_maps' : 'mapbox';
+      trackApiUsage(mapProvider as any);
+    }
   }, [fetchIntel, consented]);
 
   useEffect(() => {
@@ -176,6 +181,8 @@ export default function RefinedMapEngine() {
           if (filters.category === 'hostel' && props.category !== 'hostel') return false;
         }
         if (filters.flatmateNeeded && !f.flatmate_needed) return false;
+        if (filters.tenantPreference !== 'any' && f.tenant_preference !== filters.tenantPreference && f.tenant_preference !== 'any') return false;
+        if (filters.petsAllowed && !f.pets_allowed) return false;
         if (filters.postedWithin !== 'all' && f.updated_at) {
           const days = parseInt(filters.postedWithin);
           const diff = (Date.now() - new Date(f.updated_at).getTime()) / (1000 * 60 * 60 * 24);
@@ -289,7 +296,7 @@ export default function RefinedMapEngine() {
     }
   };
 
-  const [addFormInitialData, setAddFormInitialData] = useState<{ buildingName?: string; address?: string } | null>(null);
+  const [addFormInitialData, setAddFormInitialData] = useState<{ buildingName?: string; address?: string; existingBuildingId?: string | null; category?: string } | null>(null);
 
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry?.location) {
@@ -308,20 +315,8 @@ export default function RefinedMapEngine() {
 
   const handleAddPropertySubmit = async (data: any) => {
     setLoading(true);
-    // Convert maintenance field from string to boolean/type
-    const cleanData = { ...data };
-    if (cleanData.maintenanceIncluded === 'none' || cleanData.maintenanceIncluded === '') {
-      cleanData.maintenanceIncluded = false;
-      cleanData.maintenanceType = null;
-    } else if (cleanData.maintenanceIncluded === 'fixed') {
-      cleanData.maintenanceIncluded = true;
-      cleanData.maintenanceType = 'fixed';
-    } else if (cleanData.maintenanceIncluded === 'variable') {
-      cleanData.maintenanceIncluded = true;
-      cleanData.maintenanceType = 'variable';
-    }
-
-    const payload = { ...cleanData, lat: viewState.latitude, lng: viewState.longitude, ipHash };
+    // Pass maintenance fields directly (no conversion needed)
+    const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
     const result = await deployNode(payload);
     if (result.error) { alert(result.error); setLoading(false); }
     else {

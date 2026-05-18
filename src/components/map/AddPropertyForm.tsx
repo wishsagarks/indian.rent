@@ -39,7 +39,12 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
     bhk: '' as string,
     furnishing: '' as string,
     sizeSqft: '',
-    maintenanceIncluded: '' as string,
+    tenantPreference: 'any' as 'any' | 'bachelors' | 'family',
+    petsAllowed: false,
+    maintenanceExtra: false,
+    maintenanceAmount: '',
+    depositMonths: '2',
+    isTransparencyPin: false,
     availabilityDate: '',
     flatmateNeeded: false,
   });
@@ -193,6 +198,24 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   </button>
                 </div>
               )}
+
+              {/* Transparency Pin Toggle */}
+              <button
+                onClick={() => updateData({ isTransparencyPin: !formData.isTransparencyPin })}
+                className={`w-full flex items-center justify-between p-4 rounded-lg border transition-all ${
+                  formData.isTransparencyPin ? 'border-amber-400/40 bg-amber-400/5' : 'border-white/5'
+                }`}
+              >
+                <div className="flex flex-col text-left">
+                  <span className="font-black text-xs uppercase tracking-wider">Transparency Pin</span>
+                  <span className="text-[9px] text-on-surface-variant/60 font-technical mt-0.5">
+                    I live here — not renting, just adding for transparency
+                  </span>
+                </div>
+                <div className={`w-10 h-5 rounded-full transition-all relative ${formData.isTransparencyPin ? 'bg-amber-400' : 'bg-white/20'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${formData.isTransparencyPin ? 'left-5.5' : 'left-0.5'}`} />
+                </div>
+              </button>
             </motion.div>
           )}
 
@@ -295,30 +318,26 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                 )}
               </div>
 
-              {/* Maintenance - Fixed or Variable */}
+              {/* Tenant Preference */}
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Maintenance (Optional)</label>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => updateData({ maintenanceIncluded: 'none' })}
-                    className={`py-4 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all text-center ${formData.maintenanceIncluded === 'none' ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}
-                  >
-                    Not Included
-                  </button>
-                  <button
-                    onClick={() => updateData({ maintenanceIncluded: 'fixed' })}
-                    className={`py-4 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all text-center ${formData.maintenanceIncluded === 'fixed' ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}
-                  >
-                    Fixed Charge
-                  </button>
-                  <button
-                    onClick={() => updateData({ maintenanceIncluded: 'variable' })}
-                    className={`py-4 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all text-center ${formData.maintenanceIncluded === 'variable' ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}
-                  >
-                    Variable
-                  </button>
+                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Tenant Preference</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[{ id: 'any', label: '🏠 Any' }, { id: 'bachelors', label: '🎓 Bachelors' }, { id: 'family', label: '👨‍👩‍👧 Family' }].map(p => (
+                    <button key={p.id} onClick={() => updateData({ tenantPreference: p.id as any })} className={`py-3.5 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all ${formData.tenantPreference === p.id ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{p.label}</button>
+                  ))}
                 </div>
               </div>
+
+              {/* Pets Allowed */}
+              <button onClick={() => updateData({ petsAllowed: !formData.petsAllowed })} className={`w-full flex items-center justify-between p-5 rounded-lg border transition-all ${formData.petsAllowed ? 'border-emerald-400 bg-emerald-400/5' : 'border-white/5 bg-white/5 hover:border-emerald-400/40'}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">🐕</span>
+                  <span className="font-black text-xs uppercase tracking-wider">Pets Allowed</span>
+                </div>
+                <div className={`w-10 h-5 rounded-full transition-all relative ${formData.petsAllowed ? 'bg-emerald-400' : 'bg-white/20'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${formData.petsAllowed ? 'left-5.5' : 'left-0.5'}`} />
+                </div>
+              </button>
 
               {/* Flatmate Needed */}
               <button onClick={() => updateData({ flatmateNeeded: !formData.flatmateNeeded })} className={`w-full flex items-center justify-between p-5 rounded-lg border transition-all ${formData.flatmateNeeded ? 'border-emerald-400 bg-emerald-400/5' : 'border-white/5 bg-white/5 hover:border-emerald-400/40'}`}>
@@ -339,6 +358,34 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                 <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Monthly Rent</label>
                 <input type="text" placeholder="₹ Rent amount" value={formData.rent} onChange={e => updateData({ rent: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-6 text-primary placeholder:text-primary/20 text-3xl font-black focus:border-primary transition-all outline-none tracking-tighter" />
               </div>
+
+              {/* Security Deposit (months) */}
+              <div className="space-y-4 text-left">
+                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Security Deposit (months)</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['1', '2', '3', '6'].map(m => (
+                    <button key={m} onClick={() => updateData({ depositMonths: m })} className={`py-3 rounded-lg font-black text-sm border transition-all ${formData.depositMonths === m ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{m}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Maintenance Extra */}
+              <button onClick={() => updateData({ maintenanceExtra: !formData.maintenanceExtra })} className={`w-full flex items-center justify-between p-5 rounded-lg border transition-all ${formData.maintenanceExtra ? 'border-amber-400 bg-amber-400/5' : 'border-white/5 bg-white/5 hover:border-amber-400/40'}`}>
+                <div className="flex items-center gap-3">
+                  <span className="text-lg">💰</span>
+                  <span className="font-black text-xs uppercase tracking-wider">Maintenance Extra?</span>
+                </div>
+                <div className={`w-10 h-5 rounded-full transition-all relative ${formData.maintenanceExtra ? 'bg-amber-400' : 'bg-white/20'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 transition-all ${formData.maintenanceExtra ? 'left-5.5' : 'left-0.5'}`} />
+                </div>
+              </button>
+
+              {formData.maintenanceExtra && (
+                <div className="space-y-3 text-left">
+                  <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black ml-2">Est. Amount (₹/mo)</label>
+                  <input type="number" placeholder="e.g. 1500" value={formData.maintenanceAmount} onChange={e => updateData({ maintenanceAmount: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                </div>
+              )}
 
               <div className="space-y-4 text-left">
                 <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">NoBroker Link</label>
