@@ -72,20 +72,16 @@ export default function AnalyticsDashboardV2() {
               </p>
             </div>
 
-            <div className="flex gap-2">
-              {(['bengaluru', 'hyderabad'] as const).map((city) => (
-                <button
-                  key={city}
-                  onClick={() => setSelectedCity(city)}
-                  className={`px-4 py-2 rounded-lg font-technical font-bold text-sm transition-all ${
-                    selectedCity === city
-                      ? 'bg-primary text-background'
-                      : 'bg-surface border border-white/10 text-on-surface hover:border-white/20'
-                  }`}
-                >
-                  🏙️ {city.charAt(0).toUpperCase() + city.slice(1)}
-                </button>
-              ))}
+            <div className="flex gap-3 items-center">
+              <label className="font-technical text-xs font-bold uppercase text-on-surface-variant">City:</label>
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value as 'bengaluru' | 'hyderabad')}
+                className="px-4 py-2 rounded-lg font-technical font-bold text-sm bg-surface border border-white/10 text-on-surface hover:border-white/20 cursor-pointer focus:outline-none focus:border-primary/50 transition-all"
+              >
+                <option value="bengaluru">🏙️ Bengaluru</option>
+                <option value="hyderabad">🏙️ Hyderabad</option>
+              </select>
             </div>
           </div>
         </div>
@@ -110,9 +106,22 @@ export default function AnalyticsDashboardV2() {
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* KPI Cards */}
         <section>
-          <h2 className="text-xs uppercase tracking-widest font-technical font-bold text-primary mb-6">
-            Market Health Snapshot
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xs uppercase tracking-widest font-technical font-bold text-primary">
+              Market Health Snapshot
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-technical text-on-surface-variant uppercase">Select City:</span>
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value as 'bengaluru' | 'hyderabad')}
+                className="px-3 py-1.5 rounded font-technical text-xs font-bold bg-surface border border-white/10 text-on-surface hover:border-white/20 cursor-pointer focus:outline-none focus:border-primary/50"
+              >
+                <option value="bengaluru">🏙️ Bengaluru</option>
+                <option value="hyderabad">🏙️ Hyderabad</option>
+              </select>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {loading ? (
               [...Array(4)].map((_, i) => (
