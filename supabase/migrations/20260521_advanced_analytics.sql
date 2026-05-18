@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS metrics_daily (
   UNIQUE(date, city, metric_name)
 );
 
-CREATE INDEX idx_metrics_daily_date ON metrics_daily(date);
-CREATE INDEX idx_metrics_daily_city ON metrics_daily(city);
+CREATE INDEX IF NOT EXISTS idx_metrics_daily_date ON metrics_daily(date);
+CREATE INDEX IF NOT EXISTS idx_metrics_daily_city ON metrics_daily(city);
 
 -- Comprehensive city metrics RPC
 CREATE OR REPLACE FUNCTION get_city_metrics(p_city TEXT)
