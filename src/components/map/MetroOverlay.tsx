@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { Marker as MapboxMarker, Source, Layer } from 'react-map-gl';
-import { AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+import { AdvancedMarker, Pin, Polyline } from '@vis.gl/react-google-maps';
 
 // Detect map provider from environment
 const MAP_PROVIDER = typeof window !== 'undefined' ?
   document.documentElement.getAttribute('data-map-provider') || 'google' : 'google';
 
 const METRO_LINES = {
-  // Bengaluru Metro Lines
+  // Bengaluru Metro Lines (corrected coordinates)
   blr_purple: {
     name: 'Bengaluru Purple Line (YPR - JP Nagar)',
     color: '#a855f7',
@@ -17,12 +17,11 @@ const METRO_LINES = {
       { name: 'Yaswantpur', lat: 13.0033, lng: 77.5740 },
       { name: 'Rajajinagar', lat: 13.0037, lng: 77.5641 },
       { name: 'Kuvempu Road', lat: 12.9970, lng: 77.5490 },
-      { name: 'Dr. Ambedkar Veedhi', lat: 12.9850, lng: 77.5370 },
-      { name: 'Vidhana Soudha', lat: 12.9850, lng: 77.5945 },
-      { name: 'Cubbon Park', lat: 12.9840, lng: 77.5945 },
-      { name: 'MG Road', lat: 12.9352, lng: 77.6287 },
-      { name: 'Lavelle Road', lat: 12.9500, lng: 77.5900 },
-      { name: 'Indiranagar', lat: 12.9716, lng: 77.6412 },
+      { name: 'Dr. Ambedkar Veedhi', lat: 12.9862, lng: 77.5370 },
+      { name: 'Vidhana Soudha', lat: 12.9796, lng: 77.5908 },
+      { name: 'Cubbon Park', lat: 12.9793, lng: 77.5980 },
+      { name: 'MG Road', lat: 12.9757, lng: 77.6094 },
+      { name: 'Indiranagar', lat: 12.9784, lng: 77.6408 },
       { name: 'Trinity', lat: 12.9735, lng: 77.6430 },
       { name: 'JP Nagar', lat: 12.8808, lng: 77.6086 },
     ],
@@ -33,7 +32,7 @@ const METRO_LINES = {
     stations: [
       { name: 'Whitefield', lat: 12.9698, lng: 77.7499 },
       { name: 'Hoodi', lat: 12.9680, lng: 77.7200 },
-      { name: 'Indiranagar', lat: 12.9716, lng: 77.6412 },
+      { name: 'Indiranagar', lat: 12.9784, lng: 77.6408 },
       { name: 'CV Raman Nagar', lat: 12.9640, lng: 77.6430 },
       { name: 'Silk Board', lat: 12.8450, lng: 77.6330 },
       { name: 'Jayadeva', lat: 12.8490, lng: 77.6240 },
@@ -51,7 +50,7 @@ const METRO_LINES = {
       { name: 'Vijayanagar', lat: 13.0056, lng: 77.5735 },
       { name: 'Rashtriya Vidyapeeth', lat: 13.0050, lng: 77.5900 },
       { name: 'Majestic', lat: 12.9850, lng: 77.5945 },
-      { name: 'MG Road', lat: 12.9352, lng: 77.6287 },
+      { name: 'MG Road', lat: 12.9757, lng: 77.6094 },
       { name: 'Koramangala', lat: 12.9352, lng: 77.6245 },
       { name: 'Sankey Road', lat: 13.0000, lng: 77.5800 },
     ],
@@ -145,41 +144,54 @@ export default function MetroOverlay({ visible }: MetroOverlayProps) {
 
   if (!visible) return null;
 
-  // For Google Maps - render only markers
+  // For Google Maps - render lines and markers
   if (MAP_PROVIDER !== 'mapbox') {
     return (
       <>
-        {Object.entries(METRO_LINES).map(([lineId, line]) =>
-          line.stations.map((station, i) => {
-            const stationId = `${lineId}-${i}`;
-            const isHovered = hoveredStation === stationId;
-            return (
-              <AdvancedMarker
-                key={stationId}
-                position={{ lat: station.lat, lng: station.lng }}
-                title={station.name}
-              >
-                <button
-                  onMouseEnter={() => setHoveredStation(stationId)}
-                  onMouseLeave={() => setHoveredStation(null)}
-                  onClick={() => setHoveredStation(isHovered ? null : stationId)}
-                  className="group relative cursor-pointer p-1 rounded-full transition-transform hover:scale-125 active:scale-110"
-                  title={station.name}
-                >
-                  <div
-                    className="w-3 h-3 rounded-full border-2 border-white shadow-lg"
-                    style={{ backgroundColor: line.color }}
-                  />
-                  {isHovered && (
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 border border-white/20 rounded text-[8px] font-bold text-white whitespace-nowrap z-50">
-                      {station.name}
-                    </div>
-                  )}
-                </button>
-              </AdvancedMarker>
-            );
-          })
-        )}
+        {Object.entries(METRO_LINES).map(([lineId, line]) => {
+          const path = line.stations.map(s => ({ lat: s.lat, lng: s.lng }));
+          return (
+            <React.Fragment key={lineId}>
+              {/* Draw polyline for this metro line */}
+              <Polyline
+                path={path}
+                strokeColor={line.color}
+                strokeWeight={3}
+                strokeOpacity={0.8}
+              />
+              {/* Draw station markers */}
+              {line.stations.map((station, i) => {
+                const stationId = `${lineId}-${i}`;
+                const isHovered = hoveredStation === stationId;
+                return (
+                  <AdvancedMarker
+                    key={stationId}
+                    position={{ lat: station.lat, lng: station.lng }}
+                    title={station.name}
+                  >
+                    <button
+                      onMouseEnter={() => setHoveredStation(stationId)}
+                      onMouseLeave={() => setHoveredStation(null)}
+                      onClick={() => setHoveredStation(isHovered ? null : stationId)}
+                      className="group relative cursor-pointer p-1 rounded-full transition-transform hover:scale-125 active:scale-110"
+                      title={station.name}
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full border-2 border-white shadow-lg"
+                        style={{ backgroundColor: line.color }}
+                      />
+                      {isHovered && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/80 border border-white/20 rounded text-[8px] font-bold text-white whitespace-nowrap z-50">
+                          {station.name}
+                        </div>
+                      )}
+                    </button>
+                  </AdvancedMarker>
+                );
+              })}
+            </React.Fragment>
+          );
+        })}
       </>
     );
   }
