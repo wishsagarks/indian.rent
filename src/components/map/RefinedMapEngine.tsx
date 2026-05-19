@@ -53,6 +53,7 @@ export default function RefinedMapEngine() {
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [isAddingProperty, setIsAddingProperty] = useState(false);
+  const [isSubmittingProperty, setIsSubmittingProperty] = useState(false);
   const [isSeekerMode, setIsSeekerMode] = useState(false);
   const [showSeekerForm, setShowSeekerForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -231,6 +232,19 @@ export default function RefinedMapEngine() {
     const config = cityConfig[selectedCity];
     setGoogleBounds([config.bounds[0][0], config.bounds[0][1], config.bounds[1][0], config.bounds[1][1]]);
   }, [selectedCity]);
+
+  // Keepalive: Wake DB on mount to avoid cold-start hangs
+  useEffect(() => {
+    const wakeDatabase = async () => {
+      try {
+        const supabase = createClient();
+        await supabase.from('buildings').select('id').limit(1);
+      } catch (e) {
+        console.warn('DB keepalive failed (expected):', e);
+      }
+    };
+    wakeDatabase();
+  }, []);
 
   useEffect(() => {
     if (!consented) return;
@@ -447,10 +461,11 @@ export default function RefinedMapEngine() {
   };
 
   const handleAddPropertySubmit = async (data: any) => {
+    setIsSubmittingProperty(true);
     setLoading(true);
-    // Pass maintenance fields directly (no conversion needed)
     const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
     const result = await deployNode(payload);
+    setIsSubmittingProperty(false);
     if (result.error) { alert(result.error); setLoading(false); }
     else {
       setIsAddingProperty(false);
@@ -970,12 +985,13 @@ export default function RefinedMapEngine() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto" />
             <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="relative w-full md:w-[420px] h-full bg-surface border-r border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col">
               <div className="flex-1 overflow-hidden">
-                <AddPropertyForm 
-                  onClose={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} 
-                  onSubmit={handleAddPropertySubmit} 
-                  lat={viewState.latitude} 
-                  lng={viewState.longitude} 
+                <AddPropertyForm
+                  onClose={() => { setIsAddingProperty(false); setAddFormInitialData(null); }}
+                  onSubmit={handleAddPropertySubmit}
+                  lat={viewState.latitude}
+                  lng={viewState.longitude}
                   initialData={addFormInitialData}
+                  isSubmitting={isSubmittingProperty}
                 />
               </div>
             </motion.div>

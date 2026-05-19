@@ -16,9 +16,10 @@ interface AddPropertyFormProps {
     existingBuildingId?: string | null;
     category?: string;
   } | null;
+  isSubmitting?: boolean;
 }
 
-export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialData }: AddPropertyFormProps) {
+export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialData, isSubmitting = false }: AddPropertyFormProps) {
   const [step, setStep] = useState(1);
   const [nearbyBuildings, setNearbyBuildings] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
@@ -428,19 +429,37 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
         </AnimatePresence>
       </div>
 
-      <div className="p-6 border-t border-white/5 flex gap-4 bg-surface-container-low/50 mt-auto">
-        {step > 1 && (
-          <button onClick={prevStep} className="flex-1 py-4 bg-white/5 border border-white/10 rounded-lg text-on-surface font-black uppercase tracking-[0.3em] text-[10px] transition-all active:scale-95 flex items-center justify-center gap-3 font-technical">
-            <ChevronLeft size={16} strokeWidth={3} /> Back
-          </button>
+      <div className="p-6 border-t border-white/5 flex flex-col gap-4 bg-surface-container-low/50 mt-auto">
+        {isSubmitting && (
+          <div className="w-full">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Deploying...</span>
+              <span className="font-technical text-[9px] uppercase tracking-widest text-primary font-black">Creating building</span>
+            </div>
+            <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: '0%' }}
+                animate={{ width: ['0%', '33%', '66%', '100%'] }}
+                transition={{ duration: 3, times: [0, 0.3, 0.6, 1] }}
+                className="h-full bg-gradient-to-r from-primary via-blue-400 to-primary"
+              />
+            </div>
+          </div>
         )}
-        <button
-          onClick={step === 4 ? () => onSubmit(formData) : nextStep}
-          disabled={(step === 1 && !formData.category && !formData.existingBuildingId) || (step === 2 && (!formData.floor || !formData.flatNumber))}
-          className="flex-[2] py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-3 disabled:opacity-20 border border-white/10"
-        >
-          {step === 4 ? 'Deploy Node' : 'Next'} <ChevronRight size={16} strokeWidth={3} />
-        </button>
+        <div className="flex gap-4">
+          {step > 1 && !isSubmitting && (
+            <button onClick={prevStep} className="flex-1 py-4 bg-white/5 border border-white/10 rounded-lg text-on-surface font-black uppercase tracking-[0.3em] text-[10px] transition-all active:scale-95 flex items-center justify-center gap-3 font-technical">
+              <ChevronLeft size={16} strokeWidth={3} /> Back
+            </button>
+          )}
+          <button
+            onClick={step === 4 ? () => onSubmit(formData) : nextStep}
+            disabled={(step === 1 && !formData.category && !formData.existingBuildingId) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
+            className="flex-[2] py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-3 disabled:opacity-20 border border-white/10"
+          >
+            {isSubmitting ? 'Deploying...' : (step === 4 ? 'Deploy Node' : 'Next')} {!isSubmitting && <ChevronRight size={16} strokeWidth={3} />}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -96,77 +96,54 @@ export async function deployNode(formData: any) {
   }
 
   const supabase = await createClient();
-  try {
-    let buildingId = formData.existingBuildingId;
+  const city = nearestCity;
+  let retries = 0;
+  const maxRetries = 1;
 
-    // City is already determined by nearest city geofence check
-    const city = nearestCity;
+  const attemptDeploy = async (): Promise<any> => {
+    try {
+      const { data, error } = await supabase.rpc('deploy_node_atomic', {
+        p_building_id: formData.existingBuildingId || null,
+        p_building_name: formData.buildingName || `${formData.category.toUpperCase()} NODE ${Math.floor(Math.random() * 1000)}`,
+        p_category: formData.category,
+        p_location: `POINT(${formData.lng} ${formData.lat})`,
+        p_address: formData.address || 'Tactical Deployment Zone',
+        p_city: city,
+        p_ip_hash: formData.ipHash || null,
+        p_floor_number: parseInt(formData.floor) || 0,
+        p_flat_number: formData.flatNumber,
+        p_rent_amount: parseFloat(formData.rent.replace(/[^0-9.]/g, '')),
+        p_no_broker_link: formData.noBrokerLink || null,
+        p_flatmates_link: formData.flatmatesLink || null,
+        p_contributor_name: formData.contributorName || 'Anonymous Node',
+        p_contributor_upi_id: formData.contributorUpi || '',
+        p_bhk: formData.bhk ? parseInt(formData.bhk) : null,
+        p_furnishing: formData.furnishing || null,
+        p_size_sqft: formData.sizeSqft ? parseInt(formData.sizeSqft) : null,
+        p_maintenance_extra: formData.maintenanceExtra || false,
+        p_maintenance_amount: formData.maintenanceAmount ? parseInt(formData.maintenanceAmount) : null,
+        p_tenant_preference: formData.tenantPreference || 'any',
+        p_pets_allowed: formData.petsAllowed || false,
+        p_deposit_months: formData.depositMonths ? parseInt(formData.depositMonths) : 2,
+        p_is_transparency_pin: formData.isTransparencyPin || false,
+        p_availability_date: formData.availabilityDate || null,
+        p_flatmate_needed: formData.flatmateNeeded || false,
+      });
 
-    if (!buildingId) {
-      const { data: building, error: bError } = await supabase
-        .from('buildings')
-        .insert({
-          name: formData.buildingName || `${formData.category.toUpperCase()} NODE ${Math.floor(Math.random() * 1000)}`,
-          category: formData.category,
-          location: `POINT(${formData.lng} ${formData.lat})`,
-          address: formData.address || 'Tactical Deployment Zone',
-          city,
-          ip_hash: formData.ipHash || null,
-        })
-        .select()
-        .single();
-
-      if (bError) throw bError;
-      buildingId = building.id;
+      if (error) throw error;
+      return { success: true, flatId: data.flat_id };
+    } catch (err: any) {
+      if (retries < maxRetries && (err.code === '57014' || err.code === 'PGRST301')) {
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return attemptDeploy();
+      }
+      throw err;
     }
+  };
 
-    const { data: floor, error: fError } = await supabase
-      .from('floors')
-      .insert({
-        building_id: buildingId,
-        floor_number: parseInt(formData.floor) || 0
-      })
-      .select()
-      .single();
-
-    if (fError) throw fError;
-
-    const { data: flat, error: flError } = await supabase
-      .from('flats')
-      .insert({
-        floor_id: floor.id,
-        flat_number: formData.flatNumber,
-        status: 'vacant',
-        rent_amount: parseFloat(formData.rent.replace(/[^0-9.]/g, '')),
-        no_broker_link: formData.noBrokerLink || null,
-        flatmates_link: formData.flatmatesLink || null,
-        contributor_name: formData.contributorName || 'Anonymous Node',
-        contributor_upi_id: formData.contributorUpi || '',
-        bhk: formData.bhk ? parseInt(formData.bhk) : null,
-        furnishing: formData.furnishing || null,
-        size_sqft: formData.sizeSqft ? parseInt(formData.sizeSqft) : null,
-        maintenance_extra: formData.maintenanceExtra || false,
-        maintenance_amount: formData.maintenanceAmount ? parseInt(formData.maintenanceAmount) : null,
-        tenant_preference: formData.tenantPreference || 'any',
-        pets_allowed: formData.petsAllowed || false,
-        deposit_months: formData.depositMonths ? parseInt(formData.depositMonths) : 2,
-        is_transparency_pin: formData.isTransparencyPin || false,
-        availability_date: formData.availabilityDate || null,
-        flatmate_needed: formData.flatmateNeeded || false,
-        ip_hash: formData.ipHash || null,
-      })
-      .select()
-      .single();
-
-    if (flError) throw flError;
-
-    await supabase.from('contributions').insert({
-      flat_id: flat.id,
-      contribution_type: 'new_listing',
-      reward_amount: 2500
-    });
-
-    return { success: true, flatId: flat.id };
+  try {
+    return await attemptDeploy();
   } catch (err: any) {
     console.error('Deployment Failure:', err.message);
     return { error: err.message };
