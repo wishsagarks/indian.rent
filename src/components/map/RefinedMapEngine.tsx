@@ -1116,6 +1116,25 @@ export default function RefinedMapEngine() {
         )}
       </AnimatePresence>
 
+      {/* Empty State Message */}
+      {filteredPoints.length === 0 && clusters.length === 0 && !isAddingProperty && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-surface border border-white/10 rounded-lg p-8 text-center max-w-sm shadow-2xl"
+        >
+          <div className="text-5xl mb-4">🏘️</div>
+          <h3 className="text-xl font-black uppercase tracking-tighter text-on-surface mb-2">No Listings Yet</h3>
+          <p className="text-sm text-on-surface-variant mb-6">Be the first to add a property in this area!</p>
+          <button
+            onClick={() => setIsAddingProperty(true)}
+            className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            + Add Property
+          </button>
+        </motion.div>
+      )}
+
       {/* Map Legend */}
       <div className="hidden lg:block fixed bottom-12 left-12 z-50">
         <AnimatePresence>
@@ -1228,7 +1247,7 @@ export default function RefinedMapEngine() {
       {/* Detail Card */}
       <AnimatePresence>
         {selectedProperty && !isAddingProperty && (
-          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-24 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[60vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
+          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-20 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[55vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
             <div className="bg-background/80 rounded-lg flex flex-col">
               <div className="h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
                 {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (

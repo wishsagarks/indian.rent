@@ -219,6 +219,22 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     <div className="min-h-screen bg-background text-on-background pb-24 selection:bg-primary/30">
       {navBar}
 
+      {/* Copy Toast Notification */}
+      <AnimatePresence>
+        {isCopied && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-3 bg-secondary/20 border border-secondary/40 rounded-lg shadow-xl backdrop-blur-sm"
+          >
+            <Check size={16} className="text-secondary" />
+            <span className="font-technical text-[11px] font-black uppercase tracking-widest text-secondary">Link Copied!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main className="pt-24 px-3 sm:px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 text-left">
         {/* Left */}
         <div className="space-y-6">

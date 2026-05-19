@@ -93,14 +93,31 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
 
   return (
     <div className="flex flex-col h-full bg-surface text-on-surface font-sans antialiased">
-      <div className="p-8 border-b border-white/5 flex justify-between items-center bg-surface-container-low">
-        <div>
-          <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-1">
-            Node Deployment // 0{step}
+      <div className="border-b border-white/5 bg-surface-container-low">
+        <div className="p-8 flex justify-between items-center">
+          <div>
+            <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-1">
+              Node Deployment // Step {step} of 4
+            </div>
+            <h2 className="text-2xl font-black text-on-surface uppercase tracking-tighter leading-none font-display text-left">
+              {steps[step - 1].title}
+            </h2>
           </div>
-          <h2 className="text-2xl font-black text-on-surface uppercase tracking-tighter leading-none font-display text-left">
-            {steps[step - 1].title}
-          </h2>
+        </div>
+        {/* Progress Bar */}
+        <div className="px-8 pb-6 space-y-2">
+          <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden border border-white/5">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${(step / 4) * 100}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
+            />
+          </div>
+          <div className="flex justify-between text-[9px] font-technical uppercase tracking-widest text-on-surface-variant font-black opacity-60">
+            <span>{Math.round((step / 4) * 100)}% Complete</span>
+            <span>{4 - step} steps remaining</span>
+          </div>
         </div>
       </div>
 
