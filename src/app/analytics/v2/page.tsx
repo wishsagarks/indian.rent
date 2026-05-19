@@ -4,12 +4,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   getCityMetrics,
-  getOpportunityScores,
-  getSupplyDemandTrend,
-  getPriceDistribution,
-  getMarketSegmentation,
-  getLocalityPerformance
+  getOpportunityScores
 } from '@/app/actions/analytics-actions';
+import { getSimpleAnalytics } from '@/app/actions/simple-analytics';
 import { transformMetrics, type CityMetricsUI } from '@/lib/analytics-utils';
 import KPICard3D from '@/components/analytics/KPICard3D';
 import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
@@ -85,17 +82,24 @@ export default function AnalyticsDashboardV2() {
     setChartsLoading(true);
     try {
       const cityName = city === 'bengaluru' ? 'Bengaluru' : 'Hyderabad';
-      const [supply, priceData, marketSeg, localityPerf] = await Promise.all([
-        getSupplyDemandTrend(cityName),
-        getPriceDistribution(cityName),
-        getMarketSegmentation(cityName),
-        getLocalityPerformance(cityName)
-      ]);
+      const result = await getSimpleAnalytics(cityName);
 
-      setSupplyDemandData(supply || []);
-      setPriceDistData(priceData || []);
-      setMarketSegData(marketSeg || []);
-      setLocalityPerfData(localityPerf || []);
+      if (result.success && result.data) {
+        setSupplyDemandData(result.data.supplyTrend || []);
+        setPriceDistData(result.data.priceData || []);
+        setMarketSegData(result.data.segmentData || []);
+
+        // For locality performance, use price data as fallback
+        const localityData = result.data.segmentData.map((seg: any) => ({
+          name: seg.name,
+          demand: seg.value,
+          medianRent: result.data.basicStats.medianRent,
+          supply: seg.value
+        }));
+        setLocalityPerfData(localityData || []);
+      } else {
+        console.error('Analytics fetch failed:', result.error);
+      }
     } catch (error: any) {
       console.error('Failed to load chart data:', error);
     } finally {
