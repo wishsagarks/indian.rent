@@ -499,8 +499,8 @@ This project is licensed under the **MIT License** — see [LICENSE](./LICENSE) 
 ## 📞 Get in Touch
 
 - **Website:** [wishlabs.in](https://wishlabs.in)
-- **Twitter:** [@wishsagar](https://twitter.com/wishsagar)
-- **Email:** hello@wishlabs.in
+- **Twitter:** [@freaking_wish](https://twitter.com/freaking_wish)
+- **Email:** wishsagarks@gmail.com
 - **Issues:** [GitHub Issues](https://github.com/your-org/indian-rent/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/your-org/indian-rent/discussions)
 
