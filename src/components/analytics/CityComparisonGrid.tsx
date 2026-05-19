@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CityMetricsUI } from '@/lib/analytics-utils';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import CityComparisonCard3D from './CityComparisonCard3D';
 
 interface CityComparisonGridProps {
   bengaluru?: CityMetricsUI;
@@ -17,9 +17,9 @@ export default function CityComparisonGrid({
 }: CityComparisonGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
-        {[...Array(12)].map((_, i) => (
-          <div key={i} className="h-16 bg-surface rounded-lg border border-white/10" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+        {[...Array(9)].map((_, i) => (
+          <div key={i} className="h-48 bg-surface rounded-xl border border-white/10" />
         ))}
       </div>
     );
@@ -42,18 +42,25 @@ export default function CityComparisonGrid({
       format: (v: number) => v.toLocaleString()
     },
     {
+      category: 'Supply',
+      metric: 'supply_trend',
+      label: 'Supply Trend',
+      getValue: (m?: CityMetricsUI) => m?.supply.change || 0,
+      format: (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)}%`
+    },
+    {
       category: 'Demand',
       metric: 'seeker_pins',
-      label: 'Seeker Pins',
+      label: 'Seeker Demand',
       getValue: (m?: CityMetricsUI) => m?.demand.count || 0,
       format: (v: number) => v.toLocaleString()
     },
     {
       category: 'Demand',
       metric: 'ratio',
-      label: 'Seeker-Listing Ratio',
+      label: 'Market Balance',
       getValue: (m?: CityMetricsUI) => m?.demand.ratio || 0,
-      format: (v: number) => `1:${Math.round(1 / v)}`
+      format: (v: number) => `1:${(1 / v).toFixed(1)}`
     },
     {
       category: 'Price',
@@ -65,75 +72,63 @@ export default function CityComparisonGrid({
     {
       category: 'Price',
       metric: 'volatility',
-      label: 'Volatility',
+      label: 'Price Volatility',
       getValue: (m?: CityMetricsUI) => m?.price.volatility || 0,
       format: (v: number) => `${v.toFixed(1)}%`
+    },
+    {
+      category: 'Price',
+      metric: 'premium',
+      label: 'Premium Index',
+      getValue: (m?: CityMetricsUI) => m?.price.premiumIndex || 0,
+      format: (v: number) => `${v.toFixed(2)}x`
+    },
+    {
+      category: 'Quality',
+      metric: 'transparency',
+      label: 'Data Quality',
+      getValue: (m?: CityMetricsUI) => m?.quality.transparencyScore || 0,
+      format: (v: number) => `${v.toFixed(0)}%`
     }
   ];
 
   const calculateDelta = (blr: number, hyd: number) => {
-    if (!blr || !hyd) return 0;
+    if (hyd === 0) return blr > 0 ? 100 : 0;
     return ((blr - hyd) / hyd) * 100;
   };
 
+  if (!bengaluru || !hyderabad) {
+    return (
+      <div className="p-8 text-center rounded-xl border border-white/10 bg-surface/50">
+        <p className="text-on-surface-variant">Loading city comparison data...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      {['Supply', 'Demand', 'Price'].map((category) => (
+      {['Supply', 'Demand', 'Price', 'Quality'].map((category) => (
         <div key={category}>
-          <h3 className="text-xs uppercase tracking-widest font-technical font-bold text-primary mb-4">
-            {category}
+          <h3 className="text-xs uppercase tracking-widest font-technical font-bold text-primary mb-6">
+            {category} Comparison
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {rows
               .filter((r) => r.category === category)
               .map((row) => {
                 const blrValue = row.getValue(bengaluru);
                 const hydValue = row.getValue(hyderabad);
-                const delta = calculateDelta(
-                  typeof blrValue === 'number' ? blrValue : 0,
-                  typeof hydValue === 'number' ? hydValue : 0
-                );
-                const isBetter = delta > 0;
+                const delta = calculateDelta(blrValue, hydValue);
 
                 return (
-                  <div
+                  <CityComparisonCard3D
                     key={row.metric}
-                    className="grid grid-cols-3 gap-4 p-4 rounded-lg border border-white/10 bg-surface/50"
-                  >
-                    {/* Label */}
-                    <div className="col-span-3">
-                      <p className="text-xs uppercase tracking-widest font-technical font-bold text-on-surface-variant">
-                        {row.label}
-                      </p>
-                    </div>
-
-                    {/* Bengaluru */}
-                    <div>
-                      <p className="text-xs text-on-surface-variant mb-1">🏙️ Bengaluru</p>
-                      <p className="text-lg font-bold text-white">
-                        {row.format(blrValue as number)}
-                      </p>
-                    </div>
-
-                    {/* Hyderabad */}
-                    <div>
-                      <p className="text-xs text-on-surface-variant mb-1">🏙️ Hyderabad</p>
-                      <p className="text-lg font-bold text-white">
-                        {row.format(hydValue as number)}
-                      </p>
-                    </div>
-
-                    {/* Delta */}
-                    <div className="text-right">
-                      <p className="text-xs text-on-surface-variant mb-1">Δ</p>
-                      <div className={`flex items-center gap-1 justify-end ${
-                        delta > 0 ? 'text-green-400' : delta < 0 ? 'text-red-400' : 'text-yellow-400'
-                      }`}>
-                        {delta > 0 ? <TrendingUp size={14} /> : delta < 0 ? <TrendingDown size={14} /> : '→'}
-                        <span className="text-sm font-bold">{Math.abs(delta).toFixed(1)}%</span>
-                      </div>
-                    </div>
-                  </div>
+                    label={row.label}
+                    bengaluru={row.format(blrValue)}
+                    hyderabad={row.format(hydValue)}
+                    delta={delta}
+                    category={category}
+                  />
                 );
               })}
           </div>
