@@ -11,7 +11,7 @@ import {
   getLocalityPerformance
 } from '@/app/actions/analytics-actions';
 import { transformMetrics, type CityMetricsUI } from '@/lib/analytics-utils';
-import KPICard from '@/components/analytics/KPICard';
+import KPICard3D from '@/components/analytics/KPICard3D';
 import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
 import OpportunityTable from '@/components/analytics/OpportunityTable';
 import {
@@ -180,7 +180,7 @@ export default function AnalyticsDashboardV2() {
               ))
             ) : currentMetrics ? (
               <>
-                <KPICard
+                <KPICard3D
                   label="Supply"
                   value={currentMetrics.supply.count}
                   unit="listings"
@@ -188,21 +188,21 @@ export default function AnalyticsDashboardV2() {
                   interpretation={currentMetrics.supply.trend}
                   icon={<Home size={20} />}
                 />
-                <KPICard
+                <KPICard3D
                   label="Demand"
                   value={currentMetrics.demand.count}
                   unit="seekers"
                   interpretation={currentMetrics.demand.interpretation}
                   icon={<Users size={20} />}
                 />
-                <KPICard
+                <KPICard3D
                   label="Median Rent"
                   value={`₹${(currentMetrics.price.median / 1000).toFixed(1)}k`}
                   interpretation={`P75: ₹${(currentMetrics.price.p75 / 1000).toFixed(1)}k`}
                   icon={<TrendingUp size={20} />}
                   highlight
                 />
-                <KPICard
+                <KPICard3D
                   label="Market Quality"
                   value={currentMetrics.quality.transparencyScore.toFixed(0)}
                   unit="%"

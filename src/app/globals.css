@@ -68,6 +68,20 @@
   .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
   .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 102, 255, 0.4); border-radius: 4px; box-shadow: 0 0 8px rgba(0, 102, 255, 0.3); }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 102, 255, 0.6); box-shadow: 0 0 12px rgba(0, 102, 255, 0.5); }
+
+  /* 3D Card Animations */
+  .animate-shimmer {
+    animation: shimmer 3s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .group {
+    position: relative;
+  }
 }
 
 /* Material Symbols Integration */
