@@ -1035,7 +1035,7 @@ export default function RefinedMapEngine() {
                 value={selectedCity}
                 onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
                 title={selectedCity}
-                className="px-2 md:px-3 py-1 md:py-1.5 rounded-full md:rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[10px] md:text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all text-center flex-1 mx-2 md:mx-0 appearance-none max-w-[120px] md:max-w-none"
+                className="px-2 md:px-5 py-1 md:py-2.5 rounded-full md:rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[10px] md:text-lg font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all text-center flex-1 mx-2 md:mx-0 appearance-none max-w-[120px] md:max-w-none"
               >
                 <option value="bengaluru">Bengaluru</option>
                 <option value="hyderabad">Hyderabad</option>
