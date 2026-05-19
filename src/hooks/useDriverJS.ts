@@ -20,7 +20,7 @@ const TOURS = {
       element: '#map-container',
       popover: {
         title: 'Interactive Map',
-        description: 'Browse rental listings on the map. Click on any pin to see details.',
+        description: 'Browse rental listings on the map. Click on any pin to see details. Use the controls to explore areas.',
         side: 'bottom' as const,
         align: 'center' as const,
       },
@@ -48,6 +48,24 @@ const TOURS = {
       popover: {
         title: 'Add Your Rental',
         description: 'Share a rental property from your area. Help your neighbors find great listings!',
+        side: 'right' as const,
+        align: 'start' as const,
+      },
+    },
+    {
+      element: '[data-tour="metro-button"]',
+      popover: {
+        title: 'View Metro Lines',
+        description: 'Toggle to see metro and public transport routes overlaid on the map.',
+        side: 'right' as const,
+        align: 'start' as const,
+      },
+    },
+    {
+      element: '[data-tour="looking-button"]',
+      popover: {
+        title: 'Signal Demand',
+        description: 'Drop a pin where you\'re looking for a flat. Landlords see heatmaps to list properties where they\'re needed!',
         side: 'right' as const,
         align: 'start' as const,
       },

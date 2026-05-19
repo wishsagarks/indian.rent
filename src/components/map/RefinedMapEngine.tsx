@@ -46,7 +46,15 @@ const MOCK_INTEL = [
 
 export default function RefinedMapEngine() {
   const systemTheme = useSystemTheme();
-  useDriverJS('explore');
+  const shouldShowTour = typeof window !== 'undefined' && !localStorage.getItem('indian_rent_toured');
+  useDriverJS(shouldShowTour ? 'explore' : null);
+
+  // Mark tour as completed on first visit
+  useEffect(() => {
+    if (shouldShowTour) {
+      localStorage.setItem('indian_rent_toured', 'true');
+    }
+  }, [shouldShowTour]);
   const [consented, setConsented] = useState(false);
   const [points, setPoints] = useState<any[]>([]);
   const [seekerPins, setSeekerPins] = useState<any[]>([]);
@@ -980,12 +988,12 @@ export default function RefinedMapEngine() {
               
               <div className="flex items-center gap-2 md:gap-4">
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
-                <button onClick={() => setShowMetro(!showMetro)} className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
+                <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
                 <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
                 <div className="w-px h-4 bg-white/10 hidden md:block" />
-                <button onClick={() => { setIsSeekerMode(!isSeekerMode); setShowSeekerForm(false); }} className={`p-2 rounded-lg transition-all ${isSeekerMode ? 'bg-emerald-400/20 text-emerald-400' : 'text-on-surface-variant hover:text-emerald-400'}`} title="I'm Looking for a flat"><Users size={16} /></button>
+                <button onClick={() => { setIsSeekerMode(!isSeekerMode); setShowSeekerForm(false); }} data-tour="looking-button" className={`p-2 rounded-lg transition-all ${isSeekerMode ? 'bg-emerald-400/20 text-emerald-400' : 'text-on-surface-variant hover:text-emerald-400'}`} title="I'm Looking for a flat"><Users size={16} /></button>
                 <button onClick={fetchIntel} className={`text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={16} strokeWidth={2.5} /></button>
               </div>
             </div>

@@ -108,6 +108,13 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
+              <div className="p-4 bg-emerald-400/10 border border-emerald-400/30 rounded-lg">
+                <p className="font-technical text-[9px] uppercase tracking-widest text-emerald-400 font-black mb-2">Quick Tip</p>
+                <p className="text-[10px] text-on-surface-variant leading-relaxed">
+                  <strong>Already listed?</strong> Select your building below. <strong>New building?</strong> Scroll down to enter details.
+                </p>
+              </div>
+
               {formData.buildingName && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 bg-primary/10 border border-primary/20 rounded-lg flex items-center justify-between gap-4 mb-4">
                   <div className="flex items-center gap-3">
