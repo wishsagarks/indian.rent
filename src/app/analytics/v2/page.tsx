@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { getCityMetrics, getOpportunityScores } from '@/app/actions/analytics-actions';
 import { transformMetrics, type CityMetricsUI } from '@/lib/analytics-utils';
 import KPICard from '@/components/analytics/KPICard';
 import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
 import OpportunityTable from '@/components/analytics/OpportunityTable';
-import { BarChart3, TrendingUp, Users, Home } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 
 type City = 'bengaluru' | 'hyderabad';
 
@@ -62,14 +63,19 @@ export default function AnalyticsDashboardV2() {
   return (
     <main className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-40 border-b border-white/10 bg-background/80 backdrop-blur-xl">
+      <div className="sticky top-0 z-40 border-b border-primary/30 bg-background/90 backdrop-blur-xl shadow-glow-blue-sm">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <h1 className="font-display text-3xl font-black text-white">Market Analytics</h1>
-              <p className="text-sm text-on-surface-variant mt-1">
-                Real-time rental market intelligence
-              </p>
+            <div className="flex items-center gap-4">
+              <Link href="/analytics" className="p-2 rounded-lg border border-primary/40 hover:bg-primary/10 hover:border-primary/60 transition-all hover:shadow-glow-blue-sm group">
+                <ChevronLeft size={20} className="text-primary group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <div>
+                <h1 className="font-display text-3xl font-black text-white">Market Analytics</h1>
+                <p className="text-sm text-on-surface-variant mt-1">
+                  Real-time rental market intelligence
+                </p>
+              </div>
             </div>
 
             <div className="flex gap-3 items-center">
