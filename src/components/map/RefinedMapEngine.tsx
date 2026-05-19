@@ -75,6 +75,7 @@ export default function RefinedMapEngine() {
   const [showLegend, setShowLegend] = useState(true);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
   const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>('bengaluru');
+  const [geocodeCache, setGeocodeCache] = useState<Record<string, string>>({});
 
   const { getPosition, loading: geolocating } = useGeolocation();
 
@@ -130,6 +131,33 @@ export default function RefinedMapEngine() {
       pitch: config.pitch
     });
   }, []);
+
+  const reverseGeocodeLocation = useCallback(async (lat: number, lng: number): Promise<string> => {
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    if (geocodeCache[cacheKey]) return geocodeCache[cacheKey];
+
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const addressParts = result.address_components || [];
+        const locality = addressParts.find((c: any) => c.types.includes('locality'))?.long_name || '';
+        const area = addressParts.find((c: any) => c.types.includes('sublocality'))?.long_name || '';
+        const name = area && locality ? `Near ${area}, ${locality}` : locality ? `Near ${locality}` : result.formatted_address;
+
+        setGeocodeCache(prev => ({ ...prev, [cacheKey]: name }));
+        return name;
+      }
+    } catch (err) {
+      console.warn('Reverse geocoding failed:', err);
+    }
+
+    return `Property at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }, [geocodeCache, GOOGLE_MAPS_API_KEY]);
 
   const ipHash = typeof window !== 'undefined' ? getIpHash() : '';
 
@@ -262,6 +290,15 @@ export default function RefinedMapEngine() {
       // This ensures map markers update immediately on city selection
     }
   }, [selectedCity, consented]);
+
+  // Reverse geocode building names when needed
+  useEffect(() => {
+    if (selectedProperty && (selectedProperty.name.startsWith('Property at') || !selectedProperty.name)) {
+      reverseGeocodeLocation(selectedProperty.lat, selectedProperty.lng).then(name => {
+        setSelectedProperty((prev: any) => prev ? { ...prev, name } : null);
+      });
+    }
+  }, [selectedProperty?.id, reverseGeocodeLocation]);
 
   // Apply filters
   const filteredPoints = useMemo(() => {
@@ -541,6 +578,17 @@ export default function RefinedMapEngine() {
       case 'pg':         return Home;
       case 'hostel':     return Hotel;
       default:           return Building2;
+    }
+  };
+
+  const getCategoryColors = (category: string) => {
+    switch (category) {
+      case 'gated':      return 'from-blue-600 to-blue-900';
+      case 'semi-gated': return 'from-cyan-600 to-blue-900';
+      case 'standalone': return 'from-emerald-600 to-emerald-900';
+      case 'pg':         return 'from-violet-600 to-violet-900';
+      case 'hostel':     return 'from-orange-600 to-orange-900';
+      default:           return 'from-primary to-blue-900';
     }
   };
 
@@ -1242,12 +1290,16 @@ export default function RefinedMapEngine() {
                     alt={selectedProperty.name}
                     className="w-full h-full object-cover"
                     src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${selectedProperty.lat},${selectedProperty.lng}&fov=80&key=${GOOGLE_MAPS_API_KEY}`}
+                    loading="lazy"
                     onError={() => setStreetViewFailed(true)}
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-surface-container to-background">
-                    {(() => { const Icon = getCategoryIcon(selectedProperty.category); return <Icon size={52} className="text-white/10" />; })()}
-                    <span className="font-technical text-[9px] uppercase tracking-[0.4em] text-white/20 font-black">No Street View</span>
+                  <div className={`w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-br ${getCategoryColors(selectedProperty.category)} relative`}>
+                    {(() => { const Icon = getCategoryIcon(selectedProperty.category); return <Icon size={56} className="text-white/80 drop-shadow-lg" />; })()}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
+                      <h4 className="font-display font-black text-white text-lg leading-tight tracking-tight uppercase mb-1">{selectedProperty.name}</h4>
+                      <span className="font-technical text-[10px] uppercase tracking-widest text-white/90 font-black">{selectedProperty.category.replace('-', ' ')}</span>
+                    </div>
                   </div>
                 )}
                 <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md border border-white/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
