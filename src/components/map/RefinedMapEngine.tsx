@@ -6,6 +6,7 @@ import { APIProvider, Map as GoogleMap, AdvancedMarker } from '@vis.gl/react-goo
 import { motion, AnimatePresence } from 'framer-motion';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import useSupercluster from 'use-supercluster';
+import { reverseGeocode } from '@/app/actions/map-actions';
 import AddPropertyForm from './AddPropertyForm';
 import FilterPanel, { MapFilters, DEFAULT_FILTERS } from './FilterPanel';
 import MetroOverlay from './MetroOverlay';
@@ -38,6 +39,16 @@ const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 const MAP_PROVIDER = process.env.NEXT_PUBLIC_MAP_PROVIDER || 'mapbox';
 
+function relativeDate(iso?: string): string {
+  if (!iso) return '';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days === 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
 const MOCK_INTEL = [
   { id: '1', name: 'Banjara Hills Residence', category: 'semi-gated', lat: 17.4156, lng: 78.4347, rent: '₹45,000', deposit: '2 Months', reward: '₹2,500', floor: '4th Floor', verified: true, user: { name: 'Rahul S.', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop' }, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop' },
   { id: '2', name: 'Jubilee Towers', category: 'gated', lat: 17.4284, lng: 78.4121, rent: '₹85,000', deposit: '3 Months', reward: '₹5,000', floor: '12th Floor', verified: true, user: { name: 'Priya D.', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' }, image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=800&auto=format&fit=crop' }
@@ -48,20 +59,26 @@ export default function RefinedMapEngine() {
   const shouldShowTour = typeof window !== 'undefined' && !localStorage.getItem('indian_rent_toured');
   useDriverJS(shouldShowTour ? 'explore' : null);
 
-  // Mark tour as completed on first visit
-  useEffect(() => {
-    if (shouldShowTour) {
-      localStorage.setItem('indian_rent_toured', 'true');
-    }
-  }, [shouldShowTour]);
+  // State declarations
   const [consented, setConsented] = useState(false);
   const [points, setPoints] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [isAddingProperty, setIsAddingProperty] = useState(false);
   const [isSubmittingProperty, setIsSubmittingProperty] = useState(false);
+  const [showBrowseSearch, setShowBrowseSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState<MapFilters>(() => {
+    if (typeof window === 'undefined') return DEFAULT_FILTERS;
+    const savedBhk = localStorage.getItem('ir_filter_bhk');
+    const savedMaxRent = localStorage.getItem('ir_filter_maxrent');
+    if (!savedBhk && !savedMaxRent) return DEFAULT_FILTERS;
+    return {
+      ...DEFAULT_FILTERS,
+      ...(savedBhk && { bhk: savedBhk }),
+      ...(savedMaxRent && { rentMax: savedMaxRent })
+    };
+  });
   const [showMetro, setShowMetro] = useState(false);
   const [showAreaStats, setShowAreaStats] = useState(false);
   const [areaStatsCenter, setAreaStatsCenter] = useState<{ lat: number; lng: number } | null>(null);
@@ -76,9 +93,53 @@ export default function RefinedMapEngine() {
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
   const [showLegend, setShowLegend] = useState(true);
   const [legendPopCount, setLegendPopCount] = useState(0);
+  const [legendManual, setLegendManual] = useState(false);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
-  const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>('bengaluru');
+  const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>(() => {
+    if (typeof window === 'undefined') return 'bengaluru';
+    const saved = localStorage.getItem('ir_city');
+    return (saved as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack' | null) ?? 'bengaluru';
+  });
   const [geocodeCache, setGeocodeCache] = useState<Record<string, string>>({});
+  const [mapToast, setMapToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  // Mark tour as completed on first visit
+  useEffect(() => {
+    if (shouldShowTour) {
+      localStorage.setItem('indian_rent_toured', 'true');
+    }
+  }, [shouldShowTour]);
+
+  // Auto-dismiss toast after 3 seconds
+  useEffect(() => {
+    if (mapToast) {
+      const timer = setTimeout(() => setMapToast(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mapToast]);
+
+  // Persist city selection to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ir_city', selectedCity);
+    }
+  }, [selectedCity]);
+
+  // Persist filters to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (filters.bhk && filters.bhk !== DEFAULT_FILTERS.bhk) {
+        localStorage.setItem('ir_filter_bhk', filters.bhk);
+      } else {
+        localStorage.removeItem('ir_filter_bhk');
+      }
+      if (filters.rentMax && filters.rentMax !== DEFAULT_FILTERS.rentMax) {
+        localStorage.setItem('ir_filter_maxrent', filters.rentMax);
+      } else {
+        localStorage.removeItem('ir_filter_maxrent');
+      }
+    }
+  }, [filters]);
 
   const { getPosition, loading: geolocating } = useGeolocation();
 
@@ -140,27 +201,17 @@ export default function RefinedMapEngine() {
     if (geocodeCache[cacheKey]) return geocodeCache[cacheKey];
 
     try {
-      const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`
-      );
-      const data = await response.json();
-
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
-        const addressParts = result.address_components || [];
-        const locality = addressParts.find((c: any) => c.types.includes('locality'))?.long_name || '';
-        const area = addressParts.find((c: any) => c.types.includes('sublocality'))?.long_name || '';
-        const name = area && locality ? `Near ${area}, ${locality}` : locality ? `Near ${locality}` : result.formatted_address;
-
-        setGeocodeCache(prev => ({ ...prev, [cacheKey]: name }));
-        return name;
+      const address = await reverseGeocode(lat, lng);
+      if (address) {
+        setGeocodeCache(prev => ({ ...prev, [cacheKey]: address }));
+        return address;
       }
     } catch (err) {
       console.warn('Reverse geocoding failed:', err);
     }
 
     return `Property at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-  }, [geocodeCache, GOOGLE_MAPS_API_KEY]);
+  }, [geocodeCache]);
 
   const ipHash = typeof window !== 'undefined' ? getIpHash() : '';
 
@@ -278,31 +329,36 @@ export default function RefinedMapEngine() {
 
   // Legend auto-pop and close effect
   useEffect(() => {
-    if (!showLegend) return;
+    if (!showLegend || legendManual) {
+      if (!showLegend) setLegendPopCount(0);
+      return;
+    }
 
     let popInterval: NodeJS.Timeout;
     let closeTimeout: NodeJS.Timeout;
 
-    // Start popping animation 3 times
+    // Start popping animation 4 times
     let popCount = 0;
     popInterval = setInterval(() => {
       popCount++;
       setLegendPopCount(popCount);
-      if (popCount >= 3) {
+      if (popCount >= 4) {
         clearInterval(popInterval);
         // Close after last pop animation completes (500ms)
         closeTimeout = setTimeout(() => {
-          setShowLegend(false);
-          setLegendPopCount(0);
+          if (!legendManual) {
+            setShowLegend(false);
+            setLegendPopCount(0);
+          }
         }, 500);
       }
-    }, 600); // Pop every 600ms
+    }, 800); // Slightly slower pop for better visibility
 
     return () => {
       clearInterval(popInterval);
       clearTimeout(closeTimeout);
     };
-  }, [showLegend]);
+  }, [showLegend, legendManual]);
 
   useEffect(() => {
     if (!consented) return;
@@ -516,9 +572,12 @@ export default function RefinedMapEngine() {
     if (place.geometry?.location) {
       const lat = place.geometry.location.lat();
       const lng = place.geometry.location.lng();
-      setViewState({ ...viewState, latitude: lat, longitude: lng, zoom: 16 });
 
-      if (isAddingProperty) {
+      if (showBrowseSearch) {
+        setViewState({ ...viewState, latitude: lat, longitude: lng, zoom: 15 });
+        setShowBrowseSearch(false);
+      } else if (isAddingProperty) {
+        setViewState({ ...viewState, latitude: lat, longitude: lng, zoom: 16 });
         setAddFormInitialData({
           buildingName: place.name,
           address: place.formatted_address
@@ -533,7 +592,7 @@ export default function RefinedMapEngine() {
     const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
     const result = await deployNode(payload);
     setIsSubmittingProperty(false);
-    if (result.error) { alert(result.error); setLoading(false); }
+    if (result.error) { setMapToast({ message: result.error, type: 'error' }); setLoading(false); }
     else {
       setIsAddingProperty(false);
       setAddFormInitialData(null);
@@ -555,8 +614,8 @@ export default function RefinedMapEngine() {
   const handleDeletePin = async (flatId: string) => {
     if (!confirm('Delete this pin permanently?')) return;
     const result = await deleteOwnPin(flatId);
-    if (result.error) alert(result.error);
-    else { setSelectedProperty(null); fetchIntel(); }
+    if (result.error) setMapToast({ message: result.error, type: 'error' });
+    else { setSelectedProperty(null); fetchIntel(); setMapToast({ message: 'Listing deleted!', type: 'success' }); }
   };
 
   const handleShare = () => {
@@ -566,12 +625,12 @@ export default function RefinedMapEngine() {
   };
 
   const handleSubscribeToArea = async () => {
-    if (!notifyEmail || !notifyEmail.includes('@')) { alert('Valid email required'); return; }
+    if (!notifyEmail || !notifyEmail.includes('@')) { setMapToast({ message: 'Valid email required', type: 'error' }); return; }
     setNotifySubmitting(true);
     const result = await subscribeToArea(notifyEmail, viewState.latitude, viewState.longitude, notifyRadius);
     setNotifySubmitting(false);
-    if (result.error) alert(result.error);
-    else { alert('Subscribed! You\'ll get email updates when new listings appear.'); setShowNotifyModal(false); setNotifyEmail(''); }
+    if (result.error) setMapToast({ message: result.error, type: 'error' });
+    else { setMapToast({ message: 'Subscribed! You\'ll get email updates when new listings appear.', type: 'success' }); setShowNotifyModal(false); setNotifyEmail(''); }
   };
 
   const calculateDecay = (updatedAt: string) => {
@@ -953,37 +1012,42 @@ export default function RefinedMapEngine() {
 
         {/* Top HUD */}
         {!isAddingProperty && (
-          <header className="fixed top-0 w-full z-50 flex justify-center h-20 px-4 md:px-8 pointer-events-none pt-4 font-technical">
-            <div className="max-w-5xl w-full flex justify-between items-center pointer-events-auto h-14 bg-background/80 backdrop-blur-xl rounded-lg border border-white/10 shadow-2xl px-4 md:px-6">
-              <div className="flex items-center gap-3">
+          <header className="fixed top-0 w-full z-50 flex justify-center h-20 px-4 md:px-8 pointer-events-none pt-2 md:pt-4 font-technical">
+            <div className="max-w-5xl w-full flex justify-between items-center pointer-events-auto h-12 md:h-14 bg-background/80 backdrop-blur-xl rounded-full md:rounded-lg border border-white/10 shadow-2xl px-2 md:px-6">
+              <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-0">
                 <UnifiedMenu />
-                <div className="flex flex-col -gap-1">
+                <div className="flex flex-col -gap-1 hidden md:flex">
                   <Link href="/" className="font-display text-lg text-primary font-black tracking-tighter cursor-pointer uppercase">indian.rent</Link>
                   <span className="text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black hidden md:block">by WishLabs</span>
                 </div>
+                {/* Mobile minimal text logo */}
+                <Link href="/" className="md:hidden font-display text-sm text-primary font-black tracking-tighter cursor-pointer uppercase">IR.</Link>
               </div>
 
-              {/* City Selector - Extended to 4 Cities */}
+              {/* City Selector */}
               <select
                 value={selectedCity}
                 onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
                 title={selectedCity}
-                className="px-1.5 md:px-3 py-1.5 rounded-lg bg-surface border border-white/20 text-on-surface font-technical text-xs md:text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all min-w-fit"
+                className="px-2 md:px-3 py-1 md:py-1.5 rounded-full md:rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[10px] md:text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all text-center flex-1 mx-2 md:mx-0 appearance-none max-w-[120px] md:max-w-none"
               >
-                <option value="bengaluru">🏙️ Bengaluru</option>
-                <option value="hyderabad">🏙️ Hyderabad</option>
-                <option value="bhubaneswar">🏙️ Bhubaneswar</option>
-                <option value="cuttack">🏙️ Cuttack</option>
+                <option value="bengaluru">Bengaluru</option>
+                <option value="hyderabad">Hyderabad</option>
+                <option value="bhubaneswar">Bhubaneswar</option>
+                <option value="cuttack">Cuttack</option>
               </select>
               
-              <div className="flex items-center gap-2 md:gap-4">
-                <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
-                <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
-                <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
-                <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
-                <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
+              <div className="flex items-center gap-1 md:gap-4 pr-1 md:pr-0">
+                <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} title="Search location" className={`p-2 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={16} /></button>
+                <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-full md:rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
+                <div className="hidden md:flex items-center gap-4">
+                  <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
+                  <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
+                  <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
+                  <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
+                </div>
                 <div className="w-px h-4 bg-white/10 hidden md:block" />
-                <button onClick={fetchIntel} className={`text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={16} strokeWidth={2.5} /></button>
+                <button onClick={fetchIntel} className={`p-2 rounded-full md:rounded-lg text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={16} strokeWidth={2.5} /></button>
               </div>
             </div>
           </header>
@@ -1024,12 +1088,38 @@ export default function RefinedMapEngine() {
         {showAreaStats && areaStatsCenter && <CircleAreaSelector center={areaStatsCenter} onClose={() => setShowAreaStats(false)} />}
       </AnimatePresence>
 
-      {/* Add Property Sidebar */}
+      {/* Browse Search Overlay */}
+      <AnimatePresence>
+        {showBrowseSearch && !isAddingProperty && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className="fixed top-12 md:top-6 left-1/2 z-[110] w-[calc(100%-2rem)] max-w-lg"
+          >
+            <div className="bg-background/80 backdrop-blur-xl border border-white/10 rounded-lg p-2 shadow-3xl">
+              <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
+              <div className="mt-2 px-3 flex justify-between items-center">
+                <span className="font-technical text-[8px] uppercase tracking-[0.3em] text-primary font-black">Search Locality</span>
+                <button onClick={() => setShowBrowseSearch(false)} className="text-[8px] uppercase tracking-[0.3em] text-on-surface-variant hover:text-white font-black">Close</button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Property Sidebar / Bottom Sheet */}
       <AnimatePresence>
         {isAddingProperty && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-start pointer-events-none">
+          <div className="fixed inset-0 z-[100] flex md:items-center items-end justify-start pointer-events-none">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto" />
-            <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="relative w-full md:w-[420px] h-full bg-surface border-r border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col">
+            <motion.div 
+              initial={{ y: '100%', opacity: 0 }} 
+              animate={{ y: 0, opacity: 1 }} 
+              exit={{ y: '100%', opacity: 0 }} 
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
+              className="relative w-full md:w-[420px] h-[85vh] md:h-full bg-surface md:border-r border-t md:border-t-0 border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col rounded-t-3xl md:rounded-none"
+            >
               <div className="flex-1 overflow-hidden">
                 <AddPropertyForm
                   onClose={() => { setIsAddingProperty(false); setAddFormInitialData(null); }}
@@ -1127,10 +1217,10 @@ export default function RefinedMapEngine() {
       <AnimatePresence>
         {isAddingProperty && (
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-6 left-1/2 -translate-x-1/2 z-[110] w-full max-w-lg px-4"
+            initial={{ opacity: 0, y: -20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: -20, x: '-50%' }}
+            className="fixed top-12 md:top-6 left-1/2 z-[110] w-[calc(100%-2rem)] max-w-lg"
           >
             <div className="bg-background/80 backdrop-blur-xl border border-white/10 rounded-lg p-2 shadow-3xl">
               <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
@@ -1150,15 +1240,31 @@ export default function RefinedMapEngine() {
           animate={{ opacity: 1, y: 0 }}
           className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-surface border border-white/10 rounded-lg p-8 text-center max-w-sm shadow-2xl"
         >
-          <div className="text-5xl mb-4">🏘️</div>
-          <h3 className="text-xl font-black uppercase tracking-tighter text-on-surface mb-2">No Listings Yet</h3>
-          <p className="text-sm text-on-surface-variant mb-6">Be the first to add a property in this area!</p>
-          <button
-            onClick={() => setIsAddingProperty(true)}
-            className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg"
-          >
-            + Add Property
-          </button>
+          {JSON.stringify(filters) !== JSON.stringify(DEFAULT_FILTERS) ? (
+            <>
+              <div className="text-5xl mb-4">🔍</div>
+              <h3 className="text-xl font-black uppercase tracking-tighter text-on-surface mb-2">No Results for Your Filters</h3>
+              <p className="text-sm text-on-surface-variant mb-6">Try adjusting your search criteria or clearing filters to see all listings.</p>
+              <button
+                onClick={() => setFilters(DEFAULT_FILTERS)}
+                className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg"
+              >
+                Clear Filters
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="text-5xl mb-4">🏘️</div>
+              <h3 className="text-xl font-black uppercase tracking-tighter text-on-surface mb-2">No Listings Yet</h3>
+              <p className="text-sm text-on-surface-variant mb-6">Be the first to add a property in this area!</p>
+              <button
+                onClick={() => setIsAddingProperty(true)}
+                className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg"
+              >
+                + Add Property
+              </button>
+            </>
+          )}
         </motion.div>
       )}
 
@@ -1172,19 +1278,23 @@ export default function RefinedMapEngine() {
               animate={{
                 opacity: 1,
                 y: 0,
-                scale: legendPopCount > 0 ? [1, 1.3, 1] : 1
+                scale: legendPopCount > 0 ? [1, 1.1, 1] : 1
               }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: legendPopCount > 0 ? 0.4 : 0.3 }}
               className="mb-3 bg-surface border border-white/10 rounded-lg p-4 shadow-xl min-w-[220px]"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">
-                  Map Legend {legendPopCount > 0 && <span className="text-xs opacity-50">({legendPopCount}/3)</span>}
+                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black">
+                  Map Legend {legendPopCount > 0 && <span className="text-[10px] text-primary ml-1 opacity-100 border-b border-primary/40">({legendPopCount}/4)</span>}
                 </div>
-                <div className="p-1 text-on-surface-variant opacity-50">
+                <button 
+                  onClick={() => setShowLegend(false)}
+                  className="p-1 text-on-surface-variant hover:text-primary transition-colors active:scale-90"
+                  title="Close legend"
+                >
                   <X size={14} />
-                </div>
+                </button>
               </div>
               {[
                 { label: 'Gated Society',   Icon: Shield,      color: 'text-blue-400',   border: 'border-blue-400'   },
@@ -1209,7 +1319,10 @@ export default function RefinedMapEngine() {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowLegend(true)}
+          onClick={() => {
+            setShowLegend(true);
+            setLegendManual(true);
+          }}
           className={`w-11 h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
           title="Show Map Legend"
         >
@@ -1280,7 +1393,10 @@ export default function RefinedMapEngine() {
                     {(() => { const Icon = getCategoryIcon(selectedProperty.category); return <Icon size={56} className="text-white/80 drop-shadow-lg" />; })()}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
                       <h4 className="font-display font-black text-white text-lg leading-tight tracking-tight uppercase mb-1">{selectedProperty.name}</h4>
-                      <span className="font-technical text-[10px] uppercase tracking-widest text-white/90 font-black">{selectedProperty.category.replace('-', ' ')}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-technical text-[10px] uppercase tracking-widest text-white/90 font-black">{selectedProperty.category.replace('-', ' ')}</span>
+                        {selectedProperty.updatedAt && <span className="text-[9px] text-white/60">· {relativeDate(selectedProperty.updatedAt)}</span>}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1375,20 +1491,62 @@ export default function RefinedMapEngine() {
       </AnimatePresence>
 
       {/* Mobile Nav */}
-      <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] overflow-x-auto flex items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg scrollbar-hide">
-        <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-10 flex-shrink-0 transition-all active:scale-90">
-          <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
-        </button>
+      <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-0 left-0 w-full z-[70] pb-5 pt-3 px-6 bg-background/80 backdrop-blur-2xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] rounded-t-3xl flex justify-between items-end">
+        
         <button onClick={() => {
           const next = !showAreaStats;
           setShowAreaStats(next);
           if (next && !areaStatsCenter) {
             setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude });
           }
-        }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Area</span></button>
-        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:bg-white/5'}`} title="Metro"><Train size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Metro</span></button>
-        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:bg-white/5'}`} title="Live Stats"><BarChart3 size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Live</span></button>
+        }} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showAreaStats ? 'text-primary' : 'text-on-surface-variant hover:text-white'}`} title="Area stats">
+          <Landmark size={20} className={showAreaStats ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
+          <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Area</span>
+        </button>
+
+        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showMetro ? 'text-primary' : 'text-on-surface-variant hover:text-white'}`} title="Metro">
+          <Train size={20} className={showMetro ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
+          <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Metro</span>
+        </button>
+
+        {/* Center Primary Action Button */}
+        <div className="relative flex-1 flex justify-center -mt-8">
+          <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center transition-all active:scale-90 hover:scale-105">
+            <div className="w-14 h-14 bg-primary text-on-primary rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(0,102,255,0.5)] border-4 border-background">
+              <Plus size={26} strokeWidth={3} />
+            </div>
+          </button>
+        </div>
+
+        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showLiveStats ? 'text-primary' : 'text-on-surface-variant hover:text-white'}`} title="Live Stats">
+          <BarChart3 size={20} className={showLiveStats ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
+          <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Live</span>
+        </button>
+
+        <button onClick={() => setShowNotifyModal(true)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 text-on-surface-variant hover:text-white`} title="Notify">
+          <Bell size={20} />
+          <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Alerts</span>
+        </button>
       </nav>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {mapToast && (
+          <motion.div
+            key="toast"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className={`fixed bottom-24 left-1/2 -translate-x-1/2 z-50 px-4 py-3 rounded-lg font-black text-[13px] uppercase tracking-wider shadow-lg ${
+              mapToast.type === 'success'
+                ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/30'
+                : 'bg-red-400/10 text-red-400 border border-red-400/30'
+            }`}
+          >
+            {mapToast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
     </APIProvider>
   );

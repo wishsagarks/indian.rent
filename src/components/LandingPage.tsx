@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import gsap from 'gsap';
@@ -8,7 +9,10 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Satellite } from 'lucide-react';
 
-import { GlobeAnalytics } from './ui/cobe-globe-analytics';
+const GlobeAnalytics = dynamic(() => import('./ui/cobe-globe-analytics').then(m => ({ default: m.GlobeAnalytics })), {
+  ssr: false,
+  loading: () => <div className="w-80 h-80 bg-white/5 rounded-full animate-pulse mx-auto" />,
+});
 import MagneticButton, { PeelingSticker } from './ui-advanced/TactileControls';
 import TracingBeam from './ui-advanced/TracingBeam';
 import { BentoGrid } from './ui-advanced/BentoGrid';

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users } from 'lucide-react';
+import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X } from 'lucide-react';
 import { findNearbyBuildings } from '@/app/actions/map-actions';
 
 interface AddPropertyFormProps {
@@ -94,15 +94,18 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
   return (
     <div className="flex flex-col h-full bg-surface text-on-surface font-sans antialiased">
       <div className="border-b border-white/5 bg-surface-container-low">
-        <div className="p-8 flex justify-between items-center">
+        <div className="p-6 md:p-8 flex justify-between items-center">
           <div>
             <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-1">
               Node Deployment // Step {step} of 4
             </div>
-            <h2 className="text-2xl font-black text-on-surface uppercase tracking-tighter leading-none font-display text-left">
+            <h2 className="text-xl md:text-2xl font-black text-on-surface uppercase tracking-tighter leading-none font-display text-left">
               {steps[step - 1].title}
             </h2>
           </div>
+          <button onClick={onClose} className="p-2 -mr-2 rounded-full text-on-surface-variant hover:text-white hover:bg-white/5 transition-all">
+            <X size={24} />
+          </button>
         </div>
         {/* Progress Bar */}
         <div className="px-8 pb-6 space-y-2">
@@ -121,7 +124,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 pb-32 md:pb-8 custom-scrollbar">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">

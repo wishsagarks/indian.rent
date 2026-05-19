@@ -1,11 +1,12 @@
-import RefinedMapEngine from "@/components/map/RefinedMapEngine";
-import MapErrorBoundary from "@/components/MapErrorBoundary";
-import { Metadata } from "next";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Explore Map — indian.rent by WishLabs",
-  description: "Live tactical rental grid for Hyderabad. Find direct listings and contributor rewards.",
-};
+import dynamic from "next/dynamic";
+import MapErrorBoundary from "@/components/MapErrorBoundary";
+
+const RefinedMapEngine = dynamic(() => import("@/components/map/RefinedMapEngine"), {
+  ssr: false,
+  loading: () => <div className="w-full h-screen bg-background animate-pulse" />,
+});
 
 export default function ExplorePage() {
   return (

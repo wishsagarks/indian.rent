@@ -20,8 +20,24 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "indian.rent | Direct Rental Marketplace by WishLabs",
-  description: "Bypass brokers, find your next home directly in Hyderabad and across India. A product of WishLabs.",
+  title: "indian.rent — No Broker, No Bullshit",
+  description: "Find verified rentals in Hyderabad & Bengaluru without broker fees. Direct from owners & residents.",
+  manifest: "/manifest.json",
+  openGraph: {
+    title: "indian.rent — No Broker, No Bullshit",
+    description: "Find verified rentals in Hyderabad & Bengaluru without broker fees.",
+    url: "https://indian.rent",
+    siteName: "indian.rent",
+    images: [{ url: "https://indian.rent/og-image.png", width: 1200, height: 630, alt: "indian.rent" }],
+    locale: "en_IN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "indian.rent — No Broker, No Bullshit",
+    description: "Find verified rentals without broker fees.",
+    images: ["https://indian.rent/og-image.png"],
+  },
 };
 
 export default function RootLayout({

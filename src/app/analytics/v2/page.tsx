@@ -2,11 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { getCityMetrics, getOpportunityScores } from '@/app/actions/analytics-actions';
+import {
+  getCityMetrics,
+  getOpportunityScores,
+  getSupplyDemandTrend,
+  getPriceDistribution,
+  getMarketSegmentation,
+  getLocalityPerformance
+} from '@/app/actions/analytics-actions';
 import { transformMetrics, type CityMetricsUI } from '@/lib/analytics-utils';
 import KPICard from '@/components/analytics/KPICard';
 import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
 import OpportunityTable from '@/components/analytics/OpportunityTable';
+import {
+  SupplyDemandChart,
+  PriceDistributionChart,
+  MarketSegmentChart,
+  LocalityPerformanceChart
+} from '@/components/analytics/MetricsCharts';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 
 type City = 'bengaluru' | 'hyderabad';
@@ -19,10 +32,20 @@ export default function AnalyticsDashboardV2() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<'overall' | 'comparison' | 'opportunities'>('overall');
+  const [supplyDemandData, setSupplyDemandData] = useState<any[]>([]);
+  const [priceDistData, setPriceDistData] = useState<any[]>([]);
+  const [marketSegData, setMarketSegData] = useState<any[]>([]);
+  const [localityPerfData, setLocalityPerfData] = useState<any[]>([]);
+  const [chartsLoading, setChartsLoading] = useState(false);
 
   useEffect(() => {
     loadMetrics();
+    loadChartData('bengaluru');
   }, []);
+
+  useEffect(() => {
+    loadChartData(selectedCity);
+  }, [selectedCity]);
 
   const loadMetrics = async () => {
     setLoading(true);
@@ -52,9 +75,31 @@ export default function AnalyticsDashboardV2() {
       }
     } catch (error: any) {
       console.error('Failed to load metrics:', error);
-      setError(`Error loading analytics: ${error?.message || 'Unknown error'}`);
+      setError('Analytics data unavailable — try again later.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadChartData = async (city: 'bengaluru' | 'hyderabad') => {
+    setChartsLoading(true);
+    try {
+      const cityName = city === 'bengaluru' ? 'Bengaluru' : 'Hyderabad';
+      const [supply, priceData, marketSeg, localityPerf] = await Promise.all([
+        getSupplyDemandTrend(cityName),
+        getPriceDistribution(cityName),
+        getMarketSegmentation(cityName),
+        getLocalityPerformance(cityName)
+      ]);
+
+      setSupplyDemandData(supply || []);
+      setPriceDistData(priceData || []);
+      setMarketSegData(marketSeg || []);
+      setLocalityPerfData(localityPerf || []);
+    } catch (error: any) {
+      console.error('Failed to load chart data:', error);
+    } finally {
+      setChartsLoading(false);
     }
   };
 
@@ -207,6 +252,47 @@ export default function AnalyticsDashboardV2() {
                 <div>
                   <p className="text-xs text-on-surface-variant mb-2">Premium Index</p>
                   <p className="text-2xl font-bold text-white">{currentMetrics.price.premiumIndex.toFixed(2)}x</p>
+                </div>
+              </div>
+
+              {/* Charts Section */}
+              <div className="space-y-6">
+                <h3 className="text-xs uppercase tracking-widest font-technical font-bold text-primary">
+                  Market Metrics & Trends
+                </h3>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {chartsLoading ? (
+                    <>
+                      <div className="h-80 bg-surface rounded-lg border border-white/10 animate-pulse" />
+                      <div className="h-80 bg-surface rounded-lg border border-white/10 animate-pulse" />
+                      <div className="h-80 bg-surface rounded-lg border border-white/10 animate-pulse" />
+                      <div className="h-80 bg-surface rounded-lg border border-white/10 animate-pulse" />
+                    </>
+                  ) : (
+                    <>
+                      <SupplyDemandChart
+                        data={supplyDemandData}
+                        title="Supply & Demand Trend"
+                        description="30-day listing and seeker activity"
+                      />
+                      <PriceDistributionChart
+                        data={priceDistData}
+                        title="Price Distribution"
+                        description="Market rent levels (P25, Median, P75, Avg)"
+                      />
+                      <MarketSegmentChart
+                        data={marketSegData}
+                        title="Market Segmentation"
+                        description="Listings by BHK and furnishing type"
+                      />
+                      <LocalityPerformanceChart
+                        data={localityPerfData}
+                        title="Locality Performance"
+                        description="Demand vs median rent analysis"
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>

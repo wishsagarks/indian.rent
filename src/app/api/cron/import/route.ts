@@ -78,6 +78,8 @@ export async function GET(request: Request) {
   });
 
   try {
+    const startTime = Date.now();
+
     // Fetch pins
     const fetchResponse = await fetch(SOURCE_API);
     if (!fetchResponse.ok) {
@@ -87,7 +89,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const payload = (await fetchResponse.json()) as { pins: BengaluruPin[] };
+    const payload = (await fetchResponse.json()) as { pins: RentalListing[] };
     const pins = payload.pins;
 
     let imported = 0;
@@ -145,13 +147,27 @@ export async function GET(request: Request) {
     // Refresh snapshot
     await supabase.rpc('refresh_map_snapshot');
 
+    // Track import run
+    const durationMs = Date.now() - startTime;
+    await supabase.from('import_runs').insert({
+      source: SOURCE_NAME,
+      total: pins.length,
+      imported,
+      skipped,
+      failed,
+      duration_ms: durationMs
+    }).then(result => {
+      if (result.error) console.error('[cron] Failed to insert import_run:', result.error);
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
         imported,
         skipped,
         failed,
-        total: pins.length
+        total: pins.length,
+        duration_ms: durationMs
       }),
       { status: 200 }
     );

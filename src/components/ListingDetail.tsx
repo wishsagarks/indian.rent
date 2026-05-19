@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Banknote, Link as LinkIcon, Share2, CircleCheck as CheckCircle2, ChevronLeft, Check, QrCode, ShieldAlert, Star, MessageCircle, Send, Ruler, Calendar, Sofa, Users, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
-import { lockPlace, flagIntel, getFlatRatings, submitRating, getComments, addComment, getFlatDetails } from '@/app/actions/map-actions';
+import { lockPlace, flagIntel, getFlatRatings, submitRating, getComments, addComment, getFlatDetails, getContributorPaymentDetails } from '@/app/actions/map-actions';
+import { rewardFromRent } from '@/lib/constants';
 import UnifiedMenu from './UnifiedMenu';
 import { useDriverJS } from '@/hooks/useDriverJS';
 
@@ -39,9 +40,14 @@ function floorLabel(n: number | null | undefined): string {
   return `${n}${suffix} Floor`;
 }
 
-function rewardFromRent(rent: number | null | undefined): number {
-  if (!rent) return 2500;
-  return Math.round(Math.min(Math.max(rent * 0.05, 1000), 10000) / 100) * 100;
+function relativeDate(iso: string): string {
+  if (!iso) return '';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  if (days === 0) return 'Added today';
+  if (days === 1) return 'Added yesterday';
+  if (days < 7) return `Added ${days} days ago`;
+  if (days < 30) return `Added ${Math.floor(days / 7)} wk${Math.floor(days / 7) > 1 ? 's' : ''} ago`;
+  return `Added ${Math.floor(days / 30)} mo ago`;
 }
 
 export default function ListingDetail({ id, type }: ListingPageProps) {
@@ -54,6 +60,8 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
+  const [upiDetails, setUpiDetails] = useState<{ upiId: string | null; contributorName: string | null } | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const [ratings, setRatings] = useState<{ avg_locality: number; avg_built_quality: number; total_ratings: number }>({ avg_locality: 0, avg_built_quality: 0, total_ratings: 0 });
   const [localityScore, setLocalityScore] = useState(0);
@@ -85,8 +93,16 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const handleLockPlace = async () => {
     setIsLocking(true);
     const result = await lockPlace(id);
-    if (result.error) { alert(result.error); setIsLocking(false); }
-    else { setShowRewardModal(true); setIsLocking(false); }
+    if (result.error) {
+      setToast({ message: result.error, type: 'error' });
+      setIsLocking(false);
+    }
+    else {
+      const paymentDetails = await getContributorPaymentDetails(id);
+      setUpiDetails({ upiId: paymentDetails.upiId, contributorName: listing?.contributorName || 'Contributor' });
+      setShowRewardModal(true);
+      setIsLocking(false);
+    }
   };
 
   const handleFlagIntel = async () => {
@@ -139,8 +155,8 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
       <div className="max-w-5xl flex justify-between items-center w-full gap-2">
         <div className="flex items-center gap-1 sm:gap-3 min-w-0">
           <UnifiedMenu />
-          <Link href="/explore" className="hidden sm:flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical whitespace-nowrap">
-            <ChevronLeft size={16} /> Back
+          <Link href="/explore" className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical whitespace-nowrap">
+            <ChevronLeft size={16} /> <span className="hidden sm:inline">Back</span>
           </Link>
         </div>
         <div className="flex flex-col items-center min-w-0">
@@ -242,6 +258,26 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
         )}
       </AnimatePresence>
 
+      {/* Error/Success Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+            onAnimationComplete={() => toast && setTimeout(() => setToast(null), 3000)}
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-3 rounded-lg shadow-xl backdrop-blur-sm border ${
+              toast.type === 'error'
+                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+            }`}
+          >
+            <span className="font-technical text-[11px] font-black uppercase tracking-widest">{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <main className="pt-24 px-3 sm:px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 text-left">
         {/* Left */}
         <div className="space-y-6">
@@ -274,7 +310,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
             <div className="flex flex-wrap items-center gap-2">
               <span className="bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
-                <CheckCircle2 size={12} /> Verified
+                <CheckCircle2 size={12} /> Verified · {relativeDate(listing.createdAt)}
               </span>
               {listing.flatmateNeeded && (
                 <span className="bg-emerald-400/10 border border-emerald-400/20 text-emerald-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
@@ -512,7 +548,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
       {/* Reward Modal */}
       <AnimatePresence>
-        {showRewardModal && (
+        {showRewardModal && upiDetails?.upiId && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-center">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowRewardModal(false)} className="absolute inset-0 bg-black/80 backdrop-blur-xl" />
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="relative w-full max-w-md bg-surface border border-white/10 rounded-lg p-10 shadow-2xl">
@@ -523,12 +559,22 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                 <h2 className="text-3xl font-black uppercase tracking-tighter font-display">Place Locked</h2>
                 <p className="text-on-surface-variant text-sm">Listing secured without broker interference. Pay the contributor their good faith reward.</p>
                 <div className="bg-white/5 border border-white/5 rounded-lg p-6 space-y-4">
-                  <div className="p-3 bg-white rounded-md inline-block"><QrCode size={120} className="text-black" /></div>
-                  <div className="font-technical text-[10px] uppercase tracking-widest text-primary font-black">Scan to Pay Good Faith Reward</div>
-                  <div className="text-2xl font-black text-on-surface tracking-tighter">₹{reward.toLocaleString()}</div>
-                  {listing.contributorUpiId && (
-                    <div className="text-[10px] text-on-surface-variant font-technical">UPI: {listing.contributorUpiId}</div>
-                  )}
+                  {(() => {
+                    const upiLink = `upi://pay?pa=${encodeURIComponent(upiDetails.upiId)}&pn=${encodeURIComponent(upiDetails.contributorName || 'Contributor')}&am=${reward}&cu=INR`;
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiLink)}&size=200x200`;
+                    return (
+                      <>
+                        <img src={qrUrl} alt="UPI Payment QR Code" className="w-40 h-40 mx-auto rounded-md" />
+                        <div className="font-technical text-[10px] uppercase tracking-widest text-primary font-black">Scan to Pay Good Faith Reward</div>
+                        <div className="text-2xl font-black text-on-surface tracking-tighter">₹{reward.toLocaleString()}</div>
+                        <a href={upiLink} className="w-full block">
+                          <button className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:shadow-lg active:scale-95">
+                            ✓ Pay via UPI App
+                          </button>
+                        </a>
+                      </>
+                    );
+                  })()}
                 </div>
                 <button onClick={() => setShowRewardModal(false)} className="w-full py-4 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] transition-all">Done</button>
               </div>

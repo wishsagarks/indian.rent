@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { MapPin, ChevronLeft, Trash2, Edit2, Check, X, Users, Clock, AlertTriangle, Award } from 'lucide-react';
 import { getMyListings, getMySeekerPins, updateMyListing, deleteMySeekerPin, deleteOwnPin } from '@/app/actions/map-actions';
+import { rewardFromRent } from '@/lib/constants';
 import UnifiedMenu from './UnifiedMenu';
 
 const STATUS_STYLE: Record<string, string> = {
@@ -12,10 +13,6 @@ const STATUS_STYLE: Record<string, string> = {
   partial: 'bg-amber-400/10 text-amber-400 border-amber-400/30',
   occupied: 'bg-red-400/10 text-red-400 border-red-400/30',
 };
-
-function rewardFromRent(rent: number): number {
-  return Math.round(Math.min(Math.max(rent * 0.05, 1000), 10000) / 100) * 100;
-}
 
 export default function MyPinsDashboard() {
   const [listings, setListings] = useState<any[]>([]);

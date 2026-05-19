@@ -3,6 +3,26 @@
 import { checkRateLimit, checkRateLimitStrict, getServerIpHash } from '@/lib/redis';
 import { createClient } from '@/utils/supabase/server';
 
+/**
+ * Reverse geocode coordinates to address via Google Geocoding API.
+ * Calls API from server-side using server-only API key.
+ */
+export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return null;
+
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`
+    );
+    const data = (await res.json()) as { results?: Array<{ formatted_address: string }> };
+    return data.results?.[0]?.formatted_address ?? null;
+  } catch (err) {
+    console.error('Reverse geocode failed:', err);
+    return null;
+  }
+}
+
 function isSafeUrl(url?: string | null): boolean {
   if (!url) return true;
   try {

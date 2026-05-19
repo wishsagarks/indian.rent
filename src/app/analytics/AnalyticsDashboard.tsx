@@ -22,7 +22,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
       icon: Building2,
       color: "text-primary",
       bg: "bg-primary/10",
-      description: "Active structural nodes deployed across the Hyderabad tactical grid."
+      description: "Active structural nodes deployed across our rental network."
     },
     {
       title: "Live Intel",
