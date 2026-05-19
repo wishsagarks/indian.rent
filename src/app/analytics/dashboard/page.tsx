@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { getSimpleAnalytics } from '@/app/actions/simple-analytics';
 import {
   SupplyDemandChart,
-  PriceDistributionChart,
   MarketSegmentChart,
 } from '@/components/analytics/MetricsCharts';
+import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistributionChartEnhanced';
 import KPICard3D from '@/components/analytics/KPICard3D';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 
@@ -146,10 +146,10 @@ export default function AnalyticsDashboard() {
                 )}
 
                 {data.priceData.length > 0 && (
-                  <PriceDistributionChart
+                  <PriceDistributionChartEnhanced
                     data={data.priceData}
                     title="Price Distribution by BHK"
-                    description="Market rent percentiles"
+                    description="Market rent percentiles with toggles"
                   />
                 )}
 

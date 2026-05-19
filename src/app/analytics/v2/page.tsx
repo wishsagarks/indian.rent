@@ -13,10 +13,10 @@ import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
 import OpportunityTable from '@/components/analytics/OpportunityTable';
 import {
   SupplyDemandChart,
-  PriceDistributionChart,
   MarketSegmentChart,
   LocalityPerformanceChart
 } from '@/components/analytics/MetricsCharts';
+import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistributionChartEnhanced';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 
 type City = 'bengaluru' | 'hyderabad';
@@ -280,7 +280,7 @@ export default function AnalyticsDashboardV2() {
                         title="Supply & Demand Trend"
                         description="30-day listing and seeker activity"
                       />
-                      <PriceDistributionChart
+                      <PriceDistributionChartEnhanced
                         data={priceDistData}
                         title="Price Distribution"
                         description="Market rent levels (P25, Median, P75, Avg)"
