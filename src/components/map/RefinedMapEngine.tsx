@@ -1359,7 +1359,7 @@ export default function RefinedMapEngine() {
       </AnimatePresence>
 
       {/* Mobile Nav */}
-      <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] overflow-x-auto flex items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg scrollbar-hide">
+      <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] overflow-x-auto flex items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg scrollbar-hide">
         <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-10 flex-shrink-0 transition-all active:scale-90">
           <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
         </button>

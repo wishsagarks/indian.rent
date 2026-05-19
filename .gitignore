@@ -20,6 +20,16 @@
 # production
 /build
 
+# Ignore markdown files except project documentation
+*.md
+!README.md
+!WIKI.md
+!ARCHITECTURE.md
+!CONTRIBUTING.md
+!GETTING_STARTED.md
+!DOCS_INDEX.md
+!LICENSE
+
 # misc
 .DS_Store
 *.pem
