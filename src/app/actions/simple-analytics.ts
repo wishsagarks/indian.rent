@@ -6,9 +6,9 @@ export async function getSimpleAnalytics(city: string) {
   const supabase = await createClient();
 
   try {
-    // Get listings by BHK
+    // Get listings by BHK (use flats_with_city view which includes city from buildings)
     const { data: listingsByBhk } = await supabase
-      .from('flats')
+      .from('flats_with_city')
       .select('bhk, rent_amount, created_at')
       .eq('city', city);
 

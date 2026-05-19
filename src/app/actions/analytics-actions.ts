@@ -69,7 +69,7 @@ export async function getSupplyDemandTrend(city: string) {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const { data, error } = await supabase
-    .from('flats')
+    .from('flats_with_city')
     .select('created_at')
     .eq('city', city)
     .gte('created_at', thirtyDaysAgo.toISOString());
@@ -109,7 +109,7 @@ export async function getPriceDistribution(city: string) {
 export async function getMarketSegmentation(city: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from('flats')
+    .from('flats_with_city')
     .select('bhk, furnishing')
     .eq('city', city);
 
