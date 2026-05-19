@@ -5,7 +5,15 @@ export async function fetchPlatformStats(): Promise<PlatformStatsData> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase.rpc('get_platform_stats');
-    if (error || !data || data.length === 0) throw new Error('no data');
+
+    if (error) {
+      console.error('RPC error:', error);
+      throw error;
+    }
+    if (!data || data.length === 0) {
+      console.warn('No data returned from get_platform_stats');
+      throw new Error('no data');
+    }
     const row = data[0];
 
     // Fetch API usage for current month
@@ -27,7 +35,12 @@ export async function fetchPlatformStats(): Promise<PlatformStatsData> {
       totalActions: Number(row.total_actions) || 0,
       apiUsage,
     };
-  } catch {
+  } catch (e: any) {
+    console.error('fetchPlatformStats error:', {
+      message: e?.message,
+      code: e?.code,
+      fullError: JSON.stringify(e)
+    });
     return {
       totalBuildings: 0,
       totalListings: 0,
