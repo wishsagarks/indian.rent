@@ -113,11 +113,14 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="font-technical text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-4 flex items-center gap-3"
+            className="font-technical text-[10px] font-black uppercase tracking-[0.5em] text-primary mb-6 flex items-center gap-6"
           >
             System Metrics // Data Visualization
-            <Link href="/analytics/v2" className="inline-flex items-center gap-2 px-3 py-1 bg-secondary/10 border border-secondary/30 rounded-full hover:bg-secondary/20 transition-all group">
-              <span className="text-[8px] font-black uppercase text-secondary">✨ NEW: v2</span>
+            <Link href="/analytics/v2" className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-secondary/30 to-secondary/20 border-2 border-secondary shadow-glow-green rounded-xl hover:shadow-[0_0_20px_rgba(47,248,1,0.6)] hover:from-secondary/50 hover:to-secondary/30 transition-all group active:scale-95">
+              <span className="text-[12px] font-black uppercase tracking-widest text-secondary drop-shadow-lg">✨ NEW: v2 Analytics</span>
+              <svg className="w-5 h-5 text-secondary group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
             </Link>
           </motion.div>
           <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter leading-none font-display mb-6">
