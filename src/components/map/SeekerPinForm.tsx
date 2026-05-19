@@ -57,8 +57,8 @@ export default function SeekerPinForm({ lat, lng, onClose, onSubmit }: SeekerPin
 
         {/* Budget */}
         <div className="space-y-3 text-left">
-          <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Budget (per month)</label>
-          <input type="number" placeholder="₹ Max budget" value={formData.budget} onChange={e => update({ budget: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface text-lg font-black placeholder:text-on-surface-variant/30 focus:border-emerald-400 outline-none" />
+          <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Budget (per month) <span className="text-[8px] opacity-60">Optional</span></label>
+          <input type="number" placeholder="₹ Max budget (optional)" value={formData.budget} onChange={e => update({ budget: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface text-lg font-black placeholder:text-on-surface-variant/30 focus:border-emerald-400 outline-none" />
         </div>
 
         {/* Move-in Timeline */}
@@ -109,10 +109,11 @@ export default function SeekerPinForm({ lat, lng, onClose, onSubmit }: SeekerPin
         </div>
       </div>
 
-      <div className="p-6 border-t border-white/5 bg-surface-container-low/50">
-        <button onClick={handleSubmit} disabled={!formData.budget} className="w-full py-4 bg-emerald-400 text-background rounded-lg font-black uppercase tracking-[0.3em] text-[10px] shadow-lg hover:bg-emerald-300 transition-all flex items-center justify-center gap-3 disabled:opacity-20 border border-white/10">
+      <div className="p-6 border-t border-white/5 bg-surface-container-low/50 space-y-3">
+        <button onClick={handleSubmit} className="w-full py-4 bg-emerald-400 text-background rounded-lg font-black uppercase tracking-[0.3em] text-[10px] shadow-lg hover:bg-emerald-300 active:scale-95 transition-all flex items-center justify-center gap-3 border border-white/10">
           <Search size={16} strokeWidth={3} /> Drop Seeker Pin <ChevronRight size={14} />
         </button>
+        <p className="text-[8px] text-on-surface-variant/60 text-center">Drop a pin on the map, then fill this form. Landlords will see demand patterns.</p>
       </div>
     </motion.div>
   );

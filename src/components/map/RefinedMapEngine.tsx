@@ -922,6 +922,8 @@ export default function RefinedMapEngine() {
                   </div>
                 </AdvancedMarker>
               )}
+              {/* Metro Overlay for Google Maps */}
+              <MetroOverlay visible={showMetro} />
             </GoogleMap>
           )}
         </div>
