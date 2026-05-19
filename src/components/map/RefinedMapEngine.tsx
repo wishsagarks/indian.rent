@@ -1030,20 +1030,20 @@ export default function RefinedMapEngine() {
                 <Link href="/" className="md:hidden font-display text-sm text-primary font-black tracking-tighter cursor-pointer uppercase">IR.</Link>
               </div>
 
-              {/* City Selector */}
-              <select
-                value={selectedCity}
-                onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
-                title={selectedCity}
-                className="px-2 md:px-2 py-1 md:py-0.5 rounded-full md:rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[10px] md:text-xs font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all text-center flex-1 mx-2 md:mx-0 appearance-none max-w-[120px] md:max-w-[100px]"
-              >
-                <option value="bengaluru">Bengaluru</option>
-                <option value="hyderabad">Hyderabad</option>
-                <option value="bhubaneswar">Bhubaneswar</option>
-                <option value="cuttack">Cuttack</option>
-              </select>
-              
-              <div className="flex items-center gap-1 md:gap-4 pr-1 md:pr-0">
+              <div className="flex items-center gap-1 md:gap-3 pr-1 md:pr-0">
+                {/* City Selector */}
+                <select
+                  value={selectedCity}
+                  onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
+                  title={selectedCity}
+                  className="px-2 py-1 md:py-0.5 rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[9px] md:text-[11px] font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all appearance-none"
+                >
+                  <option value="bengaluru">BLR</option>
+                  <option value="hyderabad">HYD</option>
+                  <option value="bhubaneswar">BBS</option>
+                  <option value="cuttack">CTK</option>
+                </select>
+
                 <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} title="Search location" className={`p-2 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={16} /></button>
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-full md:rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
                 <div className="hidden md:flex items-center gap-4">
