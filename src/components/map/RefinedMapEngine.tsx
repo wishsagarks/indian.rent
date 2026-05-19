@@ -75,8 +75,7 @@ export default function RefinedMapEngine() {
   const [geoStatus, setGeoStatus] = useState<string>('');
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
   const [showLegend, setShowLegend] = useState(true);
-  const [legendCloseAttempts, setLegendCloseAttempts] = useState(0);
-  const [legendAnimateKey, setLegendAnimateKey] = useState(0);
+  const [legendPopCount, setLegendPopCount] = useState(0);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
   const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>('bengaluru');
   const [geocodeCache, setGeocodeCache] = useState<Record<string, string>>({});
@@ -276,6 +275,34 @@ export default function RefinedMapEngine() {
     };
     wakeDatabase();
   }, []);
+
+  // Legend auto-pop and close effect
+  useEffect(() => {
+    if (!showLegend) return;
+
+    let popInterval: NodeJS.Timeout;
+    let closeTimeout: NodeJS.Timeout;
+
+    // Start popping animation 3 times
+    let popCount = 0;
+    popInterval = setInterval(() => {
+      popCount++;
+      setLegendPopCount(popCount);
+      if (popCount >= 3) {
+        clearInterval(popInterval);
+        // Close after last pop animation completes (500ms)
+        closeTimeout = setTimeout(() => {
+          setShowLegend(false);
+          setLegendPopCount(0);
+        }, 500);
+      }
+    }, 600); // Pop every 600ms
+
+    return () => {
+      clearInterval(popInterval);
+      clearTimeout(closeTimeout);
+    };
+  }, [showLegend]);
 
   useEffect(() => {
     if (!consented) return;
@@ -1140,30 +1167,24 @@ export default function RefinedMapEngine() {
         <AnimatePresence>
           {showLegend && (
             <motion.div
+              key="legend"
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: legendPopCount > 0 ? [1, 1.3, 1] : 1
+              }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: legendPopCount > 0 ? 0.4 : 0.3 }}
               className="mb-3 bg-surface border border-white/10 rounded-lg p-4 shadow-xl min-w-[220px]"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">Map Legend</div>
-                <motion.button
-                  key={legendAnimateKey}
-                  animate={legendCloseAttempts < 3 ? { scale: [1, 1.4, 1] } : {}}
-                  transition={{ duration: 0.4 }}
-                  onClick={() => {
-                    const newAttempts = legendCloseAttempts + 1;
-                    setLegendCloseAttempts(newAttempts);
-                    setLegendAnimateKey(prev => prev + 1);
-                    if (newAttempts >= 3) {
-                      setTimeout(() => setShowLegend(false), 300);
-                    }
-                  }}
-                  className="p-1 text-on-surface-variant hover:text-primary transition-colors"
-                  title={legendCloseAttempts < 3 ? `Click to close (${3 - legendCloseAttempts} taps remaining)` : 'Close legend'}
-                >
+                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">
+                  Map Legend {legendPopCount > 0 && <span className="text-xs opacity-50">({legendPopCount}/3)</span>}
+                </div>
+                <div className="p-1 text-on-surface-variant opacity-50">
                   <X size={14} />
-                </motion.button>
+                </div>
               </div>
               {[
                 { label: 'Gated Society',   Icon: Shield,      color: 'text-blue-400',   border: 'border-blue-400'   },
@@ -1188,14 +1209,9 @@ export default function RefinedMapEngine() {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            setShowLegend(v => !v);
-            if (!showLegend) {
-              setLegendCloseAttempts(0);
-            }
-          }}
+          onClick={() => setShowLegend(true)}
           className={`w-11 h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
-          title="Map Legend"
+          title="Show Map Legend"
         >
           <Info size={18} />
         </motion.button>
