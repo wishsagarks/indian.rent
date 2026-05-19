@@ -921,7 +921,8 @@ export default function RefinedMapEngine() {
               <select
                 value={selectedCity}
                 onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
-                className="px-3 py-1.5 rounded-lg bg-surface border border-white/20 text-on-surface font-technical text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all"
+                title={selectedCity}
+                className="px-1.5 md:px-3 py-1.5 rounded-lg bg-surface border border-white/20 text-on-surface font-technical text-xs md:text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all min-w-fit"
               >
                 <option value="bengaluru">🏙️ Bengaluru</option>
                 <option value="hyderabad">🏙️ Hyderabad</option>
@@ -1340,20 +1341,20 @@ export default function RefinedMapEngine() {
       </AnimatePresence>
 
       {/* Mobile Nav */}
-      <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] flex justify-around items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg">
-        <button onClick={handleLocateMe} className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg hover:text-primary hover:bg-white/5"><Navigation size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest opacity-60">Locate</span></button>
-        <button onClick={() => setIsSeekerMode(!isSeekerMode)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${isSeekerMode ? 'text-emerald-400 bg-emerald-400/10' : 'text-on-surface-variant hover:bg-white/5'}`}><Users size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Hunt</span></button>
-        <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 flex-1 transition-all active:scale-90">
+      <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] overflow-x-auto flex items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg scrollbar-hide">
+        <button onClick={() => setIsSeekerMode(!isSeekerMode)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${isSeekerMode ? 'text-emerald-400 bg-emerald-400/10' : 'text-on-surface-variant hover:bg-white/5'}`}><Users size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Looking</span></button>
+        <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-10 flex-shrink-0 transition-all active:scale-90">
           <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
         </button>
-        <button onClick={() => { 
+        <button onClick={() => {
           const next = !showAreaStats;
-          setShowAreaStats(next); 
-          if (next && !areaStatsCenter) { 
-            setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); 
-          } 
-        }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
-        <button onClick={() => setShowFilters(!showFilters)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showFilters ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`}><SlidersHorizontal size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Filter</span></button>
+          setShowAreaStats(next);
+          if (next && !areaStatsCenter) {
+            setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude });
+          }
+        }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Area</span></button>
+        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:bg-white/5'}`} title="Metro"><Train size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Metro</span></button>
+        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:bg-white/5'}`} title="Live Stats"><BarChart3 size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Live</span></button>
       </nav>
     </div>
     </APIProvider>
