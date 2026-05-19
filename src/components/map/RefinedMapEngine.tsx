@@ -14,7 +14,7 @@ import LiveStatsPanel from './LiveStatsPanel';
 import SeekerPinForm from './SeekerPinForm';
 import ConsentSplash from './ConsentSplash';
 import Link from 'next/link';
-import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
+import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle, CheckCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
 import { getMapIntel, deployNode, searchLocalities, getSeekerPins, dropSeekerPin, deleteOwnPin, subscribeToArea, trackApiUsage } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
@@ -67,6 +67,8 @@ export default function RefinedMapEngine() {
   const [notifyRadius, setNotifyRadius] = useState(5);
   const [notifySubmitting, setNotifySubmitting] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [seekerPinSuccess, setSeekerPinSuccess] = useState(false);
+  const [lastSeekerEmail, setLastSeekerEmail] = useState<string | null>(null);
   const [geoStatus, setGeoStatus] = useState<string>('');
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
   const [showLegend, setShowLegend] = useState(true);
@@ -461,7 +463,12 @@ export default function RefinedMapEngine() {
   const handleSeekerSubmit = async (data: any) => {
     const result = await dropSeekerPin({ ...data, ipHash });
     if (result.error) { alert(result.error); }
-    else { setShowSeekerForm(false); setIsSeekerMode(false); fetchIntel(); }
+    else {
+      setLastSeekerEmail(data.email);
+      setSeekerPinSuccess(true);
+      setShowSeekerForm(false);
+      fetchIntel();
+    }
   };
 
   const handleMapClick = (e: any) => {
@@ -631,8 +638,8 @@ export default function RefinedMapEngine() {
               <MapboxNavigationControl position="top-right" />
               <MetroOverlay visible={showMetro} />
 
-              {/* Seeker Pins */}
-              {seekerPins.map(sp => (
+              {/* Seeker Pins - Show only own pin */}
+              {seekerPins.filter(sp => sp.ip_hash === ipHash).map(sp => (
                 <MapboxMarker key={sp.id} longitude={sp.longitude} latitude={sp.latitude} anchor="center">
                   <div className="w-6 h-6 rounded-full bg-emerald-400/80 border-2 border-white flex items-center justify-center shadow-lg">
                     <Search size={10} className="text-white" />
@@ -855,6 +862,20 @@ export default function RefinedMapEngine() {
           </div>
         )}
 
+        {/* Seeker Mode Activation Banner */}
+        <AnimatePresence>
+          {isSeekerMode && !showSeekerForm && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-emerald-400 text-background px-6 py-3 rounded-lg font-technical text-[10px] font-black uppercase tracking-widest shadow-xl max-w-md text-center"
+            >
+              Drop a pin where you're looking for a flat. Landlords see demand heatmaps. Your info stays private. ✓
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Target Reticle */}
         <AnimatePresence>
           {(isAddingProperty || isSeekerMode) && !showSeekerForm && (
@@ -900,7 +921,7 @@ export default function RefinedMapEngine() {
                 <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
                 <div className="w-px h-4 bg-white/10 hidden md:block" />
-                <button onClick={() => { setIsSeekerMode(!isSeekerMode); setShowSeekerForm(false); }} className={`p-2 rounded-lg transition-all ${isSeekerMode ? 'bg-emerald-400/20 text-emerald-400' : 'text-on-surface-variant hover:text-emerald-400'}`} title="Flat Hunt"><Users size={16} /></button>
+                <button onClick={() => { setIsSeekerMode(!isSeekerMode); setShowSeekerForm(false); }} className={`p-2 rounded-lg transition-all ${isSeekerMode ? 'bg-emerald-400/20 text-emerald-400' : 'text-on-surface-variant hover:text-emerald-400'}`} title="I'm Looking for a flat"><Users size={16} /></button>
                 <button onClick={fetchIntel} className={`text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={16} strokeWidth={2.5} /></button>
               </div>
             </div>
@@ -1045,6 +1066,33 @@ export default function RefinedMapEngine() {
                 <Bell size={14} /> {notifySubmitting ? 'Subscribing...' : 'Subscribe'}
               </button>
               <button onClick={() => setShowNotifyModal(false)} className="w-full mt-2 py-3 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-on-surface-variant">Close</button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Seeker Pin Success Modal */}
+      <AnimatePresence>
+        {seekerPinSuccess && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+            <div onClick={() => setSeekerPinSuccess(false)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="relative bg-surface border border-white/10 rounded-lg p-8 max-w-sm w-full shadow-2xl">
+              <div className="w-16 h-16 bg-emerald-400/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle size={32} className="text-emerald-400" />
+              </div>
+              <h3 className="text-2xl font-black text-on-surface uppercase tracking-tighter mb-2 text-center">Pin Dropped!</h3>
+              <p className="text-on-surface-variant text-sm mb-6 text-center">
+                We'll notify you at <span className="text-primary font-bold">{lastSeekerEmail}</span> when a matching listing appears nearby.
+              </p>
+              <p className="text-on-surface-variant text-xs mb-6 text-center opacity-70">
+                Check your email for confirmation. Landlords can see demand heatmaps to list properties where they're needed most.
+              </p>
+              <button
+                onClick={() => setSeekerPinSuccess(false)}
+                className="w-full py-3 bg-emerald-400/20 border border-emerald-400/40 text-emerald-400 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] hover:bg-emerald-400/30 transition-all"
+              >
+                Got It
+              </button>
             </motion.div>
           </motion.div>
         )}
