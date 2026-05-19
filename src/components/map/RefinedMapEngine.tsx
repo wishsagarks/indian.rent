@@ -24,6 +24,17 @@ import { useSystemTheme } from '@/hooks/useSystemTheme';
 import { PlaceAutocomplete } from './PlaceAutocomplete';
 import { useDriverJS } from '@/hooks/useDriverJS';
 
+type PlaceResult = {
+  geometry?: {
+    location?: {
+      lat: () => number;
+      lng: () => number;
+    };
+  };
+  name?: string;
+  formatted_address?: string;
+};
+
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 const MAP_PROVIDER = process.env.NEXT_PUBLIC_MAP_PROVIDER || 'mapbox';
@@ -209,7 +220,7 @@ export default function RefinedMapEngine() {
       fetchIntel();
       // Track API usage for quota monitoring
       const mapProvider = MAP_PROVIDER === 'google' ? 'google_maps' : 'mapbox';
-      trackApiUsage(mapProvider as any);
+      trackApiUsage(mapProvider as any).catch(e => console.warn('Usage tracking failed:', e));
     }
   }, [fetchIntel, consented]);
 
@@ -245,7 +256,7 @@ export default function RefinedMapEngine() {
 
       // Filter by selected city
       // If city field is missing, infer from building location based on proximity to city centers
-      let buildingCity = props.city?.toLowerCase();
+      let buildingCity = typeof props.city === 'string' ? props.city.toLowerCase() : null;
 
       // If no city data, try to infer from coordinates
       if (!buildingCity && p.geometry?.coordinates) {
@@ -601,8 +612,17 @@ export default function RefinedMapEngine() {
     );
   }
 
+  console.log('Grid Telemetry:', { 
+    provider: MAP_PROVIDER, 
+    hasApiKey: !!GOOGLE_MAPS_API_KEY, 
+    mapId, 
+    city: selectedCity,
+    pointsCount: points.length,
+    filteredCount: filteredPoints.length
+  });
+
   return (
-    <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places']}>
+    <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places', 'marker']}>
       <div className="h-screen w-full overflow-hidden bg-background relative selection:bg-primary/20 selection:text-primary">
         {/* Map */}
         <div id="map-container" className="absolute inset-0 z-0 bg-background">
@@ -718,9 +738,16 @@ export default function RefinedMapEngine() {
                 strictBounds: false
               }}
               onCameraChanged={(ev) => {
-                setViewState({ ...viewState, latitude: ev.detail.center.lat, longitude: ev.detail.center.lng, zoom: ev.detail.zoom });
+                if (ev.detail.center && typeof ev.detail.center.lat === 'number' && typeof ev.detail.center.lng === 'number') {
+                  setViewState(prev => ({ ...prev, latitude: ev.detail.center.lat, longitude: ev.detail.center.lng, zoom: ev.detail.zoom }));
+                }
                 if (ev.detail.bounds) {
-                  setGoogleBounds([ev.detail.bounds.west, ev.detail.bounds.south, ev.detail.bounds.east, ev.detail.bounds.north]);
+                  setGoogleBounds([
+                    Number(ev.detail.bounds.west) || -180, 
+                    Number(ev.detail.bounds.south) || -85, 
+                    Number(ev.detail.bounds.east) || 180, 
+                    Number(ev.detail.bounds.north) || 85
+                  ]);
                 }
               }}
               style={{ width: '100%', height: '100%' }}
