@@ -122,52 +122,72 @@ export default function RefinedMapEngine() {
   const mapId = systemTheme === 'dark' ? 'TACTICAL_HUD_MAP' : 'LIGHT_HUD_MAP';
 
   const processIntelData = useCallback((data: any[]) => {
-    if (data && data.length > 0) {
-      const featurePoints = data.map((b: any) => {
-        const allFlats: any[] = [];
-        b.floors?.forEach((f: any) => {
-          f.flats?.forEach((fl: any) => {
-            allFlats.push({
-              ...fl,
-              floorNumber: f.floor_number,
-              buildingId: b.id,
-              buildingName: b.name,
-              category: b.category,
-              address: b.address,
-              city: b.city
+    try {
+      if (data && Array.isArray(data) && data.length > 0) {
+        const featurePoints = data.map((b: any) => {
+          if (!b || !b.location || !b.location.coordinates || !Array.isArray(b.location.coordinates)) return null;
+          
+          const allFlats: any[] = [];
+          try {
+            b.floors?.forEach((f: any) => {
+              f.flats?.forEach((fl: any) => {
+                allFlats.push({
+                  ...fl,
+                  floorNumber: f.floor_number,
+                  buildingId: b.id,
+                  buildingName: b.name,
+                  category: b.category,
+                  address: b.address,
+                  city: b.city
+                });
+              });
             });
-          });
-        });
+          } catch (e) {
+            console.error('Error processing floors/flats for building:', b.id, e);
+          }
 
-        const isEmpty = allFlats.length === 0;
+          const isEmpty = allFlats.length === 0;
 
-        return {
-          type: "Feature",
-          properties: {
-            cluster: false,
-            propertyId: b.id,
-            category: b.category,
-            name: b.name,
-            allFlats: allFlats,
-            isEmpty: isEmpty,
-            // Initial values
-            rent: isEmpty ? 'NODE' : `₹${allFlats[0].rent_amount?.toLocaleString()}`,
-            rentNum: isEmpty ? 0 : (allFlats[0].rent_amount || 0),
-            bhk: isEmpty ? null : (allFlats[0].bhk || null),
-            furnishing: isEmpty ? null : (allFlats[0].furnishing || null),
-            flatmateNeeded: !isEmpty && allFlats.some(f => f.flatmate_needed),
-            ipHash: b.ip_hash || (isEmpty ? '' : allFlats[0].ip_hash) || '',
-            updatedAt: b.updated_at || (isEmpty ? null : allFlats[0].updated_at),
-            image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop',
-            user: { name: 'User', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }
-          },
-          geometry: { type: "Point", coordinates: [parseFloat(b.location.coordinates[0]), parseFloat(b.location.coordinates[1])] }
-        };
-      });
-      setPoints(featurePoints);
-    } else {
-      const rentNum = 45000;
-      setPoints(MOCK_INTEL.map(m => ({ type: "Feature", properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: rentNum }], rentNum, bhk: '2', furnishing: 'semi-furnished', flatmateNeeded: false, ipHash: '' }, geometry: { type: "Point", coordinates: [m.lng, m.lat] } })));
+          return {
+            type: "Feature",
+            properties: {
+              cluster: false,
+              propertyId: b.id || Math.random().toString(),
+              category: b.category || 'standalone',
+              name: b.name || 'Unknown Building',
+              allFlats: allFlats,
+              isEmpty: isEmpty,
+              // Initial values
+              rent: isEmpty ? 'NODE' : `₹${allFlats[0]?.rent_amount?.toLocaleString() || '0'}`,
+              rentNum: isEmpty ? 0 : (allFlats[0]?.rent_amount || 0),
+              bhk: isEmpty ? null : (allFlats[0]?.bhk || null),
+              furnishing: isEmpty ? null : (allFlats[0]?.furnishing || null),
+              flatmateNeeded: !isEmpty && allFlats.some(f => f.flatmate_needed),
+              ipHash: b.ip_hash || (isEmpty ? '' : allFlats[0]?.ip_hash) || '',
+              updatedAt: b.updated_at || (isEmpty ? null : allFlats[0]?.updated_at),
+              image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop',
+              user: { name: 'User', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }
+            },
+            geometry: { 
+              type: "Point", 
+              coordinates: [
+                parseFloat(b.location.coordinates[0]) || 0, 
+                parseFloat(b.location.coordinates[1]) || 0
+              ] 
+            }
+          };
+        }).filter(Boolean);
+        setPoints(featurePoints);
+      } else {
+        const rentNum = 45000;
+        setPoints(MOCK_INTEL.map(m => ({ 
+          type: "Feature", 
+          properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: rentNum }], rentNum, bhk: '2', furnishing: 'semi-furnished', flatmateNeeded: false, ipHash: '' }, 
+          geometry: { type: "Point", coordinates: [m.lng, m.lat] } 
+        })));
+      }
+    } catch (err) {
+      console.error('Critical failure in processIntelData:', err);
     }
   }, []);
 
@@ -309,9 +329,19 @@ export default function RefinedMapEngine() {
   }, [points, filters, isAddingProperty, selectedCity]);
 
   // For Mapbox, get bounds from ref; for Google Maps, use state (which is updated from onCameraChanged)
-  const bounds: [number, number, number, number] = MAP_PROVIDER === 'mapbox' && mapRef.current
-    ? mapRef.current.getMap().getBounds().toArray().flat()
-    : googleBounds;
+  const bounds: [number, number, number, number] = useMemo(() => {
+    try {
+      if (MAP_PROVIDER === 'mapbox' && mapRef.current) {
+        const map = mapRef.current.getMap();
+        if (map && map.getBounds) {
+          return map.getBounds().toArray().flat() as [number, number, number, number];
+        }
+      }
+    } catch (e) {
+      console.error('Error getting Mapbox bounds:', e);
+    }
+    return googleBounds;
+  }, [googleBounds, mapRef.current]);
 
   // Dynamic cluster radius based on zoom level - more clustered at lower zoom, less at higher zoom
   const clusterRadius = viewState.zoom > 16 ? 25 : viewState.zoom > 14 ? 40 : 60;
@@ -605,50 +635,68 @@ export default function RefinedMapEngine() {
               )}
 
               {/* Listing Clusters & Markers */}
-              {clusters.map((cluster) => {
-                const [longitude, latitude] = cluster.geometry.coordinates;
-                const { cluster: isCluster, point_count: pointCount } = cluster.properties;
-                if (isCluster) {
-                  const size = Math.max(36, 28 + pointCount * 1.5);
+              {clusters.map((cluster: any) => {
+                try {
+                  const coordinates = cluster.geometry?.coordinates;
+                  if (!coordinates || !Array.isArray(coordinates)) return null;
+                  const [longitude, latitude] = coordinates;
+                  const { cluster: isCluster, point_count: pointCount } = cluster.properties || {};
+                  
+                  if (isCluster) {
+                    const size = Math.max(36, 28 + (pointCount || 0) * 1.5);
+                    return (
+                      <MapboxMarker key={`cluster-${cluster.id}`} longitude={longitude} latitude={latitude}>
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all active:scale-90"
+                          style={{ width: size, height: size }}
+                          onClick={() => { 
+                            try {
+                              const z = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20); 
+                              setViewState({ ...viewState, longitude, latitude, zoom: z }); 
+                            } catch (e) {
+                              setViewState({ ...viewState, longitude, latitude, zoom: viewState.zoom + 2 });
+                            }
+                          }}
+                        >
+                          <span className="leading-none">{pointCount}</span>
+                          <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
+                        </motion.div>
+                      </MapboxMarker>
+                    );
+                  }
+
+                  if (!cluster.properties?.propertyId) return null;
+
                   return (
-                    <MapboxMarker key={`cluster-${cluster.id}`} longitude={longitude} latitude={latitude}>
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all active:scale-90"
-                        style={{ width: size, height: size }}
-                        onClick={() => { const z = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20); setViewState({ ...viewState, longitude, latitude, zoom: z }); }}
-                      >
-                        <span className="leading-none">{pointCount}</span>
-                        <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
-                      </motion.div>
+                    <MapboxMarker 
+                      key={`prop-${cluster.properties.propertyId}`} 
+                      longitude={longitude} 
+                      latitude={latitude} 
+                      anchor="bottom"
+                    >
+                      <AliveMarker
+                        prop={cluster.properties}
+                        onClick={() => {
+                          if (isAddingProperty) {
+                            setAddFormInitialData({
+                              existingBuildingId: cluster.properties.propertyId,
+                              buildingName: cluster.properties.name,
+                              category: cluster.properties.category
+                            });
+                          } else {
+                            setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                            setStreetViewFailed(false);
+                          }
+                        }}
+                      />
                     </MapboxMarker>
                   );
+                } catch (e) {
+                  console.error('Error rendering Mapbox cluster:', e);
+                  return null;
                 }
-                return (
-                  <MapboxMarker 
-                    key={`prop-${cluster.properties.propertyId}`} 
-                    longitude={longitude} 
-                    latitude={latitude} 
-                    anchor="bottom"
-                  >
-                    <AliveMarker
-                      prop={cluster.properties}
-                      onClick={() => {
-                        if (isAddingProperty) {
-                          setAddFormInitialData({
-                            existingBuildingId: cluster.properties.propertyId,
-                            buildingName: cluster.properties.name,
-                            category: cluster.properties.category
-                          });
-                        } else {
-                          setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
-                          setStreetViewFailed(false);
-                        }
-                      }}
-                    />
-                  </MapboxMarker>
-                );
               })}
             </MapboxMap>
           ) : (
@@ -677,71 +725,84 @@ export default function RefinedMapEngine() {
               }}
               style={{ width: '100%', height: '100%' }}
             >
-              {clusters.map((cluster) => {
-                const [longitude, latitude] = cluster.geometry.coordinates;
-                const { cluster: isCluster, point_count: pointCount } = cluster.properties;
-                
-                if (isCluster) {
-                  const size = Math.max(36, 28 + pointCount * 1.5);
-                  return (
-                    <AdvancedMarker
-                      key={`cluster-${cluster.id}`}
-                      position={{ lat: latitude, lng: longitude }}
-                      onClick={() => {
-                        const expansionZoom = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20);
-                        setViewState({ ...viewState, latitude, longitude, zoom: expansionZoom });
-                      }}
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all"
-                        style={{ width: size, height: size }}
-                      >
-                        <span className="leading-none">{pointCount}</span>
-                        <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
-                      </motion.div>
-                    </AdvancedMarker>
-                  );
-                }
-
-                // Zoom-aware rendering: compact at low zoom, full detail at high zoom
-                return (
-                  <AdvancedMarker
-                    key={`prop-${cluster.properties.propertyId}`}
-                    position={{ lat: latitude, lng: longitude }}
-                  >
-                    {viewState.zoom >= 15.5 ? (
-                      <AliveMarker
-                        prop={cluster.properties}
+              {clusters.map((cluster: any) => {
+                try {
+                  const coordinates = cluster.geometry?.coordinates;
+                  if (!coordinates || !Array.isArray(coordinates)) return null;
+                  const [longitude, latitude] = coordinates;
+                  const { cluster: isCluster, point_count: pointCount } = cluster.properties || {};
+                  
+                  if (isCluster) {
+                    const size = Math.max(36, 28 + (pointCount || 0) * 1.5);
+                    return (
+                      <AdvancedMarker
+                        key={`cluster-${cluster.id || Math.random()}`}
+                        position={{ lat: latitude, lng: longitude }}
                         onClick={() => {
-                          if (isAddingProperty) {
-                            setAddFormInitialData({
-                              existingBuildingId: cluster.properties.propertyId,
-                              buildingName: cluster.properties.name,
-                              category: cluster.properties.category
-                            });
-                          } else {
-                            setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
-                            setStreetViewFailed(false);
+                          try {
+                            const expansionZoom = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20);
+                            setViewState({ ...viewState, latitude, longitude, zoom: expansionZoom });
+                          } catch (e) {
+                            setViewState({ ...viewState, latitude, longitude, zoom: viewState.zoom + 2 });
                           }
                         }}
-                      />
-                    ) : (
-                      <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileHover={{ scale: 1.1 }}
-                        onClick={() => {
-                          if (!isAddingProperty) setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
-                        }}
-                        className={`px-2 py-1 rounded-full bg-surface border-2 text-[10px] font-black text-on-surface shadow-lg whitespace-nowrap cursor-pointer transition-all ${getMarkerColor(cluster.properties.category, cluster.properties.ipHash)}`}
                       >
-                        {cluster.properties.isEmpty ? '·' : cluster.properties.rent}
-                      </motion.div>
-                    )}
-                  </AdvancedMarker>
-                );
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all"
+                          style={{ width: size, height: size }}
+                        >
+                          <span className="leading-none">{pointCount}</span>
+                          <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
+                        </motion.div>
+                      </AdvancedMarker>
+                    );
+                  }
+
+                  if (!cluster.properties?.propertyId) return null;
+
+                  // Zoom-aware rendering: compact at low zoom, full detail at high zoom
+                  return (
+                    <AdvancedMarker
+                      key={`prop-${cluster.properties.propertyId}`}
+                      position={{ lat: latitude, lng: longitude }}
+                    >
+                      {viewState.zoom >= 15.5 ? (
+                        <AliveMarker
+                          prop={cluster.properties}
+                          onClick={() => {
+                            if (isAddingProperty) {
+                              setAddFormInitialData({
+                                existingBuildingId: cluster.properties.propertyId,
+                                buildingName: cluster.properties.name,
+                                category: cluster.properties.category
+                              });
+                            } else {
+                              setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                              setStreetViewFailed(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <motion.div
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => {
+                            if (!isAddingProperty) setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                          }}
+                          className={`px-2 py-1 rounded-full bg-surface border-2 text-[10px] font-black text-on-surface shadow-lg whitespace-nowrap cursor-pointer transition-all ${getMarkerColor(cluster.properties.category, cluster.properties.ipHash)}`}
+                        >
+                          {cluster.properties.isEmpty ? '·' : cluster.properties.rent}
+                        </motion.div>
+                      )}
+                    </AdvancedMarker>
+                  );
+                } catch (e) {
+                  console.error('Error rendering Google cluster:', e);
+                  return null;
+                }
               })}
               {/* User Location Marker */}
               {userLocation && (
@@ -1194,7 +1255,13 @@ export default function RefinedMapEngine() {
         <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 flex-1 transition-all active:scale-90">
           <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
         </button>
-        <button onClick={() => setShowAreaStats(!showAreaStats)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
+        <button onClick={() => { 
+          const next = !showAreaStats;
+          setShowAreaStats(next); 
+          if (next && !areaStatsCenter) { 
+            setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); 
+          } 
+        }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
         <button onClick={() => setShowFilters(!showFilters)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showFilters ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`}><SlidersHorizontal size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Filter</span></button>
       </nav>
     </div>
