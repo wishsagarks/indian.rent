@@ -5,9 +5,9 @@ import Link from 'next/link';
 import { getSimpleAnalytics } from '@/app/actions/simple-analytics';
 import {
   SupplyDemandChart,
-  MarketSegmentChart,
 } from '@/components/analytics/MetricsCharts';
 import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistributionChartEnhanced';
+import MarketSegmentChartEnhanced from '@/components/analytics/MarketSegmentChartEnhanced';
 import KPICard3D from '@/components/analytics/KPICard3D';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 
@@ -154,7 +154,7 @@ export default function AnalyticsDashboard() {
                 )}
 
                 {data.segmentData.length > 0 && (
-                  <MarketSegmentChart
+                  <MarketSegmentChartEnhanced
                     data={data.segmentData}
                     title="Market Segmentation"
                     description="Listings by BHK type"

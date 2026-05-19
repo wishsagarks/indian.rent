@@ -13,10 +13,10 @@ import CityComparisonGrid from '@/components/analytics/CityComparisonGrid';
 import OpportunityTable from '@/components/analytics/OpportunityTable';
 import {
   SupplyDemandChart,
-  MarketSegmentChart,
   LocalityPerformanceChart
 } from '@/components/analytics/MetricsCharts';
 import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistributionChartEnhanced';
+import MarketSegmentChartEnhanced from '@/components/analytics/MarketSegmentChartEnhanced';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 
 type City = 'bengaluru' | 'hyderabad';
@@ -285,7 +285,7 @@ export default function AnalyticsDashboardV2() {
                         title="Price Distribution"
                         description="Market rent levels (P25, Median, P75, Avg)"
                       />
-                      <MarketSegmentChart
+                      <MarketSegmentChartEnhanced
                         data={marketSegData}
                         title="Market Segmentation"
                         description="Listings by BHK and furnishing type"
