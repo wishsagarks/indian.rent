@@ -361,7 +361,13 @@ export default function RefinedMapEngine() {
   }, [showLegend, legendManual]);
 
   useEffect(() => {
-    if (!consented) return;
+    if (!consented || typeof window === 'undefined') return;
+
+    // Skip real-time in insecure contexts (development with HTTP)
+    if (window.location.protocol !== 'https:' && process.env.NODE_ENV === 'development') {
+      return;
+    }
+
     const supabase = createClient();
     const channel = supabase.channel('map-snapshot-changes').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'map_snapshot', filter: 'id=eq.1' }, (payload: any) => {
       if (payload.new && (payload.new as any).data) processIntelData((payload.new as any).data);
