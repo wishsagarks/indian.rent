@@ -80,12 +80,12 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
   return (
     <div className="min-h-screen bg-background text-on-background font-sans selection:bg-primary/20">
       {/* Background Decor */}
-      <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
-         <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.02)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(255,255,255,0.02)_1px,_transparent_1px)] bg-[size:40px_40px]" />
+      <div className="fixed inset-0 z-0 opacity-30 pointer-events-none">
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-secondary/5 to-background" />
+         <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(0,102,255,0.05)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(47,248,1,0.05)_1px,_transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
-      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-6">
+      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/90 backdrop-blur-xl border-b border-primary/30 shadow-glow-blue-sm px-6">
         <div className="max-w-7xl w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
             <UnifiedMenu />
@@ -131,30 +131,34 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
         {/* Resource Telemetry */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           {systemMetrics.map((m, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, x: i % 2 === 0 ? -20 : 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="glass-plate border border-white/5 p-6 rounded-lg flex flex-col gap-4"
+              className={`glass-plate border p-6 rounded-lg flex flex-col gap-4 ${
+                m.color === 'text-secondary'
+                  ? 'border-secondary/50 shadow-glow-green-sm'
+                  : 'border-primary/50 shadow-glow-blue-sm'
+              }`}
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <m.icon className={m.color} size={18} />
-                  <span className="font-technical text-[10px] font-black uppercase tracking-widest">{m.label}</span>
+                  <m.icon className={`${m.color} drop-shadow-lg`} size={18} />
+                  <span className="font-technical text-[10px] font-black uppercase tracking-widest text-on-surface">{m.label}</span>
                 </div>
-                <div className="text-[10px] font-technical opacity-40 uppercase tracking-widest">
+                <div className="text-[10px] font-technical opacity-60 uppercase tracking-widest">
                   {m.value} / {m.limit}
                 </div>
               </div>
-              <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                <motion.div 
+              <div className="h-2 w-full bg-surface-container rounded-full overflow-hidden border border-primary/20">
+                <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${m.percent}%` }}
                   transition={{ duration: 1.5, ease: "circOut" }}
-                  className={`h-full ${m.color === 'text-secondary' ? 'bg-secondary shadow-[0_0_10px_rgba(47,248,1,0.5)]' : 'bg-primary shadow-[0_0_10px_rgba(0,102,255,0.5)]'}`}
+                  className={`h-full ${m.color === 'text-secondary' ? 'bg-secondary shadow-glow-green' : 'bg-primary shadow-glow-blue'}`}
                 />
               </div>
-              <p className="font-technical text-[8px] uppercase tracking-[0.3em] opacity-30">{m.sub}</p>
+              <p className="font-technical text-[8px] uppercase tracking-[0.3em] opacity-50">{m.sub}</p>
             </motion.div>
           ))}
         </div>
@@ -162,23 +166,27 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
         {/* Bento Grid Analytics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
           {cards.map((card, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
               whileHover={{ y: -5 }}
-              className="glass-plate border border-white/5 p-8 rounded-lg relative overflow-hidden group"
+              className={`glass-plate border p-8 rounded-lg relative overflow-hidden group transition-all ${
+                i % 2 === 0
+                  ? 'border-primary/40 shadow-glow-blue-sm hover:shadow-glow-blue'
+                  : 'border-secondary/40 shadow-glow-green-sm hover:shadow-glow-green'
+              }`}
             >
-              <div className={`absolute -right-4 -top-4 w-24 h-24 ${card.bg} blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity`} />
-              <card.icon className={`${card.color} mb-6`} size={32} />
-              <div className="text-4xl font-black tracking-tighter mb-1 text-on-background">
+              <div className={`absolute -right-4 -top-4 w-24 h-24 ${card.bg} blur-2xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity`} />
+              <card.icon className={`${card.color} mb-6 drop-shadow-lg`} size={32} />
+              <div className="text-4xl font-black tracking-tighter mb-1 text-on-background drop-shadow-md">
                 {card.value}
               </div>
-              <div className="font-technical text-[10px] uppercase tracking-[0.2em] font-black opacity-40 mb-4">
+              <div className="font-technical text-[10px] uppercase tracking-[0.2em] font-black text-primary/80 mb-4">
                 {card.sub}
               </div>
-              <p className="text-[10px] font-technical uppercase tracking-widest leading-relaxed opacity-30 group-hover:opacity-60 transition-opacity">
+              <p className="text-[10px] font-technical uppercase tracking-widest leading-relaxed opacity-50 group-hover:opacity-70 transition-opacity">
                 {card.description}
               </p>
             </motion.div>
@@ -186,7 +194,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
         </div>
 
         {/* API Quotas Section */}
-        <div className="mt-12 glass-plate border border-white/5 p-8 rounded-lg">
+        <div className="mt-12 glass-plate border border-primary/30 shadow-glow-blue-sm p-8 rounded-lg">
           <h3 className="text-xl font-black uppercase tracking-tight mb-8">API Quotas (This Month)</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {(() => {
@@ -210,13 +218,13 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                         {used.toLocaleString()} / {quota.monthly.toLocaleString()}
                       </span>
                     </div>
-                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-2.5 w-full bg-surface-container rounded-full overflow-hidden border border-primary/20">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${percent}%` }}
                         transition={{ delay: 1.2, duration: 1 }}
                         className={`h-full rounded-full ${
-                          percent > 80 ? 'bg-red-400' : percent > 50 ? 'bg-amber-400' : 'bg-primary'
+                          percent > 80 ? 'bg-red-500 shadow-[0_0_8px_rgba(255,0,0,0.5)]' : percent > 50 ? 'bg-amber-500 shadow-[0_0_8px_rgba(255,165,0,0.5)]' : 'bg-primary shadow-glow-blue-sm'
                         }`}
                       />
                     </div>
@@ -232,11 +240,11 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-12">
           {/* Growth Chart Mockup */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="lg:col-span-2 glass-plate border border-white/5 p-8 rounded-lg"
+            className="lg:col-span-2 glass-plate border border-secondary/50 shadow-glow-green-sm p-8 rounded-lg"
           >
             {/* Velocity Chart */}
             {(() => {
@@ -272,9 +280,9 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                             initial={{ height: 0 }}
                             animate={{ height: `${(v.count / maxCount) * 100}%` }}
                             transition={{ delay: 0.8 + (i * 0.05), duration: 1, ease: "circOut" }}
-                            className="w-full bg-primary/20 group-hover:bg-primary/50 transition-colors rounded-t-sm relative"
+                            className="w-full bg-gradient-to-t from-secondary/50 to-secondary/20 group-hover:from-secondary/80 group-hover:to-secondary/40 transition-colors rounded-t-sm relative shadow-glow-green-sm"
                           >
-                            <div className="absolute top-0 left-0 w-full h-[2px] bg-primary shadow-[0_0_10px_rgba(179,197,255,0.8)]" />
+                            <div className="absolute top-0 left-0 w-full h-[2px] bg-secondary shadow-glow-green" />
                           </motion.div>
                           <span className="text-[7px] font-technical font-black opacity-20 uppercase tracking-tighter">{v.month.slice(5)}</span>
                         </div>
@@ -295,7 +303,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="glass-plate border border-white/5 p-8 rounded-lg flex flex-col"
+            className="glass-plate border border-primary/50 shadow-glow-blue-sm p-8 rounded-lg flex flex-col"
           >
             <h3 className="text-xl font-black uppercase tracking-tight mb-8">Grid Distribution</h3>
             {(() => {
@@ -312,12 +320,14 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                             <span className="text-[10px] font-technical uppercase tracking-widest font-black opacity-60">{item.area}</span>
                             <span className="text-[10px] font-technical font-black uppercase tracking-widest opacity-40">{item.pct.toFixed(1)}%</span>
                           </div>
-                          <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden border border-primary/20">
                             <motion.div
                               initial={{ width: 0 }}
                               animate={{ width: `${item.pct}%` }}
                               transition={{ delay: 1 + (i * 0.1), duration: 1 }}
-                              className={`h-full ${colors[i]}`}
+                              className={`h-full ${colors[i]} ${
+                                i === 0 || i === 1 ? 'shadow-glow-blue-sm' : 'shadow-lg'
+                              }`}
                             />
                           </div>
                         </div>
@@ -353,7 +363,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
         </section>
       </main>
 
-      <footer className="py-24 px-6 border-t border-white/5 relative z-10 bg-background/50 backdrop-blur-md mt-12">
+      <footer className="py-24 px-6 border-t border-secondary/20 relative z-10 bg-background/50 backdrop-blur-md mt-12">
          <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 w-full text-center md:text-left">
            <div className="flex flex-col items-center md:items-start gap-1">
              <div className="flex items-center gap-3">
