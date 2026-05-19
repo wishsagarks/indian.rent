@@ -75,6 +75,8 @@ export default function RefinedMapEngine() {
   const [geoStatus, setGeoStatus] = useState<string>('');
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
   const [showLegend, setShowLegend] = useState(true);
+  const [legendCloseAttempts, setLegendCloseAttempts] = useState(0);
+  const [legendAnimateKey, setLegendAnimateKey] = useState(0);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
   const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>('bengaluru');
   const [geocodeCache, setGeocodeCache] = useState<Record<string, string>>({});
@@ -1126,13 +1128,23 @@ export default function RefinedMapEngine() {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">Map Legend</div>
-                <button
-                  onClick={() => setShowLegend(false)}
+                <motion.button
+                  key={legendAnimateKey}
+                  animate={legendCloseAttempts < 3 ? { scale: [1, 1.4, 1] } : {}}
+                  transition={{ duration: 0.4 }}
+                  onClick={() => {
+                    const newAttempts = legendCloseAttempts + 1;
+                    setLegendCloseAttempts(newAttempts);
+                    setLegendAnimateKey(prev => prev + 1);
+                    if (newAttempts >= 3) {
+                      setTimeout(() => setShowLegend(false), 300);
+                    }
+                  }}
                   className="p-1 text-on-surface-variant hover:text-primary transition-colors"
-                  title="Close legend"
+                  title={legendCloseAttempts < 3 ? `Click to close (${3 - legendCloseAttempts} taps remaining)` : 'Close legend'}
                 >
                   <X size={14} />
-                </button>
+                </motion.button>
               </div>
               {[
                 { label: 'Gated Society',   Icon: Shield,      color: 'text-blue-400',   border: 'border-blue-400'   },
@@ -1157,7 +1169,12 @@ export default function RefinedMapEngine() {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowLegend(v => !v)}
+          onClick={() => {
+            setShowLegend(v => !v);
+            if (!showLegend) {
+              setLegendCloseAttempts(0);
+            }
+          }}
           className={`w-11 h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
           title="Map Legend"
         >
