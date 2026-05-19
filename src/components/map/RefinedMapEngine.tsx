@@ -11,18 +11,28 @@ import FilterPanel, { MapFilters, DEFAULT_FILTERS } from './FilterPanel';
 import MetroOverlay from './MetroOverlay';
 import CircleAreaSelector from './CircleAreaSelector';
 import LiveStatsPanel from './LiveStatsPanel';
-import SeekerPinForm from './SeekerPinForm';
 import ConsentSplash from './ConsentSplash';
 import Link from 'next/link';
 import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
-import { getMapIntel, deployNode, searchLocalities, getSeekerPins, dropSeekerPin, deleteOwnPin, subscribeToArea, trackApiUsage } from '@/app/actions/map-actions';
+import { getMapIntel, deployNode, searchLocalities, deleteOwnPin, subscribeToArea, trackApiUsage } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
 import { getIpHash } from '@/utils/ip-hash';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { useSystemTheme } from '@/hooks/useSystemTheme';
 import { PlaceAutocomplete } from './PlaceAutocomplete';
 import { useDriverJS } from '@/hooks/useDriverJS';
+
+type PlaceResult = {
+  geometry?: {
+    location?: {
+      lat: () => number;
+      lng: () => number;
+    };
+  };
+  name?: string;
+  formatted_address?: string;
+};
 
 const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -35,15 +45,21 @@ const MOCK_INTEL = [
 
 export default function RefinedMapEngine() {
   const systemTheme = useSystemTheme();
-  useDriverJS('explore');
+  const shouldShowTour = typeof window !== 'undefined' && !localStorage.getItem('indian_rent_toured');
+  useDriverJS(shouldShowTour ? 'explore' : null);
+
+  // Mark tour as completed on first visit
+  useEffect(() => {
+    if (shouldShowTour) {
+      localStorage.setItem('indian_rent_toured', 'true');
+    }
+  }, [shouldShowTour]);
   const [consented, setConsented] = useState(false);
   const [points, setPoints] = useState<any[]>([]);
-  const [seekerPins, setSeekerPins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [isAddingProperty, setIsAddingProperty] = useState(false);
-  const [isSeekerMode, setIsSeekerMode] = useState(false);
-  const [showSeekerForm, setShowSeekerForm] = useState(false);
+  const [isSubmittingProperty, setIsSubmittingProperty] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<MapFilters>(DEFAULT_FILTERS);
   const [showMetro, setShowMetro] = useState(false);
@@ -59,8 +75,10 @@ export default function RefinedMapEngine() {
   const [geoStatus, setGeoStatus] = useState<string>('');
   const [googleBounds, setGoogleBounds] = useState<[number, number, number, number]>([-180, -85, 180, 85]);
   const [showLegend, setShowLegend] = useState(true);
+  const [legendPopCount, setLegendPopCount] = useState(0);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
   const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>('bengaluru');
+  const [geocodeCache, setGeocodeCache] = useState<Record<string, string>>({});
 
   const { getPosition, loading: geolocating } = useGeolocation();
 
@@ -117,66 +135,112 @@ export default function RefinedMapEngine() {
     });
   }, []);
 
+  const reverseGeocodeLocation = useCallback(async (lat: number, lng: number): Promise<string> => {
+    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+    if (geocodeCache[cacheKey]) return geocodeCache[cacheKey];
+
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${GOOGLE_MAPS_API_KEY}`
+      );
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const addressParts = result.address_components || [];
+        const locality = addressParts.find((c: any) => c.types.includes('locality'))?.long_name || '';
+        const area = addressParts.find((c: any) => c.types.includes('sublocality'))?.long_name || '';
+        const name = area && locality ? `Near ${area}, ${locality}` : locality ? `Near ${locality}` : result.formatted_address;
+
+        setGeocodeCache(prev => ({ ...prev, [cacheKey]: name }));
+        return name;
+      }
+    } catch (err) {
+      console.warn('Reverse geocoding failed:', err);
+    }
+
+    return `Property at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }, [geocodeCache, GOOGLE_MAPS_API_KEY]);
+
   const ipHash = typeof window !== 'undefined' ? getIpHash() : '';
 
   const mapId = systemTheme === 'dark' ? 'TACTICAL_HUD_MAP' : 'LIGHT_HUD_MAP';
 
   const processIntelData = useCallback((data: any[]) => {
-    if (data && data.length > 0) {
-      const featurePoints = data.map((b: any) => {
-        const allFlats: any[] = [];
-        b.floors?.forEach((f: any) => {
-          f.flats?.forEach((fl: any) => {
-            allFlats.push({
-              ...fl,
-              floorNumber: f.floor_number,
-              buildingId: b.id,
-              buildingName: b.name,
-              category: b.category,
-              address: b.address,
-              city: b.city
+    try {
+      if (data && Array.isArray(data) && data.length > 0) {
+        const featurePoints = data.map((b: any) => {
+          if (!b || !b.location || !b.location.coordinates || !Array.isArray(b.location.coordinates)) return null;
+          
+          const allFlats: any[] = [];
+          try {
+            b.floors?.forEach((f: any) => {
+              f.flats?.forEach((fl: any) => {
+                allFlats.push({
+                  ...fl,
+                  floorNumber: f.floor_number,
+                  buildingId: b.id,
+                  buildingName: b.name,
+                  category: b.category,
+                  address: b.address,
+                  city: b.city
+                });
+              });
             });
-          });
-        });
+          } catch (e) {
+            console.error('Error processing floors/flats for building:', b.id, e);
+          }
 
-        const isEmpty = allFlats.length === 0;
+          const isEmpty = allFlats.length === 0;
 
-        return {
-          type: "Feature",
-          properties: {
-            cluster: false,
-            propertyId: b.id,
-            category: b.category,
-            name: b.name,
-            allFlats: allFlats,
-            isEmpty: isEmpty,
-            // Initial values
-            rent: isEmpty ? 'NODE' : `₹${allFlats[0].rent_amount?.toLocaleString()}`,
-            rentNum: isEmpty ? 0 : (allFlats[0].rent_amount || 0),
-            bhk: isEmpty ? null : (allFlats[0].bhk || null),
-            furnishing: isEmpty ? null : (allFlats[0].furnishing || null),
-            flatmateNeeded: !isEmpty && allFlats.some(f => f.flatmate_needed),
-            ipHash: b.ip_hash || (isEmpty ? '' : allFlats[0].ip_hash) || '',
-            updatedAt: b.updated_at || (isEmpty ? null : allFlats[0].updated_at),
-            image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop',
-            user: { name: 'User', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }
-          },
-          geometry: { type: "Point", coordinates: [parseFloat(b.location.coordinates[0]), parseFloat(b.location.coordinates[1])] }
-        };
-      });
-      setPoints(featurePoints);
-    } else {
-      const rentNum = 45000;
-      setPoints(MOCK_INTEL.map(m => ({ type: "Feature", properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: rentNum }], rentNum, bhk: '2', furnishing: 'semi-furnished', flatmateNeeded: false, ipHash: '' }, geometry: { type: "Point", coordinates: [m.lng, m.lat] } })));
+          return {
+            type: "Feature",
+            properties: {
+              cluster: false,
+              propertyId: b.id || Math.random().toString(),
+              category: b.category || 'standalone',
+              name: b.name || 'Unknown Building',
+              allFlats: allFlats,
+              isEmpty: isEmpty,
+              // Initial values
+              rent: isEmpty ? 'NODE' : `₹${allFlats[0]?.rent_amount?.toLocaleString() || '0'}`,
+              rentNum: isEmpty ? 0 : (allFlats[0]?.rent_amount || 0),
+              bhk: isEmpty ? null : (allFlats[0]?.bhk || null),
+              furnishing: isEmpty ? null : (allFlats[0]?.furnishing || null),
+              flatmateNeeded: !isEmpty && allFlats.some(f => f.flatmate_needed),
+              ipHash: b.ip_hash || (isEmpty ? '' : allFlats[0]?.ip_hash) || '',
+              updatedAt: b.updated_at || (isEmpty ? null : allFlats[0]?.updated_at),
+              image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop',
+              user: { name: 'User', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200&auto=format&fit=crop' }
+            },
+            geometry: { 
+              type: "Point", 
+              coordinates: [
+                parseFloat(b.location.coordinates[0]) || 0, 
+                parseFloat(b.location.coordinates[1]) || 0
+              ] 
+            }
+          };
+        }).filter(Boolean);
+        setPoints(featurePoints);
+      } else {
+        const rentNum = 45000;
+        setPoints(MOCK_INTEL.map(m => ({ 
+          type: "Feature", 
+          properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: rentNum }], rentNum, bhk: '2', furnishing: 'semi-furnished', flatmateNeeded: false, ipHash: '' }, 
+          geometry: { type: "Point", coordinates: [m.lng, m.lat] } 
+        })));
+      }
+    } catch (err) {
+      console.error('Critical failure in processIntelData:', err);
     }
   }, []);
 
   const fetchIntel = useCallback(async () => {
     setLoading(true);
     try {
-      const [data, seekers] = await Promise.all([getMapIntel(), getSeekerPins()]);
+      const data = await getMapIntel();
       processIntelData(data);
-      setSeekerPins(seekers);
     } catch (err) {
       console.error('Intel Fetch Failed:', err);
     } finally {
@@ -189,7 +253,7 @@ export default function RefinedMapEngine() {
       fetchIntel();
       // Track API usage for quota monitoring
       const mapProvider = MAP_PROVIDER === 'google' ? 'google_maps' : 'mapbox';
-      trackApiUsage(mapProvider as any);
+      trackApiUsage(mapProvider as any).catch(e => console.warn('Usage tracking failed:', e));
     }
   }, [fetchIntel, consented]);
 
@@ -198,6 +262,47 @@ export default function RefinedMapEngine() {
     const config = cityConfig[selectedCity];
     setGoogleBounds([config.bounds[0][0], config.bounds[0][1], config.bounds[1][0], config.bounds[1][1]]);
   }, [selectedCity]);
+
+  // Keepalive: Wake DB on mount to avoid cold-start hangs
+  useEffect(() => {
+    const wakeDatabase = async () => {
+      try {
+        const supabase = createClient();
+        await supabase.from('buildings').select('id').limit(1);
+      } catch (e) {
+        console.warn('DB keepalive failed (expected):', e);
+      }
+    };
+    wakeDatabase();
+  }, []);
+
+  // Legend auto-pop and close effect
+  useEffect(() => {
+    if (!showLegend) return;
+
+    let popInterval: NodeJS.Timeout;
+    let closeTimeout: NodeJS.Timeout;
+
+    // Start popping animation 3 times
+    let popCount = 0;
+    popInterval = setInterval(() => {
+      popCount++;
+      setLegendPopCount(popCount);
+      if (popCount >= 3) {
+        clearInterval(popInterval);
+        // Close after last pop animation completes (500ms)
+        closeTimeout = setTimeout(() => {
+          setShowLegend(false);
+          setLegendPopCount(0);
+        }, 500);
+      }
+    }, 600); // Pop every 600ms
+
+    return () => {
+      clearInterval(popInterval);
+      clearTimeout(closeTimeout);
+    };
+  }, [showLegend]);
 
   useEffect(() => {
     if (!consented) return;
@@ -216,6 +321,15 @@ export default function RefinedMapEngine() {
     }
   }, [selectedCity, consented]);
 
+  // Reverse geocode building names when needed
+  useEffect(() => {
+    if (selectedProperty && (selectedProperty.name.startsWith('Property at') || !selectedProperty.name)) {
+      reverseGeocodeLocation(selectedProperty.lat, selectedProperty.lng).then(name => {
+        setSelectedProperty((prev: any) => prev ? { ...prev, name } : null);
+      });
+    }
+  }, [selectedProperty?.id, reverseGeocodeLocation]);
+
   // Apply filters
   const filteredPoints = useMemo(() => {
     return points.map(p => {
@@ -225,7 +339,7 @@ export default function RefinedMapEngine() {
 
       // Filter by selected city
       // If city field is missing, infer from building location based on proximity to city centers
-      let buildingCity = props.city?.toLowerCase();
+      let buildingCity = typeof props.city === 'string' ? props.city.toLowerCase() : null;
 
       // If no city data, try to infer from coordinates
       if (!buildingCity && p.geometry?.coordinates) {
@@ -309,9 +423,19 @@ export default function RefinedMapEngine() {
   }, [points, filters, isAddingProperty, selectedCity]);
 
   // For Mapbox, get bounds from ref; for Google Maps, use state (which is updated from onCameraChanged)
-  const bounds: [number, number, number, number] = MAP_PROVIDER === 'mapbox' && mapRef.current
-    ? mapRef.current.getMap().getBounds().toArray().flat()
-    : googleBounds;
+  const bounds: [number, number, number, number] = useMemo(() => {
+    try {
+      if (MAP_PROVIDER === 'mapbox' && mapRef.current) {
+        const map = mapRef.current.getMap();
+        if (map && map.getBounds) {
+          return map.getBounds().toArray().flat() as [number, number, number, number];
+        }
+      }
+    } catch (e) {
+      console.error('Error getting Mapbox bounds:', e);
+    }
+    return googleBounds;
+  }, [googleBounds, mapRef.current]);
 
   // Dynamic cluster radius based on zoom level - more clustered at lower zoom, less at higher zoom
   const clusterRadius = viewState.zoom > 16 ? 25 : viewState.zoom > 14 ? 40 : 60;
@@ -404,10 +528,11 @@ export default function RefinedMapEngine() {
   };
 
   const handleAddPropertySubmit = async (data: any) => {
+    setIsSubmittingProperty(true);
     setLoading(true);
-    // Pass maintenance fields directly (no conversion needed)
     const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
     const result = await deployNode(payload);
+    setIsSubmittingProperty(false);
     if (result.error) { alert(result.error); setLoading(false); }
     else {
       setIsAddingProperty(false);
@@ -417,12 +542,6 @@ export default function RefinedMapEngine() {
     }
   };
 
-  const handleSeekerSubmit = async (data: any) => {
-    const result = await dropSeekerPin({ ...data, ipHash });
-    if (result.error) { alert(result.error); }
-    else { setShowSeekerForm(false); setIsSeekerMode(false); fetchIntel(); }
-  };
-
   const handleMapClick = (e: any) => {
     const lat = e.lngLat?.lat || e.detail?.latLng?.lat;
     const lng = e.lngLat?.lng || e.detail?.latLng?.lng;
@@ -430,14 +549,12 @@ export default function RefinedMapEngine() {
     if (showAreaStats && lat && lng) {
       // Already showing area stats - just update center
       setAreaStatsCenter({ lat, lng });
-    } else if (isSeekerMode && lat && lng) {
-      setShowSeekerForm(true);
     }
   };
 
   const handleDeletePin = async (flatId: string) => {
     if (!confirm('Delete this pin permanently?')) return;
-    const result = await deleteOwnPin(flatId, ipHash);
+    const result = await deleteOwnPin(flatId);
     if (result.error) alert(result.error);
     else { setSelectedProperty(null); fetchIntel(); }
   };
@@ -478,6 +595,17 @@ export default function RefinedMapEngine() {
       case 'pg':         return Home;
       case 'hostel':     return Hotel;
       default:           return Building2;
+    }
+  };
+
+  const getCategoryColors = (category: string) => {
+    switch (category) {
+      case 'gated':      return 'from-blue-600 to-blue-900';
+      case 'semi-gated': return 'from-cyan-600 to-blue-900';
+      case 'standalone': return 'from-emerald-600 to-emerald-900';
+      case 'pg':         return 'from-violet-600 to-violet-900';
+      case 'hostel':     return 'from-orange-600 to-orange-900';
+      default:           return 'from-primary to-blue-900';
     }
   };
 
@@ -571,8 +699,17 @@ export default function RefinedMapEngine() {
     );
   }
 
+  console.log('Grid Telemetry:', { 
+    provider: MAP_PROVIDER, 
+    hasApiKey: !!GOOGLE_MAPS_API_KEY, 
+    mapId, 
+    city: selectedCity,
+    pointsCount: points.length,
+    filteredCount: filteredPoints.length
+  });
+
   return (
-    <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places']}>
+    <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places', 'marker']}>
       <div className="h-screen w-full overflow-hidden bg-background relative selection:bg-primary/20 selection:text-primary">
         {/* Map */}
         <div id="map-container" className="absolute inset-0 z-0 bg-background">
@@ -581,14 +718,6 @@ export default function RefinedMapEngine() {
               <MapboxNavigationControl position="top-right" />
               <MetroOverlay visible={showMetro} />
 
-              {/* Seeker Pins */}
-              {seekerPins.map(sp => (
-                <MapboxMarker key={sp.id} longitude={sp.longitude} latitude={sp.latitude} anchor="center">
-                  <div className="w-6 h-6 rounded-full bg-emerald-400/80 border-2 border-white flex items-center justify-center shadow-lg">
-                    <Search size={10} className="text-white" />
-                  </div>
-                </MapboxMarker>
-              ))}
 
               {/* User Location Marker */}
               {userLocation && (
@@ -605,50 +734,68 @@ export default function RefinedMapEngine() {
               )}
 
               {/* Listing Clusters & Markers */}
-              {clusters.map((cluster) => {
-                const [longitude, latitude] = cluster.geometry.coordinates;
-                const { cluster: isCluster, point_count: pointCount } = cluster.properties;
-                if (isCluster) {
-                  const size = Math.max(36, 28 + pointCount * 1.5);
+              {clusters.map((cluster: any) => {
+                try {
+                  const coordinates = cluster.geometry?.coordinates;
+                  if (!coordinates || !Array.isArray(coordinates)) return null;
+                  const [longitude, latitude] = coordinates;
+                  const { cluster: isCluster, point_count: pointCount } = cluster.properties || {};
+                  
+                  if (isCluster) {
+                    const size = Math.max(36, 28 + (pointCount || 0) * 1.5);
+                    return (
+                      <MapboxMarker key={`cluster-${cluster.id}`} longitude={longitude} latitude={latitude}>
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all active:scale-90"
+                          style={{ width: size, height: size }}
+                          onClick={() => { 
+                            try {
+                              const z = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20); 
+                              setViewState({ ...viewState, longitude, latitude, zoom: z }); 
+                            } catch (e) {
+                              setViewState({ ...viewState, longitude, latitude, zoom: viewState.zoom + 2 });
+                            }
+                          }}
+                        >
+                          <span className="leading-none">{pointCount}</span>
+                          <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
+                        </motion.div>
+                      </MapboxMarker>
+                    );
+                  }
+
+                  if (!cluster.properties?.propertyId) return null;
+
                   return (
-                    <MapboxMarker key={`cluster-${cluster.id}`} longitude={longitude} latitude={latitude}>
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all active:scale-90"
-                        style={{ width: size, height: size }}
-                        onClick={() => { const z = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20); setViewState({ ...viewState, longitude, latitude, zoom: z }); }}
-                      >
-                        <span className="leading-none">{pointCount}</span>
-                        <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
-                      </motion.div>
+                    <MapboxMarker 
+                      key={`prop-${cluster.properties.propertyId}`} 
+                      longitude={longitude} 
+                      latitude={latitude} 
+                      anchor="bottom"
+                    >
+                      <AliveMarker
+                        prop={cluster.properties}
+                        onClick={() => {
+                          if (isAddingProperty) {
+                            setAddFormInitialData({
+                              existingBuildingId: cluster.properties.propertyId,
+                              buildingName: cluster.properties.name,
+                              category: cluster.properties.category
+                            });
+                          } else {
+                            setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                            setStreetViewFailed(false);
+                          }
+                        }}
+                      />
                     </MapboxMarker>
                   );
+                } catch (e) {
+                  console.error('Error rendering Mapbox cluster:', e);
+                  return null;
                 }
-                return (
-                  <MapboxMarker 
-                    key={`prop-${cluster.properties.propertyId}`} 
-                    longitude={longitude} 
-                    latitude={latitude} 
-                    anchor="bottom"
-                  >
-                    <AliveMarker
-                      prop={cluster.properties}
-                      onClick={() => {
-                        if (isAddingProperty) {
-                          setAddFormInitialData({
-                            existingBuildingId: cluster.properties.propertyId,
-                            buildingName: cluster.properties.name,
-                            category: cluster.properties.category
-                          });
-                        } else {
-                          setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
-                          setStreetViewFailed(false);
-                        }
-                      }}
-                    />
-                  </MapboxMarker>
-                );
               })}
             </MapboxMap>
           ) : (
@@ -670,78 +817,98 @@ export default function RefinedMapEngine() {
                 strictBounds: false
               }}
               onCameraChanged={(ev) => {
-                setViewState({ ...viewState, latitude: ev.detail.center.lat, longitude: ev.detail.center.lng, zoom: ev.detail.zoom });
+                if (ev.detail.center && typeof ev.detail.center.lat === 'number' && typeof ev.detail.center.lng === 'number') {
+                  setViewState(prev => ({ ...prev, latitude: ev.detail.center.lat, longitude: ev.detail.center.lng, zoom: ev.detail.zoom }));
+                }
                 if (ev.detail.bounds) {
-                  setGoogleBounds([ev.detail.bounds.west, ev.detail.bounds.south, ev.detail.bounds.east, ev.detail.bounds.north]);
+                  setGoogleBounds([
+                    Number(ev.detail.bounds.west) || -180, 
+                    Number(ev.detail.bounds.south) || -85, 
+                    Number(ev.detail.bounds.east) || 180, 
+                    Number(ev.detail.bounds.north) || 85
+                  ]);
                 }
               }}
               style={{ width: '100%', height: '100%' }}
             >
-              {clusters.map((cluster) => {
-                const [longitude, latitude] = cluster.geometry.coordinates;
-                const { cluster: isCluster, point_count: pointCount } = cluster.properties;
-                
-                if (isCluster) {
-                  const size = Math.max(36, 28 + pointCount * 1.5);
-                  return (
-                    <AdvancedMarker
-                      key={`cluster-${cluster.id}`}
-                      position={{ lat: latitude, lng: longitude }}
-                      onClick={() => {
-                        const expansionZoom = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20);
-                        setViewState({ ...viewState, latitude, longitude, zoom: expansionZoom });
-                      }}
-                    >
-                      <motion.div
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all"
-                        style={{ width: size, height: size }}
-                      >
-                        <span className="leading-none">{pointCount}</span>
-                        <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
-                      </motion.div>
-                    </AdvancedMarker>
-                  );
-                }
-
-                // Zoom-aware rendering: compact at low zoom, full detail at high zoom
-                return (
-                  <AdvancedMarker
-                    key={`prop-${cluster.properties.propertyId}`}
-                    position={{ lat: latitude, lng: longitude }}
-                  >
-                    {viewState.zoom >= 15.5 ? (
-                      <AliveMarker
-                        prop={cluster.properties}
+              {clusters.map((cluster: any) => {
+                try {
+                  const coordinates = cluster.geometry?.coordinates;
+                  if (!coordinates || !Array.isArray(coordinates)) return null;
+                  const [longitude, latitude] = coordinates;
+                  const { cluster: isCluster, point_count: pointCount } = cluster.properties || {};
+                  
+                  if (isCluster) {
+                    const size = Math.max(36, 28 + (pointCount || 0) * 1.5);
+                    return (
+                      <AdvancedMarker
+                        key={`cluster-${cluster.id || Math.random()}`}
+                        position={{ lat: latitude, lng: longitude }}
                         onClick={() => {
-                          if (isAddingProperty) {
-                            setAddFormInitialData({
-                              existingBuildingId: cluster.properties.propertyId,
-                              buildingName: cluster.properties.name,
-                              category: cluster.properties.category
-                            });
-                          } else {
-                            setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
-                            setStreetViewFailed(false);
+                          try {
+                            const expansionZoom = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20);
+                            setViewState({ ...viewState, latitude, longitude, zoom: expansionZoom });
+                          } catch (e) {
+                            setViewState({ ...viewState, latitude, longitude, zoom: viewState.zoom + 2 });
                           }
                         }}
-                      />
-                    ) : (
-                      <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        whileHover={{ scale: 1.1 }}
-                        onClick={() => {
-                          if (!isAddingProperty) setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
-                        }}
-                        className={`px-2 py-1 rounded-full bg-surface border-2 text-[10px] font-black text-on-surface shadow-lg whitespace-nowrap cursor-pointer transition-all ${getMarkerColor(cluster.properties.category, cluster.properties.ipHash)}`}
                       >
-                        {cluster.properties.isEmpty ? '·' : cluster.properties.rent}
-                      </motion.div>
-                    )}
-                  </AdvancedMarker>
-                );
+                        <motion.div
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all"
+                          style={{ width: size, height: size }}
+                        >
+                          <span className="leading-none">{pointCount}</span>
+                          <span className="text-[6px] opacity-60 font-black uppercase tracking-widest mt-0.5">pins</span>
+                        </motion.div>
+                      </AdvancedMarker>
+                    );
+                  }
+
+                  if (!cluster.properties?.propertyId) return null;
+
+                  // Zoom-aware rendering: compact at low zoom, full detail at high zoom
+                  return (
+                    <AdvancedMarker
+                      key={`prop-${cluster.properties.propertyId}`}
+                      position={{ lat: latitude, lng: longitude }}
+                    >
+                      {viewState.zoom >= 15.5 ? (
+                        <AliveMarker
+                          prop={cluster.properties}
+                          onClick={() => {
+                            if (isAddingProperty) {
+                              setAddFormInitialData({
+                                existingBuildingId: cluster.properties.propertyId,
+                                buildingName: cluster.properties.name,
+                                category: cluster.properties.category
+                              });
+                            } else {
+                              setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                              setStreetViewFailed(false);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <motion.div
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => {
+                            if (!isAddingProperty) setSelectedProperty({ ...cluster.properties, id: cluster.properties.propertyId, lat: latitude, lng: longitude });
+                          }}
+                          className={`px-2 py-1 rounded-full bg-surface border-2 text-[10px] font-black text-on-surface shadow-lg whitespace-nowrap cursor-pointer transition-all ${getMarkerColor(cluster.properties.category, cluster.properties.ipHash)}`}
+                        >
+                          {cluster.properties.isEmpty ? '·' : cluster.properties.rent}
+                        </motion.div>
+                      )}
+                    </AdvancedMarker>
+                  );
+                } catch (e) {
+                  console.error('Error rendering Google cluster:', e);
+                  return null;
+                }
               })}
               {/* User Location Marker */}
               {userLocation && (
@@ -756,6 +923,8 @@ export default function RefinedMapEngine() {
                   </div>
                 </AdvancedMarker>
               )}
+              {/* Metro Overlay for Google Maps */}
+              <MetroOverlay visible={showMetro} />
             </GoogleMap>
           )}
         </div>
@@ -767,14 +936,15 @@ export default function RefinedMapEngine() {
           </div>
         )}
 
+
         {/* Target Reticle */}
         <AnimatePresence>
-          {(isAddingProperty || isSeekerMode) && !showSeekerForm && (
+          {isAddingProperty && (
             <motion.div initial={{ opacity: 0, scale: 2 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 2 }} className="fixed inset-0 flex items-center justify-center z-10 pointer-events-none">
               <div className="relative">
-                <Crosshair className={`w-12 h-12 animate-pulse ${isSeekerMode ? 'text-emerald-400' : 'text-primary'}`} strokeWidth={1} />
-                <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-4 px-3 py-1 ${isSeekerMode ? 'bg-emerald-400' : 'bg-primary'} text-background font-technical text-[9px] font-black uppercase tracking-widest rounded-sm whitespace-nowrap shadow-xl`}>
-                  {isSeekerMode ? 'Tap to drop seeker pin' : `${viewState.latitude.toFixed(4)}, ${viewState.longitude.toFixed(4)}`}
+                <Crosshair className="w-12 h-12 animate-pulse text-primary" strokeWidth={1} />
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 px-3 py-1 bg-primary text-background font-technical text-[9px] font-black uppercase tracking-widest rounded-sm whitespace-nowrap shadow-xl">
+                  {`${viewState.latitude.toFixed(4)}, ${viewState.longitude.toFixed(4)}`}
                 </div>
               </div>
             </motion.div>
@@ -782,7 +952,7 @@ export default function RefinedMapEngine() {
         </AnimatePresence>
 
         {/* Top HUD */}
-        {!isAddingProperty && !showSeekerForm && (
+        {!isAddingProperty && (
           <header className="fixed top-0 w-full z-50 flex justify-center h-20 px-4 md:px-8 pointer-events-none pt-4 font-technical">
             <div className="max-w-5xl w-full flex justify-between items-center pointer-events-auto h-14 bg-background/80 backdrop-blur-xl rounded-lg border border-white/10 shadow-2xl px-4 md:px-6">
               <div className="flex items-center gap-3">
@@ -797,7 +967,8 @@ export default function RefinedMapEngine() {
               <select
                 value={selectedCity}
                 onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
-                className="px-3 py-1.5 rounded-lg bg-surface border border-white/20 text-on-surface font-technical text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all"
+                title={selectedCity}
+                className="px-1.5 md:px-3 py-1.5 rounded-lg bg-surface border border-white/20 text-on-surface font-technical text-xs md:text-sm font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all min-w-fit"
               >
                 <option value="bengaluru">🏙️ Bengaluru</option>
                 <option value="hyderabad">🏙️ Hyderabad</option>
@@ -807,12 +978,11 @@ export default function RefinedMapEngine() {
               
               <div className="flex items-center gap-2 md:gap-4">
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
-                <button onClick={() => setShowMetro(!showMetro)} className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
+                <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
                 <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
                 <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
                 <div className="w-px h-4 bg-white/10 hidden md:block" />
-                <button onClick={() => { setIsSeekerMode(!isSeekerMode); setShowSeekerForm(false); }} className={`p-2 rounded-lg transition-all ${isSeekerMode ? 'bg-emerald-400/20 text-emerald-400' : 'text-on-surface-variant hover:text-emerald-400'}`} title="Flat Hunt"><Users size={16} /></button>
                 <button onClick={fetchIntel} className={`text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={16} strokeWidth={2.5} /></button>
               </div>
             </div>
@@ -861,25 +1031,16 @@ export default function RefinedMapEngine() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto" />
             <motion.div initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="relative w-full md:w-[420px] h-full bg-surface border-r border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col">
               <div className="flex-1 overflow-hidden">
-                <AddPropertyForm 
-                  onClose={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} 
-                  onSubmit={handleAddPropertySubmit} 
-                  lat={viewState.latitude} 
-                  lng={viewState.longitude} 
+                <AddPropertyForm
+                  onClose={() => { setIsAddingProperty(false); setAddFormInitialData(null); }}
+                  onSubmit={handleAddPropertySubmit}
+                  lat={viewState.latitude}
+                  lng={viewState.longitude}
                   initialData={addFormInitialData}
+                  isSubmitting={isSubmittingProperty}
                 />
               </div>
             </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Seeker Pin Form */}
-      <AnimatePresence>
-        {showSeekerForm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-start pointer-events-none">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setShowSeekerForm(false); setIsSeekerMode(false); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto" />
-            <SeekerPinForm lat={viewState.latitude} lng={viewState.longitude} onClose={() => { setShowSeekerForm(false); setIsSeekerMode(false); }} onSubmit={handleSeekerSubmit} />
           </div>
         )}
       </AnimatePresence>
@@ -982,25 +1143,48 @@ export default function RefinedMapEngine() {
         )}
       </AnimatePresence>
 
+      {/* Empty State Message */}
+      {filteredPoints.length === 0 && clusters.length === 0 && !isAddingProperty && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-surface border border-white/10 rounded-lg p-8 text-center max-w-sm shadow-2xl"
+        >
+          <div className="text-5xl mb-4">🏘️</div>
+          <h3 className="text-xl font-black uppercase tracking-tighter text-on-surface mb-2">No Listings Yet</h3>
+          <p className="text-sm text-on-surface-variant mb-6">Be the first to add a property in this area!</p>
+          <button
+            onClick={() => setIsAddingProperty(true)}
+            className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg"
+          >
+            + Add Property
+          </button>
+        </motion.div>
+      )}
+
       {/* Map Legend */}
       <div className="hidden lg:block fixed bottom-12 left-12 z-50">
         <AnimatePresence>
           {showLegend && (
             <motion.div
+              key="legend"
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: legendPopCount > 0 ? [1, 1.3, 1] : 1
+              }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
+              transition={{ duration: legendPopCount > 0 ? 0.4 : 0.3 }}
               className="mb-3 bg-surface border border-white/10 rounded-lg p-4 shadow-xl min-w-[220px]"
             >
               <div className="flex items-center justify-between mb-3">
-                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">Map Legend</div>
-                <button
-                  onClick={() => setShowLegend(false)}
-                  className="p-1 text-on-surface-variant hover:text-primary transition-colors"
-                  title="Close legend"
-                >
+                <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black opacity-60">
+                  Map Legend {legendPopCount > 0 && <span className="text-xs opacity-50">({legendPopCount}/3)</span>}
+                </div>
+                <div className="p-1 text-on-surface-variant opacity-50">
                   <X size={14} />
-                </button>
+                </div>
               </div>
               {[
                 { label: 'Gated Society',   Icon: Shield,      color: 'text-blue-400',   border: 'border-blue-400'   },
@@ -1009,7 +1193,6 @@ export default function RefinedMapEngine() {
                 { label: 'PG / Guest House',Icon: Home,        color: 'text-violet-400', border: 'border-violet-400' },
                 { label: 'Hostel',          Icon: Hotel,       color: 'text-amber-400',  border: 'border-amber-400'  },
                 { label: 'Your Pin',        Icon: Building2,   color: 'text-emerald-400',border: 'border-emerald-400'},
-                { label: 'Looking for Flat',Icon: Search,      color: 'text-emerald-400',border: 'border-emerald-400'},
                 { label: 'Multiple Listings',Icon: Users,      color: 'text-cyan-400',   border: 'border-cyan-400'   },
                 { label: 'May Be Stale',    Icon: AlertCircle, color: 'text-white/40',  border: 'border-white/20'   },
               ].map(({ label, Icon, color, border }) => (
@@ -1026,16 +1209,16 @@ export default function RefinedMapEngine() {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setShowLegend(v => !v)}
+          onClick={() => setShowLegend(true)}
           className={`w-11 h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
-          title="Map Legend"
+          title="Show Map Legend"
         >
           <Info size={18} />
         </motion.button>
       </div>
 
       {/* Floating Action Buttons */}
-      {!isAddingProperty && !showSeekerForm && (
+      {!isAddingProperty && (
         <div className="hidden lg:flex fixed bottom-12 right-12 z-50 flex-col gap-3">
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
@@ -1079,8 +1262,8 @@ export default function RefinedMapEngine() {
 
       {/* Detail Card */}
       <AnimatePresence>
-        {selectedProperty && !isAddingProperty && !showSeekerForm && (
-          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-24 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[60vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
+        {selectedProperty && !isAddingProperty && (
+          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-20 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[55vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
             <div className="bg-background/80 rounded-lg flex flex-col">
               <div className="h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
                 {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (
@@ -1089,12 +1272,16 @@ export default function RefinedMapEngine() {
                     alt={selectedProperty.name}
                     className="w-full h-full object-cover"
                     src={`https://maps.googleapis.com/maps/api/streetview?size=800x400&location=${selectedProperty.lat},${selectedProperty.lng}&fov=80&key=${GOOGLE_MAPS_API_KEY}`}
+                    loading="lazy"
                     onError={() => setStreetViewFailed(true)}
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center gap-3 bg-gradient-to-br from-surface-container to-background">
-                    {(() => { const Icon = getCategoryIcon(selectedProperty.category); return <Icon size={52} className="text-white/10" />; })()}
-                    <span className="font-technical text-[9px] uppercase tracking-[0.4em] text-white/20 font-black">No Street View</span>
+                  <div className={`w-full h-full flex flex-col items-center justify-center gap-4 bg-gradient-to-br ${getCategoryColors(selectedProperty.category)} relative`}>
+                    {(() => { const Icon = getCategoryIcon(selectedProperty.category); return <Icon size={56} className="text-white/80 drop-shadow-lg" />; })()}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent flex flex-col justify-end p-4">
+                      <h4 className="font-display font-black text-white text-lg leading-tight tracking-tight uppercase mb-1">{selectedProperty.name}</h4>
+                      <span className="font-technical text-[10px] uppercase tracking-widest text-white/90 font-black">{selectedProperty.category.replace('-', ' ')}</span>
+                    </div>
                   </div>
                 )}
                 <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md border border-white/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
@@ -1188,14 +1375,19 @@ export default function RefinedMapEngine() {
       </AnimatePresence>
 
       {/* Mobile Nav */}
-      <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] flex justify-around items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg">
-        <button onClick={handleLocateMe} className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg hover:text-primary hover:bg-white/5"><Navigation size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest opacity-60">Locate</span></button>
-        <button onClick={() => setIsSeekerMode(!isSeekerMode)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${isSeekerMode ? 'text-emerald-400 bg-emerald-400/10' : 'text-on-surface-variant hover:bg-white/5'}`}><Users size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Hunt</span></button>
-        <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 flex-1 transition-all active:scale-90">
+      <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] z-[70] overflow-x-auto flex items-center p-2 bg-background/60 backdrop-blur-2xl border border-white/10 shadow-3xl rounded-lg scrollbar-hide">
+        <button onClick={() => setIsAddingProperty(true)} data-tour="add-property-button" className="flex flex-col items-center justify-center text-on-surface-variant min-h-12 min-w-10 flex-shrink-0 transition-all active:scale-90">
           <div className="w-10 h-10 bg-primary text-on-primary rounded-md flex items-center justify-center shadow-lg"><Plus size={20} strokeWidth={3} /></div>
         </button>
-        <button onClick={() => setShowAreaStats(!showAreaStats)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Area</span></button>
-        <button onClick={() => setShowFilters(!showFilters)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-1 transition-all active:scale-90 rounded-lg ${showFilters ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`}><SlidersHorizontal size={20} /><span className="font-technical text-[9px] mt-1 font-black uppercase tracking-widest">Filter</span></button>
+        <button onClick={() => {
+          const next = !showAreaStats;
+          setShowAreaStats(next);
+          if (next && !areaStatsCenter) {
+            setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude });
+          }
+        }} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showAreaStats ? 'text-primary bg-primary/10' : 'text-on-surface-variant hover:bg-white/5'}`} title="Area stats"><Landmark size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Area</span></button>
+        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:bg-white/5'}`} title="Metro"><Train size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Metro</span></button>
+        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 min-w-12 flex-shrink-0 transition-all active:scale-90 rounded-lg ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:bg-white/5'}`} title="Live Stats"><BarChart3 size={20} /><span className="font-technical text-[8px] mt-1 font-black uppercase tracking-widest">Live</span></button>
       </nav>
     </div>
     </APIProvider>

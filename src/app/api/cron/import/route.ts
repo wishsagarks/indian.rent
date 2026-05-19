@@ -1,11 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { createHash } from 'crypto';
 
-const SOURCE_NAME = 'bengaluru.rent';
-const SOURCE_API = 'https://mpnjtkqklmwczowhodfh.supabase.co/functions/v1/get-pins';
+const SOURCE_NAME = 'external-feed';
+const SOURCE_API = process.env.DATA_FEED_API_URL || '';
 const WRITE_DELAY_MS = 50;
 
-interface BengaluruPin {
+interface RentalListing {
   id: string;
   lat: number;
   lng: number;
@@ -52,11 +52,14 @@ function sleep(ms: number): Promise<void> {
 export const maxDuration = 300; // 5 minutes for 4579 pins × 50ms
 
 export async function GET(request: Request) {
-  // Auth check
-  const authHeader = request.headers.get('authorization');
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
+  // Auth check - fail closed if secret missing
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return new Response(JSON.stringify({ error: 'Service unavailable' }), { status: 503 });
+  }
 
-  if (!authHeader || authHeader !== expectedAuth) {
+  const authHeader = request.headers.get('authorization');
+  if (!authHeader || authHeader !== `Bearer ${cronSecret}`) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
@@ -98,7 +101,7 @@ export async function GET(request: Request) {
       }
 
       try {
-        const { data, error } = await supabase.rpc('import_bengaluru_pin', {
+        const { data, error } = await supabase.rpc('import_rental_listing', {
           p_source: SOURCE_NAME,
           p_source_id: pin.id,
           p_lat: pin.lat,

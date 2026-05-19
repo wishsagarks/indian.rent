@@ -1,8 +1,8 @@
 /*
-  Task 4: Daily Bengaluru.rent Import Pipeline
+  Task 4: Data Import Pipeline
 
   1. import_sources tracking table — idempotency gate
-  2. import_bengaluru_pin() RPC — atomic building+floor+flat insert with building dedup
+  2. import_rental_listing() RPC — atomic building+floor+flat insert with building dedup
 */
 
 CREATE TABLE IF NOT EXISTS import_sources (
@@ -23,7 +23,7 @@ CREATE POLICY "import_sources_service_only"
   USING (false);   -- blocks anon key; service role bypasses RLS entirely
 
 -- Atomic import RPC function
-CREATE OR REPLACE FUNCTION import_bengaluru_pin(
+CREATE OR REPLACE FUNCTION import_rental_listing(
   p_source         TEXT,
   p_source_id      TEXT,
   -- building fields

@@ -10,6 +10,13 @@ export interface PlatformStatsData {
   dbSizeBytes?: number;
   totalActions?: number;
   apiUsage?: Record<string, number>;
+  seekerPinStats?: {
+    totalPins: number;
+    avgBudget?: number;
+    topBhk?: string;
+    areaCoverage?: number;
+    areaDistribution?: Array<{ area: string; count: number }>;
+  };
 }
 
 export function formatRentMapped(value: number): string {

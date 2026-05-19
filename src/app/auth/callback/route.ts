@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/utils/supabase/server'
 
+function sanitizeRedirectPath(next: string | null): string {
+  if (!next || !next.startsWith('/') || next.startsWith('//')) return '/'
+  if (/^\/*(?:javascript|data|vbscript):/i.test(next)) return '/'
+  return next
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  // if "next" is in search params, use it as the redirection URL
-  const next = searchParams.get('next') ?? '/'
+  const next = sanitizeRedirectPath(searchParams.get('next'))
 
   if (code) {
     const supabase = await createClient()

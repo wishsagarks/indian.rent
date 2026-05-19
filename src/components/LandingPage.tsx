@@ -6,6 +6,7 @@ import Link from 'next/link';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { Satellite } from 'lucide-react';
 
 import { GlobeAnalytics } from './ui/cobe-globe-analytics';
 import MagneticButton, { PeelingSticker } from './ui-advanced/TactileControls';
@@ -97,7 +98,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
             <div className="flex flex-col gap-0.5">
               <div className="flex items-center gap-4">
                 <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shadow-lg glow-primary">
-                    <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
+                    <Satellite className="text-on-primary" size={20} strokeWidth={2.5} />
                 </div>
                 <span className="font-display text-2xl md:text-3xl text-primary font-black tracking-tighter uppercase">indian.rent</span>
               </div>
@@ -226,7 +227,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
            <div className="flex flex-col items-center md:items-start gap-1">
              <div className="flex items-center gap-3">
                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-sm">satellite_alt</span>
+                  <Satellite className="text-on-primary" size={20} strokeWidth={2.5} />
                </div>
                <span className="font-display text-xl text-on-surface font-black tracking-tighter uppercase">indian.rent</span>
              </div>

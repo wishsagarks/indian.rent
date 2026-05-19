@@ -20,6 +20,16 @@
 # production
 /build
 
+# Ignore markdown files except project documentation
+*.md
+!README.md
+!WIKI.md
+!ARCHITECTURE.md
+!CONTRIBUTING.md
+!GETTING_STARTED.md
+!DOCS_INDEX.md
+!LICENSE
+
 # misc
 .DS_Store
 *.pem
@@ -47,3 +57,11 @@ conversations-resume.txt
 .claude/
 .gemini/
 .env
+
+# Data source references (local only, not committed)
+src/app/api/cron/
+src/utils/data-sources/
+src/app/actions/*-import*.ts
+*import-config*
+*data-source*
+*.scrape*

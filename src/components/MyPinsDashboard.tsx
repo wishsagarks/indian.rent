@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { MapPin, ChevronLeft, Trash2, Edit2, Check, X, Users, Clock, AlertTriangle, Award } from 'lucide-react';
 import { getMyListings, getMySeekerPins, updateMyListing, deleteMySeekerPin, deleteOwnPin } from '@/app/actions/map-actions';
-import { getIpHash } from '@/utils/ip-hash';
 import UnifiedMenu from './UnifiedMenu';
 
 const STATUS_STYLE: Record<string, string> = {
@@ -19,7 +18,6 @@ function rewardFromRent(rent: number): number {
 }
 
 export default function MyPinsDashboard() {
-  const [ipHash, setIpHash] = useState('');
   const [listings, setListings] = useState<any[]>([]);
   const [seekerPins, setSeekerPins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,10 +26,7 @@ export default function MyPinsDashboard() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const hash = getIpHash();
-    setIpHash(hash);
-    if (!hash) { setLoading(false); return; }
-    Promise.all([getMyListings(hash), getMySeekerPins(hash)]).then(([l, s]) => {
+    Promise.all([getMyListings(), getMySeekerPins()]).then(([l, s]) => {
       setListings(l);
       setSeekerPins(s);
       setLoading(false);
@@ -40,14 +35,14 @@ export default function MyPinsDashboard() {
 
   const handleDeleteListing = async (id: string) => {
     if (!confirm('Delete this listing permanently?')) return;
-    const result = await deleteOwnPin(id, ipHash);
+    const result = await deleteOwnPin(id);
     if (result.error) alert(result.error);
     else setListings(prev => prev.filter(l => l.id !== id));
   };
 
   const handleDeleteSeekerPin = async (id: string) => {
     if (!confirm('Remove this seeker pin?')) return;
-    const result = await deleteMySeekerPin(id, ipHash);
+    const result = await deleteMySeekerPin(id);
     if (result.error) alert(result.error);
     else setSeekerPins(prev => prev.filter(p => p.id !== id));
   };
@@ -56,7 +51,7 @@ export default function MyPinsDashboard() {
     const rent = parseFloat(editRent.replace(/[^0-9.]/g, ''));
     if (!rent || rent < 1000) { alert('Enter a valid rent (min ₹1,000)'); return; }
     setSaving(true);
-    const result = await updateMyListing(id, ipHash, { rentAmount: rent });
+    const result = await updateMyListing(id, { rentAmount: rent });
     if (result.error) alert(result.error);
     else {
       setListings(prev => prev.map(l => l.id === id ? { ...l, rentAmount: rent } : l));
@@ -66,7 +61,7 @@ export default function MyPinsDashboard() {
   };
 
   const handleToggleFlatmate = async (id: string, current: boolean) => {
-    const result = await updateMyListing(id, ipHash, { flatmateNeeded: !current });
+    const result = await updateMyListing(id, { flatmateNeeded: !current });
     if (result.error) alert(result.error);
     else setListings(prev => prev.map(l => l.id === id ? { ...l, flatmateNeeded: !current } : l));
   };
@@ -94,10 +89,10 @@ export default function MyPinsDashboard() {
       </nav>
 
       <main className="pt-24 px-4 md:px-8 max-w-3xl mx-auto space-y-10">
-        {!ipHash ? (
+        {listings.length === 0 && seekerPins.length === 0 ? (
           <div className="text-center py-20 text-on-surface-variant">
             <MapPin size={40} className="mx-auto mb-4 opacity-20" />
-            <p className="text-sm">No device identity found. Try deploying a pin first.</p>
+            <p className="text-sm">No pins yet. <Link href="/explore" className="text-primary underline">Deploy a pin</Link> to get started.</p>
           </div>
         ) : (
           <>

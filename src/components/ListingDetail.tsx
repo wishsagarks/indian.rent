@@ -6,7 +6,6 @@ import { MapPin, Banknote, Link as LinkIcon, Share2, CircleCheck as CheckCircle2
 import Link from 'next/link';
 import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { lockPlace, flagIntel, getFlatRatings, submitRating, getComments, addComment, getFlatDetails } from '@/app/actions/map-actions';
-import { getIpHash } from '@/utils/ip-hash';
 import UnifiedMenu from './UnifiedMenu';
 import { useDriverJS } from '@/hooks/useDriverJS';
 
@@ -22,6 +21,16 @@ const FURNISHING_LABELS: Record<string, string> = {
   'semi-furnished': 'Semi-Furnished',
   unfurnished: 'Unfurnished',
 };
+
+function safeLinkHref(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    return (u.protocol === 'https:' || u.protocol === 'http:') ? url : null;
+  } catch {
+    return null;
+  }
+}
 
 function floorLabel(n: number | null | undefined): string {
   if (n == null) return '—';
@@ -98,8 +107,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
   const handleRatingSubmit = async () => {
     if (localityScore === 0 || builtScore === 0) return;
-    const ipHash = getIpHash();
-    const result = await submitRating({ flatId: id, localityScore, builtQualityScore: builtScore, ipHash });
+    const result = await submitRating({ flatId: id, localityScore, builtQualityScore: builtScore });
     if (result.error) alert(result.error);
     else { setRatingSubmitted(true); getFlatRatings(id).then(setRatings); }
   };
@@ -107,8 +115,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const handleCommentSubmit = async () => {
     if (!newComment.trim()) return;
     setCommentLoading(true);
-    const ipHash = getIpHash();
-    const result = await addComment(id, newComment, ipHash);
+    const result = await addComment(id, newComment);
     if (result.error) alert(result.error);
     else { setNewComment(''); getComments(id).then(setComments); }
     setCommentLoading(false);
@@ -197,8 +204,8 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
   const rent = listing.rentAmount ? `₹${Number(listing.rentAmount).toLocaleString()}` : '—';
   const reward = rewardFromRent(listing.rentAmount);
-  const noBrokerLink = listing.noBrokerLink || null;
-  const flatmatesLink = (listing as any).flatmatesLink || null;
+  const noBrokerLink = safeLinkHref(listing.noBrokerLink);
+  const flatmatesLink = safeLinkHref((listing as any).flatmatesLink);
   const isOwn = listing.ipHash && listing.ipHash === (typeof window !== 'undefined' ? localStorage.getItem('ir_ip_hash') : '');
 
   const specs = [
@@ -218,6 +225,22 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   return (
     <div className="min-h-screen bg-background text-on-background pb-24 selection:bg-primary/30">
       {navBar}
+
+      {/* Copy Toast Notification */}
+      <AnimatePresence>
+        {isCopied && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-3 bg-secondary/20 border border-secondary/40 rounded-lg shadow-xl backdrop-blur-sm"
+          >
+            <Check size={16} className="text-secondary" />
+            <span className="font-technical text-[11px] font-black uppercase tracking-widest text-secondary">Link Copied!</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main className="pt-24 px-3 sm:px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 text-left">
         {/* Left */}

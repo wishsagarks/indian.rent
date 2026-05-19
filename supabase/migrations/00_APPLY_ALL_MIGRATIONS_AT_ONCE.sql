@@ -202,7 +202,7 @@ CREATE TRIGGER on_flag_threshold_reached
   EXECUTE FUNCTION revert_on_flags();
 
 -- ============================================================================
--- Task 4: Daily Bengaluru.rent Import Pipeline
+-- Task 4: Daily Data Feed Import Pipeline
 -- ============================================================================
 
 CREATE TABLE IF NOT EXISTS import_sources (
@@ -223,7 +223,7 @@ CREATE POLICY "import_sources_service_only"
   USING (false);   -- blocks anon key; service role bypasses RLS entirely
 
 -- Atomic import RPC function
-CREATE OR REPLACE FUNCTION import_bengaluru_pin(
+CREATE OR REPLACE FUNCTION import_rental_listing(
   p_source         TEXT,
   p_source_id      TEXT,
   -- building fields
@@ -361,7 +361,7 @@ BEGIN
     FALSE,                     -- not a transparency pin
     v_avail_date,
     p_looking_for_flatmate,
-    'bengaluru.rent',
+    'external-feed',
     p_ip_hash,
     0,
     FALSE
