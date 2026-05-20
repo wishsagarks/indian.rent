@@ -22,7 +22,7 @@ const TOURS = {
       popover: {
         title: '🏠 Welcome to indian.rent Map',
         description: 'You\'re viewing a live rental map of your city. Every orange pin = a rental property with real rent from real landlords. No brokers, 100% transparent. Let\'s explore together!',
-        side: 'bottom' as const,
+        side: 'top' as const,
         align: 'center' as const,
       },
       device: 'both',
@@ -32,7 +32,7 @@ const TOURS = {
       popover: {
         title: '📍 Understanding the Pins',
         description: 'Orange pins = Available rentals. Stacked pins (with +X) = Multiple properties in same building. Blue/green pins = Different property types (gated, PG, etc). Click any pin to see full details!',
-        side: 'bottom' as const,
+        side: 'top' as const,
         align: 'center' as const,
       },
       device: 'both',
@@ -42,7 +42,7 @@ const TOURS = {
       popover: {
         title: '🔍 How to Explore',
         description: 'Zoom in (scroll up) to see detailed listings. Zoom out (scroll down) to see clustered areas. Pan by clicking and dragging. Pro tip: Zoom into your favorite neighborhoods to see what\'s available!',
-        side: 'bottom' as const,
+        side: 'top' as const,
         align: 'center' as const,
       },
       device: 'both',
@@ -192,7 +192,7 @@ const TOURS = {
       popover: {
         title: '🎉 You\'re Ready to Find Your Home!',
         description: 'You know the map like a pro now. Start by searching your area, applying filters, clicking pins to explore, and using GPS to find nearby listings. Click ? button to restart tour anytime. Happy hunting! 🏡',
-        side: 'bottom' as const,
+        side: 'top' as const,
         align: 'center' as const,
       },
       device: 'both',
@@ -327,9 +327,11 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
       progressText: 'Step {{current}} of {{total}}',
       smoothScroll: true,
       allowClose: true,
+      allowKeyboardControl: true,
       doneBtnText: 'Done',
       nextBtnText: 'Next →',
       prevBtnText: '← Previous',
+      overlayOpacity: 0.6,
       onCloseClick: () => {
         localStorage.setItem(`indian_rent_tour_dismissed_${tourName}`, 'true');
       },
