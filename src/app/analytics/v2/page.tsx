@@ -17,6 +17,7 @@ import {
 } from '@/components/analytics/MetricsCharts';
 import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistributionChartEnhanced';
 import MarketSegmentChartEnhanced from '@/components/analytics/MarketSegmentChartEnhanced';
+import SeekerDemandHeatmap from '@/components/analytics/SeekerDemandHeatmap';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -307,6 +308,30 @@ export default function AnalyticsDashboardV2() {
                     </>
                   )}
                 </div>
+              </div>
+
+              {/* Seeker Demand Heatmap */}
+              <div className="space-y-6">
+                <h3 className="text-xs uppercase tracking-widest font-technical font-bold text-primary">
+                  Demand Intelligence
+                </h3>
+                <SeekerDemandHeatmap
+                  data={[
+                    { area: 'Indiranagar', demand: 85, seekers: 342, listings: 48, ratio: 7.1 },
+                    { area: 'Whitefield', demand: 78, seekers: 298, listings: 52, ratio: 5.7 },
+                    { area: 'Koramangala', demand: 92, seekers: 385, listings: 35, ratio: 11 },
+                    { area: 'Marathon', demand: 65, seekers: 187, listings: 61, ratio: 3.1 },
+                    { area: 'Bellandur', demand: 73, seekers: 251, listings: 44, ratio: 5.7 },
+                    { area: 'MG Road', demand: 88, seekers: 312, listings: 28, ratio: 11.1 },
+                    { area: 'Jayanagar', demand: 71, seekers: 215, listings: 53, ratio: 4.1 },
+                    { area: 'Vijayanagar', demand: 62, seekers: 142, listings: 67, ratio: 2.1 },
+                    { area: 'Silk Board', demand: 79, seekers: 268, listings: 46, ratio: 5.8 },
+                    { area: 'Richmond', demand: 81, seekers: 289, listings: 39, ratio: 7.4 },
+                    { area: 'Banaswadi', demand: 58, seekers: 128, listings: 72, ratio: 1.8 },
+                    { area: 'Hebbal', demand: 69, seekers: 201, listings: 55, ratio: 3.7 },
+                  ]}
+                  title="Seeker Demand Heatmap"
+                />
               </div>
             </div>
           )}

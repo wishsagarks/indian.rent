@@ -28,9 +28,21 @@ export default function KPICard3D({
   const cardRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   useEffect(() => {
-    if (!cardRef.current) return;
+    // Detect mobile on mount
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (!cardRef.current || isMobile) return;
 
     const card = cardRef.current;
     const content = contentRef.current;
@@ -85,22 +97,51 @@ export default function KPICard3D({
       card.removeEventListener('mousemove', handleMouseMove);
       card.removeEventListener('mouseleave', handleMouseLeave);
     };
-  }, []);
+  }, [isMobile]);
 
   const trendColor = trend && trend > 0 ? 'text-green-400' : trend && trend < 0 ? 'text-red-400' : 'text-on-surface-variant';
   const trendSymbol = trend && trend > 0 ? '↑' : trend && trend < 0 ? '↓' : '→';
+
+  const handleTouchStart = () => {
+    setIsPressed(true);
+    if (cardRef.current) {
+      gsap.to(cardRef.current, {
+        scale: 0.98,
+        duration: 0.15,
+        ease: 'power2.out'
+      });
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsPressed(false);
+    if (cardRef.current) {
+      gsap.to(cardRef.current, {
+        scale: 1,
+        duration: 0.2,
+        ease: 'elastic.out(1, 0.5)'
+      });
+    }
+  };
 
   return (
     <div
       ref={cardRef}
       className={`relative h-40 rounded-xl border backdrop-blur-sm transition-all duration-300 ${
         highlight
-          ? 'border-primary/60 bg-gradient-to-br from-primary/20 via-primary/5 to-surface/20 shadow-lg shadow-primary/20'
-          : 'border-white/10 bg-gradient-to-br from-surface/80 via-surface/40 to-background/60 shadow-lg shadow-black/40'
+          ? isMobile
+            ? 'border-primary/60 bg-gradient-to-br from-primary/20 via-primary/5 to-surface/20 shadow-md shadow-primary/10'
+            : 'border-primary/60 bg-gradient-to-br from-primary/20 via-primary/5 to-surface/20 shadow-lg shadow-primary/20'
+          : isMobile
+            ? 'border-white/10 bg-gradient-to-br from-surface/80 via-surface/40 to-background/60 shadow-md shadow-black/20'
+            : 'border-white/10 bg-gradient-to-br from-surface/80 via-surface/40 to-background/60 shadow-lg shadow-black/40'
       }`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       style={{
-        transformStyle: 'preserve-3d',
-        transform: 'translateZ(0)'
+        transformStyle: isMobile ? 'flat' : 'preserve-3d',
+        transform: 'translateZ(0)',
+        cursor: isMobile ? 'pointer' : 'default'
       }}
     >
       {/* Animated gradient border effect */}
