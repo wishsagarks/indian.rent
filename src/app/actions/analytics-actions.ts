@@ -88,7 +88,7 @@ export async function getSupplyDemandTrend(city: string) {
   return Object.entries(dailyData).map(([name, Listings]) => ({
     name,
     Listings,
-    Seekers: Math.floor(Listings * 0.8 + Math.random() * Listings * 0.4)
+    Seekers: Math.floor(Listings * 1.0)
   })).slice(-30);
 }
 

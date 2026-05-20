@@ -13,21 +13,8 @@ interface ChartProps {
 }
 
 export function SupplyDemandChart({ data, title, description }: ChartProps) {
-  // Demo data for when no data is available
-  const demoData = [
-    { name: 'Apr 22', Listings: 245, Seekers: 312 },
-    { name: 'Apr 25', Listings: 268, Seekers: 345 },
-    { name: 'Apr 28', Listings: 252, Seekers: 378 },
-    { name: 'May 1', Listings: 291, Seekers: 412 },
-    { name: 'May 4', Listings: 315, Seekers: 456 },
-    { name: 'May 7', Listings: 328, Seekers: 489 },
-    { name: 'May 10', Listings: 342, Seekers: 521 },
-    { name: 'May 13', Listings: 356, Seekers: 548 },
-    { name: 'May 16', Listings: 371, Seekers: 592 },
-    { name: 'May 20', Listings: 385, Seekers: 634 },
-  ];
-
-  const chartData = data && data.length > 0 ? data : demoData;
+  const hasData = data && data.length > 0;
+  const chartData = hasData ? data : [];
 
   // Calculate stats
   const listingsStart = chartData[0]?.Listings || 0;
@@ -41,6 +28,23 @@ export function SupplyDemandChart({ data, title, description }: ChartProps) {
   const seekersChange = seekersChangeNum.toFixed(1);
   const averageListings = (chartData.reduce((sum, d) => sum + (d.Listings || 0), 0) / chartData.length).toFixed(0);
   const averageSeekers = (chartData.reduce((sum, d) => sum + (d.Seekers || 0), 0) / chartData.length).toFixed(0);
+
+  if (!hasData) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
+        className="bg-surface border border-white/10 rounded-lg p-6 flex items-center justify-center min-h-[400px]"
+      >
+        <div className="text-center space-y-2">
+          <p className="text-on-surface-variant text-sm">No historical data yet</p>
+          <p className="text-xs text-on-surface-variant/60">Data will appear as listings are tracked</p>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div

@@ -57,6 +57,9 @@ export function GlobeAnalytics({
   const isPausedRef = useRef(false)
   const [data, setData] = useState(initialMarkers)
   const [currentArcIndex, setCurrentArcIndex] = useState(0)
+  const [hoveredMarkerId, setHoveredMarkerId] = useState<string | null>(null)
+  const globeRef = useRef<ReturnType<typeof createGlobe> | null>(null)
+  const currentArcIndexRef = useRef(0)
 
   useEffect(() => {
     const dataInterval = setInterval(() => {
@@ -78,6 +81,10 @@ export function GlobeAnalytics({
       clearInterval(arcInterval)
     }
   }, [])
+
+  useEffect(() => {
+    currentArcIndexRef.current = currentArcIndex
+  }, [currentArcIndex])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     pointerInteracting.current = { x: e.clientX, y: e.clientY }
@@ -116,15 +123,14 @@ export function GlobeAnalytics({
   useEffect(() => {
     if (!canvasRef.current) return
     const canvas = canvasRef.current
-    let globe: ReturnType<typeof createGlobe> | null = null
     let animationId: number
     let phi = 0
 
     function init() {
       const width = canvas.offsetWidth
-      if (width === 0 || globe) return
+      if (width === 0 || globeRef.current) return
 
-      globe = createGlobe(canvas, {
+      globeRef.current = createGlobe(canvas, {
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         width, height: width,
         phi: -1.36, theta: 0.2, dark: 0, diffuse: 1.5,
@@ -134,14 +140,15 @@ export function GlobeAnalytics({
         glowColor: [0.94, 0.93, 0.91],
         markerElevation: 0,
         markers: initialMarkers.map((m) => ({ location: m.location, size: 0.04 })),
-        arcs: arcPairs[currentArcIndex], arcColor: [0.8, 0.47, 0.36],
+        arcs: arcPairs[currentArcIndexRef.current], arcColor: [0.8, 0.47, 0.36],
         arcWidth: 0.5, arcHeight: 0.25, opacity: 0.7,
       })
       function animate() {
         if (!isPausedRef.current) phi += speed
-        globe!.update({
+        globeRef.current!.update({
           phi: phi + phiOffsetRef.current + dragOffset.current.phi,
           theta: 0.2 + thetaOffsetRef.current + dragOffset.current.theta,
+          arcs: arcPairs[currentArcIndexRef.current],
         })
         animationId = requestAnimationFrame(animate)
       }
@@ -163,9 +170,9 @@ export function GlobeAnalytics({
 
     return () => {
       if (animationId) cancelAnimationFrame(animationId)
-      if (globe) globe.destroy()
+      if (globeRef.current) globeRef.current.destroy()
     }
-  }, [initialMarkers, speed, currentArcIndex])
+  }, [initialMarkers, speed])
 
   return (
     <div className={`relative aspect-square select-none ${className}`}>
@@ -177,16 +184,13 @@ export function GlobeAnalytics({
           transition: "opacity 1.2s ease", borderRadius: "50%", touchAction: "none",
         }}
       />
-      {data.map((m) => (
+      {hoveredMarkerId && (
         <div
-          key={m.id}
           style={{
             position: "absolute",
-            positionAnchor: `--cobe-${m.id}`,
-            bottom: "anchor(top)",
-            left: "anchor(center)",
+            top: "10px",
+            left: "50%",
             translate: "-50% 0",
-            marginBottom: 6,
             display: "flex",
             alignItems: "baseline",
             gap: "0.35rem",
@@ -195,24 +199,26 @@ export function GlobeAnalytics({
             borderRadius: 4,
             pointerEvents: "none" as const,
             whiteSpace: "nowrap" as const,
-            opacity: `var(--cobe-visible-${m.id}, 0)`,
-            filter: `blur(calc((1 - var(--cobe-visible-${m.id}, 0)) * 8px))`,
-            transition: "opacity 0.3s, filter 0.3s",
+            opacity: 1,
+            transition: "opacity 0.2s",
+            zIndex: 10,
           }}
         >
           <span style={{
             fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 600,
             color: "#fff", letterSpacing: "-0.02em",
-          }}>{m.visitors}</span>
+          }}>
+            {data.find(m => m.id === hoveredMarkerId)?.visitors}
+          </span>
           <span style={{
             fontFamily: "monospace", fontSize: "0.55rem", fontWeight: 500,
             letterSpacing: "0.02em",
-            color: m.trend >= 0 ? "#34d399" : "#f87171",
+            color: (data.find(m => m.id === hoveredMarkerId)?.trend ?? 0) >= 0 ? "#34d399" : "#f87171",
           }}>
-            {m.trend >= 0 ? "↑" : "↓"} {Math.abs(m.trend)}%
+            {(data.find(m => m.id === hoveredMarkerId)?.trend ?? 0) >= 0 ? "↑" : "↓"} {Math.abs(data.find(m => m.id === hoveredMarkerId)?.trend ?? 0)}%
           </span>
         </div>
-      ))}
+      )}
     </div>
   )
 }

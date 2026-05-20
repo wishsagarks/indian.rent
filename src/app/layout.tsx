@@ -61,7 +61,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#ff6b35" />
         <link rel="icon" href="/ir.ico" type="image/x-icon" />
         <link rel="icon" href="/ir.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/ir.svg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"

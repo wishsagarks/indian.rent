@@ -42,7 +42,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
       icon: Banknote,
       color: "text-emerald-400",
       bg: "bg-emerald-400/10",
-      description: "Total monthly rental volume bypasssed from traditional brokerage fees."
+      description: "Total monthly rental volume bypassed from traditional brokerage fees."
     },
     {
       title: "Brokerage Bypassed",
