@@ -1095,7 +1095,7 @@ export default function RefinedMapEngine() {
             exit={{ opacity: 0, y: -20, x: '-50%' }}
             className="fixed top-12 md:top-6 left-1/2 z-[110] w-[calc(100%-2rem)] max-w-lg"
           >
-            <div className="bg-background/80 backdrop-blur-xl border border-white/10 rounded-lg p-2 shadow-3xl">
+            <div className="bg-background backdrop-blur-xl border border-primary/20 rounded-lg p-2 shadow-3xl">
               <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
               <div className="mt-2 px-3 flex justify-between items-center">
                 <span className="font-technical text-[8px] uppercase tracking-[0.3em] text-primary font-black">Search Locality</span>
@@ -1220,7 +1220,7 @@ export default function RefinedMapEngine() {
             exit={{ opacity: 0, y: -20, x: '-50%' }}
             className="fixed top-12 md:top-6 left-1/2 z-[110] w-[calc(100%-2rem)] max-w-lg"
           >
-            <div className="bg-background/80 backdrop-blur-xl border border-white/10 rounded-lg p-2 shadow-3xl">
+            <div className="bg-background backdrop-blur-xl border border-primary/20 rounded-lg p-2 shadow-3xl">
               <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
               <div className="mt-2 px-3 flex justify-between items-center">
                 <span className="font-technical text-[8px] uppercase tracking-[0.3em] text-primary font-black">Search for building location</span>
@@ -1418,7 +1418,7 @@ export default function RefinedMapEngine() {
       <AnimatePresence>
         {selectedProperty && !isAddingProperty && (
           <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-20 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[55vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
-            <div className="bg-background/80 rounded-lg flex flex-col">
+            <div className="bg-background rounded-lg flex flex-col">
               <div className="h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
                 {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (
                   <img
@@ -1441,11 +1441,11 @@ export default function RefinedMapEngine() {
                     </div>
                   </div>
                 )}
-                <div className="absolute top-3 right-3 bg-background/80 backdrop-blur-md border border-white/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
+                <div className="absolute top-3 right-3 bg-background backdrop-blur-md border border-primary/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-lg">
                   <span className={`w-2 h-2 rounded-full ${calculateDecay(selectedProperty.updatedAt) ? 'bg-gray-500' : 'bg-secondary animate-pulse'}`} />
                   <span className="font-technical text-[8px] text-on-surface uppercase font-black tracking-widest">{calculateDecay(selectedProperty.updatedAt) ? 'Stale' : 'Live'}</span>
                 </div>
-                <button onClick={() => setSelectedProperty(null)} className="absolute top-3 left-3 bg-background/80 backdrop-blur-md border border-white/20 rounded-lg p-1.5 text-on-surface hover:bg-white/20 transition-all"><X size={14} /></button>
+                <button onClick={() => setSelectedProperty(null)} className="absolute top-3 left-3 bg-background backdrop-blur-md border border-primary/20 rounded-lg p-1.5 text-on-surface hover:bg-white/20 transition-all"><X size={14} /></button>
               </div>
               <div className="p-6 text-left flex-1 overflow-y-auto custom-scrollbar">
                 <div className="flex justify-between items-start mb-3">

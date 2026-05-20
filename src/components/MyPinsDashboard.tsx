@@ -75,7 +75,7 @@ export default function MyPinsDashboard() {
   return (
     <div className="min-h-screen bg-background text-on-background pb-24">
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 h-16 bg-background/80 backdrop-blur-xl border-b border-outline/20 flex items-center px-mobile md:px-desktop gap-4 shadow-xl">
+      <nav className="fixed top-0 w-full z-50 h-16 bg-background backdrop-blur-xl border-b border-primary/20 flex items-center px-mobile md:px-desktop gap-4 shadow-xl">
         <div className="max-w-container w-full mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <UnifiedMenu />

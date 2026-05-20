@@ -152,7 +152,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   );
 
   const navBar = (
-    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/80 backdrop-blur-xl border-b border-outline/10 shadow-2xl px-3 sm:px-4 md:px-8">
+    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background backdrop-blur-xl border-b border-primary/20 shadow-2xl px-3 sm:px-4 md:px-8">
       <div className="max-w-5xl flex justify-between items-center w-full gap-2">
         <div className="flex items-center gap-1 sm:gap-3 min-w-0">
           <UnifiedMenu />

@@ -3,7 +3,7 @@
 export default function ListingDetailSkeleton() {
   return (
     <div className="min-h-screen bg-background pb-24 animate-pulse">
-      <div className="h-16 border-b border-white/5 bg-surface/80" />
+      <div className="h-16 border-b border-primary/20 bg-background" />
       <div className="pt-24 px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-6">
           <div className="aspect-video w-full rounded-lg bg-white/5" />

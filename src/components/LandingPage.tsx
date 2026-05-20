@@ -264,7 +264,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       </div>
 
       {/* TopNavBar - DESIGN.md Centered Layout */}
-      <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-mobile md:px-desktop">
+      <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background backdrop-blur-xl border-b border-primary/20 shadow-2xl px-mobile md:px-desktop">
         <div className="max-w-container w-full flex justify-between items-center">
           <div className="flex items-center gap-3">
             <UnifiedMenu />

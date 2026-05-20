@@ -121,7 +121,7 @@ export default function OpportunityTable({
 
               {/* Expanded Row */}
               {expandedRow === item.locality_name && (
-                <div className="border-t border-white/10 p-4 bg-surface/80 space-y-3">
+                <div className="border-t border-primary/20 p-4 bg-surface space-y-3">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                       <p className="text-xs text-on-surface-variant mb-1">Supply Trend</p>
