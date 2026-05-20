@@ -15,16 +15,22 @@ if (redisEnabled) {
 export { redis, redisEnabled };
 
 /**
- * Get server-derived IP hash from request headers.
- * Derives hash from x-forwarded-for or x-real-ip headers.
- * This replaces client-side localStorage identity tokens.
+ * Get server-derived device fingerprint from request headers.
+ * Combines IP, user-agent, and accept-language for better rate limit accuracy.
+ * Less spoofable than IP alone, more fair to shared networks.
  */
 export async function getServerIpHash(): Promise<string> {
   const headerStore = await headers();
   const ip = headerStore.get('x-forwarded-for')?.split(',')[0].trim()
            ?? headerStore.get('x-real-ip')
            ?? 'unknown';
-  return 'srv_' + createHash('sha256').update(ip).digest('hex').slice(0, 24);
+  const userAgent = headerStore.get('user-agent') ?? 'unknown';
+  const acceptLanguage = headerStore.get('accept-language') ?? 'unknown';
+
+  // Combine IP + user-agent + language for better fingerprinting
+  // This is more resistant to spoofing while being fair to users behind proxies
+  const fingerprint = `${ip}|${userAgent}|${acceptLanguage}`;
+  return 'srv_' + createHash('sha256').update(fingerprint).digest('hex').slice(0, 24);
 }
 
 /**

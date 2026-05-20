@@ -10,10 +10,25 @@ export default function HeroText() {
 
   useGSAP(() => {
     if (!textRef.current) return;
-    
+
     const text = "Bypass Brokers. Find Homes. Reward the Community.";
     const words = text.split(' ');
-    textRef.current.innerHTML = words.map(word => `<span class="inline-block overflow-hidden pb-2"><span class="inline-block translate-y-[110%]">${word}&nbsp;</span></span>`).join('');
+
+    // Clear existing content
+    textRef.current.innerHTML = '';
+
+    // Safely build DOM structure without using innerHTML
+    words.forEach(word => {
+      const outerSpan = document.createElement('span');
+      outerSpan.className = 'inline-block overflow-hidden pb-2';
+
+      const innerSpan = document.createElement('span');
+      innerSpan.className = 'inline-block translate-y-[110%]';
+      innerSpan.textContent = `${word} `;
+
+      outerSpan.appendChild(innerSpan);
+      textRef.current!.appendChild(outerSpan);
+    });
 
     gsap.to(textRef.current.querySelectorAll('span span'), {
       y: 0,

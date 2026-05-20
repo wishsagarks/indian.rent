@@ -5,11 +5,16 @@ import { createClient } from '@/utils/supabase/server';
 
 /**
  * Reverse geocode coordinates to address via Google Geocoding API.
- * Calls API from server-side using server-only API key.
+ * Uses server-only API key (restricted by IP) for security.
+ * IMPORTANT: Configure GOOGLE_MAPS_API_KEY_SERVER in Google Cloud Console with IP restriction.
  */
 export async function reverseGeocode(lat: number, lng: number): Promise<string | null> {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return null;
+  // Use private server-side API key (restricted by IP in Google Cloud)
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY_SERVER;
+  if (!apiKey) {
+    console.warn('GOOGLE_MAPS_API_KEY_SERVER not configured');
+    return null;
+  }
 
   try {
     const res = await fetch(
@@ -37,7 +42,15 @@ function validateDeployForm(f: any): string | null {
   if (!f || typeof f !== 'object') return 'Invalid form data.';
   if (typeof f.lat !== 'number' || typeof f.lng !== 'number') return 'Invalid coordinates.';
   if (!['gated', 'semi-gated', 'standalone', 'pg', 'hostel'].includes(f.category)) return 'Invalid category.';
-  if (typeof f.rent !== 'string' || !/^\d[\d,.]*$/.test(f.rent.trim())) return 'Invalid rent amount.';
+
+  // Enhanced rent validation: proper format + range check
+  if (typeof f.rent !== 'string') return 'Rent must be a string.';
+  const rentTrimmed = f.rent.trim();
+  const rentMatch = rentTrimmed.match(/^(\d+)(,\d{3})*(\.\d{2})?$/);
+  if (!rentMatch) return 'Invalid rent format (e.g., 15000 or 15,000.50).';
+  const rentAmount = parseFloat(rentTrimmed.replace(/,/g, ''));
+  if (rentAmount < 1000 || rentAmount > 100000000) return 'Rent must be between ₹1K and ₹10Cr.';
+
   if (!isSafeUrl(f.noBrokerLink)) return 'Invalid NoBroker URL (must be https).';
   if (!isSafeUrl(f.flatmatesLink)) return 'Invalid Flatmates URL (must be https).';
   return null;
@@ -75,6 +88,7 @@ export async function getMapIntel() {
  */
 export async function searchLocalities(query: string) {
   if (!query || query.length < 2) return [];
+  if (query.length > 100) return [];  // Prevent excessively long queries
 
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('search_localities', { query });
@@ -212,6 +226,12 @@ export async function deployNode(formData: any) {
  * NOTE: Does not return ipHash or contributorUpiId (use getContributorPaymentDetails for UPI)
  */
 export async function getFlatDetails(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return null;
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('flats')
@@ -297,6 +317,12 @@ export async function getFlatDetails(flatId: string) {
  * Get contributor payment details (UPI) - gated action, call only after lock confirmation
  */
 export async function getContributorPaymentDetails(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return { upiId: null };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('flats')
@@ -316,6 +342,12 @@ export async function getContributorPaymentDetails(flatId: string) {
  * Lock a flat with rate limiting (max 3 locks per 15 min)
  */
 export async function lockPlace(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return { error: 'Invalid listing ID.' };
+  }
+
   const rateKey = `lock:${flatId}`;
   const { allowed } = await checkRateLimit(rateKey, 3, 900);
   if (!allowed) {
@@ -341,6 +373,12 @@ export async function lockPlace(flatId: string) {
  * Flag a listing with rate limiting (max 3 flags per 15 min per flat)
  */
 export async function flagIntel(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return { error: 'Invalid listing ID.' };
+  }
+
   const rateKey = `flag:${flatId}`;
   const { allowed } = await checkRateLimit(rateKey, 3, 900);
   if (!allowed) {
@@ -452,6 +490,20 @@ export async function submitRating(data: {
   localityScore: number;
   builtQualityScore: number;
 }) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(data.flatId)) {
+    return { error: 'Invalid listing ID.' };
+  }
+
+  // Validate rating scores (should be 1-5)
+  if (!Number.isInteger(data.localityScore) || data.localityScore < 1 || data.localityScore > 5) {
+    return { error: 'Locality score must be between 1 and 5.' };
+  }
+  if (!Number.isInteger(data.builtQualityScore) || data.builtQualityScore < 1 || data.builtQualityScore > 5) {
+    return { error: 'Built quality score must be between 1 and 5.' };
+  }
+
   const serverIpHash = await getServerIpHash();
   const supabase = await createClient();
   try {
@@ -479,6 +531,12 @@ export async function submitRating(data: {
  * Get ratings for a flat
  */
 export async function getFlatRatings(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return { avg_locality: 0, avg_built_quality: 0, total_ratings: 0 };
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase.rpc('get_flat_ratings', { target_flat_id: flatId });
   if (error) {
@@ -491,6 +549,12 @@ export async function getFlatRatings(flatId: string) {
  * Delete own pin (by server-derived IP hash)
  */
 export async function deleteOwnPin(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return { error: 'Invalid listing ID.' };
+  }
+
   const serverIpHash = await getServerIpHash();
   const supabase = await createClient();
   try {
@@ -508,9 +572,29 @@ export async function deleteOwnPin(flatId: string) {
 }
 
 /**
+ * Escape HTML entities to prevent XSS when displaying user content
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+/**
  * Get comments for a flat
  */
 export async function getComments(flatId: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return [];
+  }
+
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('comments')
@@ -520,13 +604,23 @@ export async function getComments(flatId: string) {
     .limit(20);
 
   if (error) return [];
-  return data || [];
+  // Escape HTML in comments to prevent XSS
+  return (data || []).map(c => ({
+    ...c,
+    content: escapeHtml(c.content)
+  }));
 }
 
 /**
  * Add a comment to a flat
  */
 export async function addComment(flatId: string, content: string) {
+  // Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) {
+    return { error: 'Invalid listing ID.' };
+  }
+
   const serverIpHash = await getServerIpHash();
 
   const rateKey = `comment:${serverIpHash}`;
@@ -535,11 +629,20 @@ export async function addComment(flatId: string, content: string) {
     return { error: 'Rate limit exceeded for commenting.' };
   }
 
+  // Validate comment length before sending to database
+  const trimmedContent = content.trim();
+  if (!trimmedContent) {
+    return { error: 'Comment cannot be empty.' };
+  }
+  if (trimmedContent.length > 500) {
+    return { error: 'Comment must be 500 characters or less.' };
+  }
+
   const supabase = await createClient();
   try {
     const { error } = await supabase.from('comments').insert({
       flat_id: flatId,
-      content: content.trim().slice(0, 500),
+      content: trimmedContent,
       ip_hash: serverIpHash,
     });
     if (error) throw error;
@@ -647,7 +750,22 @@ export async function subscribeToArea(
   radiusKm: number,
   locality?: string
 ) {
-  if (!email || !email.includes('@')) return { error: 'Valid email required.' };
+  // Enhanced email validation
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!email || !emailRegex.test(email)) {
+    return { error: 'Valid email address required.' };
+  }
+
+  // Validate coordinates
+  if (typeof lat !== 'number' || typeof lng !== 'number' || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    return { error: 'Invalid coordinates.' };
+  }
+
+  // Validate radius (must be positive and reasonable)
+  if (typeof radiusKm !== 'number' || radiusKm < 0.1 || radiusKm > 100) {
+    return { error: 'Radius must be between 0.1 and 100 km.' };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.from('notification_subscriptions').insert({
     email,
@@ -656,6 +774,6 @@ export async function subscribeToArea(
     radius_km: radiusKm,
     locality: locality || null,
   });
-  if (error) return { error: error.message };
+  if (error) return { error: 'Failed to subscribe to notifications. Please try again.' };
   return { success: true };
 }

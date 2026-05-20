@@ -339,12 +339,6 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
         // Explicitly destroy the driver instance
         driverInstance.destroy();
       },
-      onFinish: () => {
-        if (tourName) {
-          localStorage.setItem(`indian_rent_tour_dismissed_${tourName}`, 'true');
-        }
-        driverInstance.destroy();
-      },
     });
 
     driverRef.current = driverInstance;
