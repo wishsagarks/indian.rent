@@ -6,8 +6,11 @@ let client: SupabaseClient | undefined;
 export function createClient() {
   if (client) return client;
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const isSecure = supabaseUrl.startsWith('https://');
+  // Ensure HTTPS URL for secure WebSocket (wss://)
+  let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:' && supabaseUrl.startsWith('http://')) {
+    supabaseUrl = supabaseUrl.replace('http://', 'https://');
+  }
 
   client = createBrowserClient(
     supabaseUrl,
@@ -22,8 +25,6 @@ export function createClient() {
         params: {
           eventsPerSecond: 10,
         },
-        // Force WebSocket protocol based on page security
-        headers: isSecure ? {} : undefined,
       },
     }
   )
