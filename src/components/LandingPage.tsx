@@ -18,6 +18,7 @@ import MagneticButton, { PeelingSticker } from './ui-advanced/TactileControls';
 import TracingBeam from './ui-advanced/TracingBeam';
 import { BentoGrid } from './ui-advanced/BentoGrid';
 import HeroText from './ui-advanced/HeroText';
+import { useTheme } from '@/hooks/useTheme';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -35,6 +36,13 @@ function StickerButton({
   onClick?: () => void
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { theme } = useTheme();
+
+  // Light mode: black background, dark mode: light cream
+  const idleBg = theme === 'light' ? '#000000' : '#e5e2e1';
+  const idleText = theme === 'light' ? '#ffffff' : '#0a0a0a';
+  const hoverBg = theme === 'light' ? '#1a1a1a' : '#b3c5ff';
+  const hoverText = theme === 'light' ? '#ffffff' : '#002b75';
 
   return (
     <motion.button
@@ -58,9 +66,9 @@ function StickerButton({
             : isLoading
               ? "#cc785c"
               : isHovered
-                ? "#b3c5ff"
-                : "#e5e2e1",
-          color: isSuccess || isLoading ? "#ffffff" : isHovered ? "#002b75" : "#0a0a0a"
+                ? hoverBg
+                : idleBg,
+          color: isSuccess || isLoading ? "#ffffff" : isHovered ? hoverText : idleText
         }}
         className="relative z-10 border border-white/10 rounded-DEFAULT px-12 py-6 overflow-hidden shadow-sm metallic-edge transition-colors duration-300"
       >
