@@ -259,7 +259,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       <MobileScrollProgress />
 
       {/* Dynamic Background - Dark Tactical with Parallax */}
-      <div className="bg-parallax-container fixed inset-0 z-0 opacity-30 pointer-events-none">
+      <div className="bg-parallax-container bg-parallax fixed inset-0 z-0 opacity-30 pointer-events-none">
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/15 via-background to-background" />
          <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.03)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(255,255,255,0.03)_1px,_transparent_1px)] bg-[size:40px_40px]" />
       </div>
@@ -298,7 +298,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
       <TracingBeam checkpoints={[0, 0.2, 0.5, 0.8, 1]}>
         {/* Hero Section */}
-        <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-12 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
+        <section data-tour="hero-section" className="hero-section relative min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-12 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
           <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center mx-auto">
             <div className="flex flex-col gap-10">
               <div className="space-y-4">
