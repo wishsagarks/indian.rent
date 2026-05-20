@@ -19,6 +19,7 @@ const GlobeAnalytics = dynamic(() => import('./ui/cobe-globe-analytics').then(m 
 import MagneticButton, { PeelingSticker } from './ui-advanced/TactileControls';
 import TracingBeam from './ui-advanced/TracingBeam';
 import { BentoGrid } from './ui-advanced/BentoGrid';
+import { CitiesMarquee } from './ui-advanced/CitiesMarquee';
 import HeroText from './ui-advanced/HeroText';
 import { useTheme } from '@/hooks/useTheme';
 
@@ -158,46 +159,49 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     // Hero section entrance animations
     gsap.from('.hero-headline', {
       opacity: 0,
-      y: 30,
-      duration: 0.8,
-      ease: 'power2.out',
+      y: 60,
+      rotate: -3,
+      duration: 0.7,
+      ease: 'back.out',
       delay: 0.1
     });
 
     gsap.from('.hero-subheading', {
       opacity: 0,
-      y: 20,
-      duration: 0.8,
-      ease: 'power2.out',
+      y: 50,
+      duration: 0.7,
+      ease: 'back.out',
       delay: 0.3
     });
 
-    // Parallax text depth on hero (mobile: 0.1x, tablet: 0.25x, desktop: 0.4x)
+    // Parallax text depth on hero (mobile: 0.15x, tablet: 0.35x, desktop: 0.8x)
     gsap.to('.hero-subheading', {
-      y: window.innerWidth >= 1024 ? 80 : window.innerWidth >= 768 ? 30 : 10,
+      y: window.innerWidth >= 1024 ? 200 : window.innerWidth >= 768 ? 60 : 25,
       ease: 'none',
       scrollTrigger: {
         trigger: '.hero-section',
         start: 'top top',
-        end: 'center center',
-        scrub: 1,
+        end: 'bottom center',
+        scrub: 1.2,
       }
     });
 
     gsap.from('.hero-cta-group', {
       opacity: 0,
-      y: 20,
-      duration: 0.8,
-      ease: 'power2.out',
+      y: 50,
+      scale: 0.9,
+      duration: 0.7,
+      ease: 'back.out',
       delay: 0.5
     });
 
     // Anti-Broker heading word-by-word reveal on scroll
     gsap.from(['.word-reveal-1', '.word-reveal-2', '.word-reveal-3'], {
       opacity: 0,
-      y: 40,
+      y: 80,
+      rotate: -5,
       duration: 0.6,
-      stagger: 0.08,
+      stagger: 0.2,
       ease: 'back.out',
       scrollTrigger: {
         trigger: '.anti-broker-section',
@@ -209,9 +213,11 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     // Tactical Stats reveal on scroll
     gsap.from('.stat-item', {
       opacity: 0,
-      y: 30,
-      stagger: 0.1,
+      y: 60,
+      scale: 0.85,
+      stagger: 0.22,
       duration: 0.6,
+      ease: 'back.out',
       scrollTrigger: {
         trigger: '.tactical-stats',
         start: 'top 70%',
@@ -222,15 +228,27 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     // Final CTA letter-cascade reveal on scroll
     gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
       opacity: 0,
-      y: 60,
-      rotate: -5,
-      duration: 0.8,
-      stagger: 0.12,
+      y: 100,
+      rotate: -12,
+      duration: 0.7,
+      stagger: 0.25,
       ease: 'back.out',
       scrollTrigger: {
         trigger: '.final-cta',
         start: 'top 65%',
         once: true,
+      }
+    });
+
+    // Powerful background parallax
+    gsap.to('.bg-parallax-container', {
+      y: -300,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: 'body',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: 2,
       }
     });
   }, { scope: mainRef });
@@ -239,10 +257,10 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     <div ref={mainRef} className="bg-background text-on-background overflow-x-hidden antialiased font-sans relative pt-16">
       <MobileScrollProgress />
 
-      {/* Dynamic Background - Dark Tactical */}
-      <div className="fixed inset-0 z-0 bg-parallax opacity-20 pointer-events-none">
-         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
-         <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.02)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(255,255,255,0.02)_1px,_transparent_1px)] bg-[size:40px_40px]" />
+      {/* Dynamic Background - Dark Tactical with Parallax */}
+      <div className="bg-parallax-container fixed inset-0 z-0 opacity-30 pointer-events-none">
+         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/15 via-background to-background" />
+         <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(255,255,255,0.03)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(255,255,255,0.03)_1px,_transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
       {/* TopNavBar - DESIGN.md Centered Layout */}
@@ -278,8 +296,8 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
       <TracingBeam checkpoints={[0, 0.2, 0.5, 0.8, 1]}>
         {/* Hero Section */}
-        <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-12 pb-20 px-mobile md:px-desktop overflow-hidden w-full">
-          <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mx-auto">
+        <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-12 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
+          <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center mx-auto">
             <div className="flex flex-col gap-10">
               <div className="space-y-4">
                  <motion.div
@@ -338,8 +356,11 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
           </div>
         </section>
 
+        {/* Cities Marquee - Live Coverage */}
+        <CitiesMarquee />
+
         {/* Anti-Broker Loop Section */}
-        <section className="anti-broker-section py-40 px-mobile md:px-desktop relative z-10 w-full">
+        <section className="anti-broker-section py-16 md:py-32 lg:py-40 px-mobile md:px-desktop relative z-10 w-full">
           <div className="max-w-container w-full mx-auto">
             <div className="mb-24 flex flex-col items-start space-y-6">
               <motion.div
@@ -387,10 +408,10 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </section>
 
         {/* Final CTA */}
-        <section className="final-cta py-40 md:py-80 px-mobile md:px-desktop flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
+        <section className="final-cta py-20 md:py-40 lg:py-80 px-mobile md:px-desktop flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
            <div className="absolute inset-0 bg-primary/5 blur-[200px] animate-pulse" />
            <div className="max-w-container mx-auto relative z-10">
-              <h2 className="final-cta-title text-4xl md:text-6xl lg:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-8 md:mb-16 leading-tight md:leading-none text-on-background font-display">
+              <h2 className="final-cta-title text-2xl md:text-4xl lg:text-6xl xl:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-6 md:mb-12 lg:mb-16 leading-tight md:leading-none text-on-background font-display">
                 <span className="cta-word-1 inline-block">Take</span>
                 {' '}
                 <span className="cta-word-2 inline-block">the</span>

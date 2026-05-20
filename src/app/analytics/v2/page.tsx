@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   getCityMetrics,
@@ -20,10 +21,12 @@ import MarketSegmentChartEnhanced from '@/components/analytics/MarketSegmentChar
 import SeekerDemandHeatmap from '@/components/analytics/SeekerDemandHeatmap';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
+import { ExperimentBadge } from '@/components/badges/ExperimentBadge';
 
 type City = 'bengaluru' | 'hyderabad';
 
 export default function AnalyticsDashboardV2() {
+  const router = useRouter();
   const [selectedCity, setSelectedCity] = useState<City>('bengaluru');
   const [bengaluruMetrics, setBengaluruMetrics] = useState<CityMetricsUI | null>(null);
   const [hyderabadMetrics, setHyderabadMetrics] = useState<CityMetricsUI | null>(null);
@@ -118,11 +121,14 @@ export default function AnalyticsDashboardV2() {
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <Link href="/analytics" className="p-2 rounded-lg border border-primary/40 hover:bg-primary/10 hover:border-primary/60 transition-all hover:shadow-glow-blue-sm group">
+              <button onClick={() => router.back()} className="p-2 rounded-lg border border-primary/40 hover:bg-primary/10 hover:border-primary/60 transition-all hover:shadow-glow-blue-sm group" aria-label="Go back">
                 <ChevronLeft size={20} className="text-primary group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+              </button>
               <div>
-                <h1 className="font-display text-3xl font-black text-on-surface">Market Analytics</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="font-display text-3xl font-black text-on-surface">Market Analytics</h1>
+                  <ExperimentBadge size="sm" />
+                </div>
                 <p className="text-sm text-on-surface-variant mt-1">
                   Real-time rental market intelligence
                 </p>
@@ -243,7 +249,6 @@ export default function AnalyticsDashboardV2() {
                   {t === 'comparison' && 'City Comparison'}
                   {t === 'opportunities' && 'Opportunities'}
                 </span>
-                <span className="text-[10px] font-black bg-primary/20 text-primary px-2 py-0.5 rounded-full">EXPERIMENT</span>
               </button>
             ))}
           </div>

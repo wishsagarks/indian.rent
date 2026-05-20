@@ -1009,7 +1009,7 @@ export default function RefinedMapEngine() {
         {/* Top HUD */}
         {!isAddingProperty && (
           <header className="fixed top-0 w-full z-50 flex justify-center h-20 px-mobile md:px-desktop pointer-events-none pt-3 md:pt-4 font-technical">
-            <div className="max-w-container w-full flex justify-between items-center pointer-events-auto h-14 md:h-16 bg-background/80 backdrop-blur-xl rounded-full md:rounded-xl border border-white/10 shadow-2xl px-3 md:px-6">
+            <div className="max-w-container w-full flex justify-between items-center pointer-events-auto h-14 md:h-16 bg-background backdrop-blur-xl rounded-full md:rounded-xl border border-primary/20 shadow-2xl px-3 md:px-6">
               <div className="flex items-center gap-2 md:gap-2 pl-1 md:pl-0">
                 <UnifiedMenu />
                 <div className="flex flex-col -gap-1 hidden md:flex">

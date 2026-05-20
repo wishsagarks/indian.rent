@@ -38,16 +38,16 @@
   color-scheme: light;
 }
 
-/* DESIGN.md DARK MODE */
+/* DESIGN.md DARK MODE — Black Base + Orange/Blue */
 .dark {
-  /* Core Colors — Dark Navy Canvas + Cream */
-  --color-background: #1f1e1b;           /* dark navy canvas */
-  --color-surface: #252320;              /* dark elevated */
-  --color-surface-dim: #1f1e1b;
-  --color-surface-bright: #252320;
-  --color-surface-container-lowest: #181715;
-  --color-surface-container-low: #252320;
-  --color-surface-container: #2a2926;
+  /* Core Colors — Pure Black Canvas */
+  --color-background: #0a0a0a;           /* black canvas */
+  --color-surface: #141414;              /* surface-elevated */
+  --color-surface-dim: #0a0a0a;
+  --color-surface-bright: #141414;
+  --color-surface-container-lowest: #050505;
+  --color-surface-container-low: #141414;
+  --color-surface-container: #1a1a1a;
   --color-surface-container-high: #faf9f5;   /* inverted: light surfaces */
   --color-surface-container-highest: #f5f0e8; /* inverted: light elevated */
 
@@ -55,18 +55,18 @@
   --color-on-surface: #faf9f5;           /* inverted: cream text */
   --color-on-surface-variant: #d4cfc5;   /* inverted: light body */
   --color-inverse-surface: #faf9f5;
-  --color-inverse-on-surface: #1f1e1b;   /* inverted: dark text */
+  --color-inverse-on-surface: #0a0a0a;   /* inverted: dark text */
   --color-outline: #9d9a92;              /* inverted: light muted */
-  --color-outline-variant: #2a2926;      /* inverted: dark hairline */
-  --color-surface-variant: #2a2926;
+  --color-outline-variant: #1a1a1a;      /* inverted: dark hairline */
+  --color-surface-variant: #1a1a1a;
   --color-on-background: #faf9f5;        /* inverted: cream text */
 
-  /* Semantic Colors (keep accents for contrast) */
-  --color-primary: #cc785c;              /* coral stays warm */
-  --color-on-primary: #1f1e1b;
-  --color-secondary: #5db8a6;            /* teal stays vibrant */
-  --color-on-secondary: #1f1e1b;
-  --color-tertiary: #2a2926;
+  /* Semantic Colors — Orange Primary + Blue Secondary */
+  --color-primary: #ff6b35;              /* orange primary */
+  --color-on-primary: #000000;
+  --color-secondary: #0088ff;            /* blue secondary */
+  --color-on-secondary: #ffffff;
+  --color-tertiary: #1a1a1a;
   --color-on-tertiary: #faf9f5;
 
   color-scheme: dark;
@@ -124,14 +124,14 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(141, 133, 117, 0.5);
+    background: rgba(255, 107, 53, 0.4);
     border-radius: 4px;
-    box-shadow: 0 0 8px rgba(141, 133, 117, 0.2);
+    box-shadow: 0 0 8px rgba(255, 107, 53, 0.2);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(108, 106, 100, 0.7);
-    box-shadow: 0 0 12px rgba(108, 106, 100, 0.3);
+    background: rgba(255, 107, 53, 0.6);
+    box-shadow: 0 0 12px rgba(255, 107, 53, 0.3);
   }
 }
 

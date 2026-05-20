@@ -89,7 +89,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
 
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   return (
-    <ReactLenis root options={{ lerp: 0.08, duration: 1.0, syncTouch: true }}>
+    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2 }}>
       <ScrollTriggerProxy>
         {children}
       </ScrollTriggerProxy>
