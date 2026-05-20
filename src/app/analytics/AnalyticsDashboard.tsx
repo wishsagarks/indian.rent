@@ -51,7 +51,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
       icon: Zap,
       color: "text-primary",
       bg: "bg-primary/10",
-      description: "Cumulative capital retained by seekers and contributors by bypassing middlemen."
+      description: "Estimated capital retained (based on avg 1.2x monthly rent broker fee)"
     }
   ];
 
@@ -70,9 +70,9 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
     },
     {
       label: "Snapshot Sync",
-      value: stats.totalListings > 0 ? '99.9%' : '—',
+      value: stats.totalListings > 0 ? 'Live' : '—',
       limit: "Real-time",
-      percent: 99.9,
+      percent: 100,
       sub: "Realtime Updates",
       icon: Globe,
       color: "text-primary"
@@ -497,10 +497,10 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
              <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary opacity-60 ml-1 font-black">WishLabs Intelligence HQ</div>
            </div>
            <div className="flex gap-12 font-technical text-technical-sm uppercase tracking-widest opacity-40">
-             <a href="#" className="hover:text-primary transition-colors">Documentation</a>
-             <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-             <a href="#" className="hover:text-primary transition-colors">T&C</a>
-             <a href="#" className="hover:text-primary transition-colors">HQ Support</a>
+             <a href="/terms" className="hover:text-primary transition-colors">Documentation</a>
+             <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
+             <a href="/terms" className="hover:text-primary transition-colors">T&C</a>
+             <a href="mailto:support@wishlabs.in" className="hover:text-primary transition-colors">HQ Support</a>
            </div>
            <div className="font-technical text-[9px] uppercase tracking-[0.6em] opacity-20 font-black">&copy; 2026 Direct Rental Protocol • A WishLabs Production</div>
          </div>

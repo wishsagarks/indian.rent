@@ -224,7 +224,7 @@ export default function RefinedMapEngine() {
   const processIntelData = useCallback((data: any[]) => {
     try {
       if (data && Array.isArray(data) && data.length > 0) {
-        const featurePoints = data.map((b: any) => {
+        const featurePoints = data.map((b: any, idx: number) => {
           if (!b || !b.location || !b.location.coordinates || !Array.isArray(b.location.coordinates)) return null;
           
           const allFlats: any[] = [];
@@ -252,7 +252,7 @@ export default function RefinedMapEngine() {
             type: "Feature",
             properties: {
               cluster: false,
-              propertyId: b.id || Math.random().toString(),
+              propertyId: b.id || `building-${idx}`,
               category: b.category || 'standalone',
               name: b.name || 'Unknown Building',
               allFlats: allFlats,
@@ -304,7 +304,7 @@ export default function RefinedMapEngine() {
       fetchIntel();
       // Track API usage for quota monitoring
       const mapProvider = MAP_PROVIDER === 'google' ? 'google_maps' : 'mapbox';
-      trackApiUsage(mapProvider as any).catch(e => console.warn('Usage tracking failed:', e));
+      trackApiUsage(mapProvider as any).catch(() => {});
     }
   }, [fetchIntel, consented]);
 
@@ -321,7 +321,7 @@ export default function RefinedMapEngine() {
         const supabase = createClient();
         await supabase.from('buildings').select('id').limit(1);
       } catch (e) {
-        console.warn('DB keepalive failed (expected):', e);
+        // Expected failure during idle periods
       }
     };
     wakeDatabase();
@@ -374,25 +374,15 @@ export default function RefinedMapEngine() {
         if (payload.new && (payload.new as any).data) processIntelData((payload.new as any).data);
       }).subscribe((status) => {
         if (status === 'CHANNEL_ERROR') {
-          console.warn('Realtime channel error - falling back to polling');
           // Fall back to REST polling if WebSocket fails
         }
       });
       return () => { supabase.removeChannel(channel); };
     } catch (error) {
-      console.warn('Failed to subscribe to realtime updates:', error);
       // Continue without realtime if subscription fails
       return () => {};
     }
   }, [processIntelData, consented]);
-
-  // Refresh data when city changes to ensure latest data for selected city
-  useEffect(() => {
-    if (consented && !loading) {
-      // City change will automatically trigger filteredPoints re-computation
-      // This ensures map markers update immediately on city selection
-    }
-  }, [selectedCity, consented]);
 
   // Reverse geocode building names when needed
   useEffect(() => {
@@ -531,7 +521,6 @@ export default function RefinedMapEngine() {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
 
-      console.log('✅ Location obtained:', lat, lng);
       setUserLocation({ lat, lng });
 
       // Calculate optimal zoom based on nearby clusters
@@ -556,7 +545,6 @@ export default function RefinedMapEngine() {
       else if (nearbyPoints.length > 10) optimalZoom = 15.5;
       else if (nearbyPoints.length < 3) optimalZoom = 17;
 
-      console.log(`📍 Found ${nearbyPoints.length} nearby points, setting zoom to ${optimalZoom}`);
       setViewState({ latitude: lat, longitude: lng, zoom: optimalZoom, pitch: 45 });
 
       // Show success
@@ -775,15 +763,6 @@ export default function RefinedMapEngine() {
     );
   }
 
-  console.log('Grid Telemetry:', { 
-    provider: MAP_PROVIDER, 
-    hasApiKey: !!GOOGLE_MAPS_API_KEY, 
-    mapId, 
-    city: selectedCity,
-    pointsCount: points.length,
-    filteredCount: filteredPoints.length
-  });
-
   return (
     <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places', 'marker']}>
       <div className="h-screen w-full overflow-hidden bg-background relative">
@@ -891,7 +870,7 @@ export default function RefinedMapEngine() {
               onTilesLoaded={() => setMapReady(true)}
               style={{ width: '100%', height: '100%' }}
             >
-              {mapReady && Array.isArray(clusters) && clusters.map((cluster: any) => {
+              {mapReady && Array.isArray(clusters) && clusters.map((cluster: any, clusterIdx: number) => {
                 try {
                   const coordinates = cluster.geometry?.coordinates;
                   if (!coordinates || !Array.isArray(coordinates)) return null;
@@ -902,7 +881,7 @@ export default function RefinedMapEngine() {
                     const size = Math.max(36, 28 + (pointCount || 0) * 1.5);
                     return (
                       <AdvancedMarker
-                        key={`cluster-${cluster.id || Math.random()}`}
+                        key={`cluster-${cluster.id || clusterIdx}`}
                         position={{ lat: latitude, lng: longitude }}
                         onClick={() => {
                           try {

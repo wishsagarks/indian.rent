@@ -10,6 +10,8 @@ import UnifiedMenu from './UnifiedMenu';
 import ThemeToggle from './ThemeToggle';
 import ShareButtons from './ShareButtons';
 import { useDriverJS } from '@/hooks/useDriverJS';
+import { useToast } from '@/hooks/useToast';
+import { useRouter } from 'next/navigation';
 
 interface ListingPageProps {
   id: string;
@@ -53,6 +55,8 @@ function relativeDate(iso: string): string {
 
 export default function ListingDetail({ id, type }: ListingPageProps) {
   useDriverJS('listing');
+  const router = useRouter();
+  const { success: showSuccess, error: showError } = useToast();
 
   const [listing, setListing] = useState<any>(null);
   const [listingLoading, setListingLoading] = useState(true);
@@ -62,6 +66,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const [isLocking, setIsLocking] = useState(false);
   const [upiDetails, setUpiDetails] = useState<{ upiId: string | null; contributorName: string | null } | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [showFlagConfirm, setShowFlagConfirm] = useState(false);
 
   const [ratings, setRatings] = useState<{ avg_locality: number; avg_built_quality: number; total_ratings: number }>({ avg_locality: 0, avg_built_quality: 0, total_ratings: 0 });
   const [localityScore, setLocalityScore] = useState(0);
@@ -99,25 +104,28 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   };
 
   const handleFlagIntel = async () => {
-    if (window.confirm('Are you sure this listing is fake or stale?')) {
-      const result = await flagIntel(id);
-      if (result.success) {
-        if (result.removed) {
-          alert('This listing has been removed after 3 community flags. Thank you for keeping the map honest.');
-          window.location.href = '/explore';
-        } else {
-          alert('Listing flagged. Thank you for keeping the map honest.');
-        }
+    setShowFlagConfirm(true);
+  };
+
+  const confirmFlagIntel = async () => {
+    setShowFlagConfirm(false);
+    const result = await flagIntel(id);
+    if (result.success) {
+      if (result.removed) {
+        showSuccess('This listing has been removed after 3 community flags. Thank you for keeping the map honest.');
+        router.push('/explore');
       } else {
-        alert(result.error || 'Flagging failed.');
+        showSuccess('Listing flagged. Thank you for keeping the map honest.');
       }
+    } else {
+      showError(result.error || 'Flagging failed.');
     }
   };
 
   const handleRatingSubmit = async () => {
     if (localityScore === 0 || builtScore === 0) return;
     const result = await submitRating({ flatId: id, localityScore, builtQualityScore: builtScore });
-    if (result.error) alert(result.error);
+    if (result.error) showError(result.error);
     else { setRatingSubmitted(true); getFlatRatings(id).then(setRatings); }
   };
 
@@ -125,7 +133,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     if (!newComment.trim()) return;
     setCommentLoading(true);
     const result = await addComment(id, newComment);
-    if (result.error) alert(result.error);
+    if (result.error) showError(result.error);
     else { setNewComment(''); getComments(id).then(setComments); }
     setCommentLoading(false);
   };

@@ -29,11 +29,9 @@ export const useGeolocation = () => {
       }
 
       setState(s => ({ ...s, loading: true, error: null }));
-      console.log('📍 Requesting geolocation permission...');
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          console.log('✓ Location granted:', position.coords);
           setState({
             loading: false,
             error: null,
