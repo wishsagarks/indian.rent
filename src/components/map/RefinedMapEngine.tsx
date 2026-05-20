@@ -1319,6 +1319,7 @@ export default function RefinedMapEngine() {
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
+          data-tour="legend-button"
           onClick={() => {
             setShowLegend(true);
             setLegendManual(true);
@@ -1339,6 +1340,7 @@ export default function RefinedMapEngine() {
             transition={{ delay: 0.1 }}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
+            data-tour="locate-button"
             onClick={handleLocateMe}
             className={`bg-surface text-on-surface-variant w-16 h-16 rounded-xl shadow-lg flex items-center justify-center border border-white/20 transition-all hover:text-primary hover:bg-primary/10 ${geolocating ? 'animate-pulse text-primary' : ''}`}
             title="Locate me"
@@ -1350,6 +1352,7 @@ export default function RefinedMapEngine() {
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.95 }}
+            data-tour="add-property-button-desktop"
             onClick={() => setIsAddingProperty(true)}
             className="bg-primary text-on-primary w-16 h-16 rounded-xl shadow-[0_30px_60px_-10px_rgba(0,102,255,0.4)] flex items-center justify-center border border-white/30"
             title="Add property"
@@ -1375,6 +1378,7 @@ export default function RefinedMapEngine() {
               }}
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.95 }}
+              data-tour="analytics-button"
               className="bg-gradient-to-br from-primary to-blue-600 text-on-primary w-16 h-16 rounded-xl flex flex-col items-center justify-center border border-white/40 relative overflow-hidden group"
               title="Market Analytics Dashboard"
             >
@@ -1536,7 +1540,7 @@ export default function RefinedMapEngine() {
       {/* Mobile Nav */}
       <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-0 left-0 w-full z-[70] pb-5 pt-3 px-6 bg-background backdrop-blur-2xl border-t border-primary/20 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] rounded-t-3xl flex justify-between items-end">
         
-        <button onClick={() => {
+        <button data-tour="area-stats-button-mobile" onClick={() => {
           const next = !showAreaStats;
           setShowAreaStats(next);
           if (next && !areaStatsCenter) {
@@ -1547,7 +1551,7 @@ export default function RefinedMapEngine() {
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Area</span>
         </button>
 
-        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showMetro ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Metro">
+        <button data-tour="metro-button-mobile" onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showMetro ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Metro">
           <Train size={20} className={showMetro ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Metro</span>
         </button>
@@ -1561,12 +1565,12 @@ export default function RefinedMapEngine() {
           </button>
         </div>
 
-        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showLiveStats ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Live Stats">
+        <button data-tour="live-stats-button-mobile" onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showLiveStats ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Live Stats">
           <BarChart3 size={20} className={showLiveStats ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Live</span>
         </button>
 
-        <button onClick={() => setShowNotifyModal(true)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 text-on-surface-variant hover:text-on-surface`} title="Notify">
+        <button data-tour="alerts-button-mobile" onClick={() => setShowNotifyModal(true)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 text-on-surface-variant hover:text-on-surface`} title="Notify">
           <Bell size={20} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Alerts</span>
         </button>

@@ -35,8 +35,10 @@ export function SupplyDemandChart({ data, title, description }: ChartProps) {
   const seekersStart = chartData[0]?.Seekers || 0;
   const seekersEnd = chartData[chartData.length - 1]?.Seekers || 0;
 
-  const listingsChange = ((listingsEnd - listingsStart) / listingsStart * 100).toFixed(1);
-  const seekersChange = ((seekersEnd - seekersStart) / seekersStart * 100).toFixed(1);
+  const listingsChangeNum = (listingsEnd - listingsStart) / listingsStart * 100;
+  const seekersChangeNum = (seekersEnd - seekersStart) / seekersStart * 100;
+  const listingsChange = listingsChangeNum.toFixed(1);
+  const seekersChange = seekersChangeNum.toFixed(1);
   const averageListings = (chartData.reduce((sum, d) => sum + (d.Listings || 0), 0) / chartData.length).toFixed(0);
   const averageSeekers = (chartData.reduce((sum, d) => sum + (d.Seekers || 0), 0) / chartData.length).toFixed(0);
 
@@ -58,12 +60,12 @@ export function SupplyDemandChart({ data, title, description }: ChartProps) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-2">
           <div className="bg-background/50 rounded-lg p-3 border border-blue-500/20">
             <p className="text-[10px] text-blue-400 font-technical uppercase tracking-wider">Listings Change</p>
-            <p className="text-lg font-black text-primary mt-1">{listingsChange > 0 ? '+' : ''}{listingsChange}%</p>
+            <p className="text-lg font-black text-primary mt-1">{listingsChangeNum > 0 ? '+' : ''}{listingsChange}%</p>
             <p className="text-[10px] text-on-surface-variant mt-0.5">{listingsStart} → {listingsEnd}</p>
           </div>
           <div className="bg-background/50 rounded-lg p-3 border border-green-500/20">
             <p className="text-[10px] text-green-400 font-technical uppercase tracking-wider">Seekers Change</p>
-            <p className="text-lg font-black text-secondary mt-1">{seekersChange > 0 ? '+' : ''}{seekersChange}%</p>
+            <p className="text-lg font-black text-secondary mt-1">{seekersChangeNum > 0 ? '+' : ''}{seekersChange}%</p>
             <p className="text-[10px] text-on-surface-variant mt-0.5">{seekersStart} → {seekersEnd}</p>
           </div>
           <div className="bg-background/50 rounded-lg p-3 border border-blue-500/20">
@@ -136,11 +138,11 @@ export function SupplyDemandChart({ data, title, description }: ChartProps) {
       <div className="border-t border-white/5 pt-4">
         <p className="text-xs text-on-surface-variant leading-relaxed">
           <span className="font-technical font-black text-primary">💡 Insight:</span> {
-            listingsChange > 0 && seekersChange > 0
+            listingsChangeNum > 0 && seekersChangeNum > 0
               ? `Both supply and demand growing. Market is active — good opportunity for landlords and seekers.`
-              : listingsChange < 0 && seekersChange > 0
+              : listingsChangeNum < 0 && seekersChangeNum > 0
               ? `High demand but low supply. Properties rent quickly in this market.`
-              : listingsChange > 0 && seekersChange < 0
+              : listingsChangeNum > 0 && seekersChangeNum < 0
               ? `More listings but fewer seekers. Competitive market for landlords.`
               : `Balanced market. Standard supply-demand dynamics.`
           }

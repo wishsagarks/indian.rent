@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 
@@ -12,6 +12,7 @@ interface TourStep {
     side?: 'left' | 'right' | 'top' | 'bottom';
     align?: 'start' | 'center' | 'end';
   };
+  device?: 'desktop' | 'mobile' | 'both'; // New: specify which devices show this step
 }
 
 const TOURS = {
@@ -24,6 +25,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '#map-container',
@@ -33,6 +35,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '#map-container',
@@ -42,69 +45,127 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '[data-tour="search-button"]',
       popover: {
-        title: '🔎 Quick Search (Top Tip!)',
+        title: '🔎 Quick Search',
         description: 'Know the area you want? Click this and type the locality name (e.g., "Indiranagar", "Whitefield"). Map auto-zooms to that area. Saves you scrolling time!',
         side: 'right' as const,
         align: 'start' as const,
       },
+      device: 'both',
     },
     {
       element: '[data-tour="filter-button"]',
       popover: {
         title: '🎯 Smart Filters',
-        description: 'Set your preferences once: BHK type (1-5), max rent budget, furnishing (unfurnished/semi/full), property type. All results update instantly. Your filters are saved for next time!',
+        description: 'Set your preferences: BHK type (1-5), max rent budget, furnishing (unfurnished/semi/full), property type. All results update instantly. Your filters are saved!',
         side: 'right' as const,
         align: 'start' as const,
       },
+      device: 'both',
     },
     {
-      element: '[data-tour="metro-button"]',
+      element: '[data-tour="locate-button"]',
+      popover: {
+        title: '📍 Find Your Location (GPS)',
+        description: 'Click the compass/navigation button to auto-locate yourself on the map. Gets your exact position and shows nearby listings. Permission required. Very helpful when apartment hunting!',
+        side: 'right' as const,
+        align: 'start' as const,
+      },
+      device: 'desktop',
+    },
+    {
+      element: '[data-tour="metro-button"], [data-tour="metro-button-mobile"]',
       popover: {
         title: '🚇 Metro/Transit Overlay',
-        description: 'Toggle this to see metro lines, bus routes, and transit hubs overlaid on the map. Looking for a place near the metro? Click this and filter by metro distance!',
+        description: 'Toggle to see metro lines, bus routes, and transit hubs on the map. Looking near public transit? Enable this to visualize commute options!',
         side: 'right' as const,
         align: 'start' as const,
       },
+      device: 'both',
     },
     {
-      element: '[data-tour="area-stats-button"]',
+      element: '[data-tour="area-stats-button"], [data-tour="area-stats-button-mobile"]',
       popover: {
         title: '📊 Area Market Intelligence',
-        description: 'Click an area on the map to see: How many listings are there? Average rent by BHK? Is demand high or low? This helps you understand market rates before clicking individual listings.',
+        description: 'Click any area on map to see live stats: listing count, average rent by BHK, demand level. Understand market rates before looking at individual properties!',
         side: 'right' as const,
         align: 'start' as const,
       },
+      device: 'both',
     },
     {
-      element: '[data-tour="add-property-button"]',
+      element: '[data-tour="legend-button"]',
       popover: {
-        title: '➕ Add a Listing (Help Your Community!)',
-        description: 'Know about a rental that should be here? Add it! Click the big + button, select location, fill details, and post. You\'re helping your neighbors find honest rents. Takes 2 minutes!',
+        title: '🗺️ Map Legend',
+        description: 'View the color-coded guide to all pin types: Gated, Semi-Gated, Standalone, PG, Hostel, Your pins, Multiple listings, and Stale pins. Helps you understand what each marker means!',
+        side: 'bottom' as const,
+        align: 'center' as const,
+      },
+      device: 'desktop',
+    },
+    {
+      element: '[data-tour="add-property-button"], [data-tour="add-property-button-desktop"]',
+      popover: {
+        title: '➕ Add Your Rental Listing',
+        description: 'Know about a rental property? Click the big + button (center bottom on mobile, right sidebar on desktop), select location, and add details. Help your community find honest rents!',
         side: 'top' as const,
         align: 'center' as const,
       },
+      device: 'both',
+    },
+    {
+      element: '[data-tour="analytics-button"]',
+      popover: {
+        title: '📈 Market Analytics Dashboard',
+        description: 'Click the animated analytics button (desktop only, right sidebar) to view deep market insights: supply/demand trends, price distributions, market segmentation, and seeker demand heatmaps!',
+        side: 'left' as const,
+        align: 'center' as const,
+      },
+      device: 'desktop',
+    },
+    {
+      element: '[data-tour="live-stats-button-mobile"]',
+      popover: {
+        title: '📊 Live Stats (Mobile)',
+        description: 'Tap Live Stats to see real-time activity: active seekers, recent listings, market velocity. Understand market heat at a glance!',
+        side: 'top' as const,
+        align: 'center' as const,
+      },
+      device: 'mobile',
+    },
+    {
+      element: '[data-tour="alerts-button-mobile"]',
+      popover: {
+        title: '🔔 Setup Notifications (Mobile)',
+        description: 'Tap Alerts to get notified when new listings appear in your preferred area. Never miss a listing again!',
+        side: 'top' as const,
+        align: 'center' as const,
+      },
+      device: 'mobile',
     },
     {
       element: '[data-tour="search-button"]',
       popover: {
         title: '💡 Pro Tips for Better Results',
-        description: 'Tip 1: Search → Filter → Look. Tip 2: Zoom close to see street names & nearby landmarks. Tip 3: Save listings to your phone (coming soon). Tip 4: Share favorite areas with friends!',
+        description: 'Tip 1: Search locality → Apply filters → Browse pins. Tip 2: Zoom close to see street names. Tip 3: Click pins multiple times to view more details. Tip 4: Share listings via WhatsApp!',
         side: 'right' as const,
         align: 'start' as const,
       },
+      device: 'both',
     },
     {
       element: '#map-container',
       popover: {
-        title: '🎉 You\'re Ready!',
-        description: 'Now you know the map like a pro. Try clicking a pin → view details → share with friends via WhatsApp. Questions? The ? button at top right restarts this tour anytime. Happy hunting! 🏡',
+        title: '🎉 You\'re Ready to Find Your Home!',
+        description: 'You know the map like a pro now. Start by searching your area, applying filters, clicking pins to explore, and using GPS to find nearby listings. Click ? button to restart tour anytime. Happy hunting! 🏡',
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
   ] as TourStep[],
 
@@ -117,6 +178,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '[data-tour="listing-images"]',
@@ -126,6 +188,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '[data-tour="listing-action-panel"]',
@@ -135,6 +198,7 @@ const TOURS = {
         side: 'left' as const,
         align: 'start' as const,
       },
+      device: 'both',
     },
   ] as TourStep[],
 
@@ -147,6 +211,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '[data-tour="explore-button"]',
@@ -156,6 +221,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
   ] as TourStep[],
 
@@ -168,6 +234,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
     {
       element: '[data-tour="city-selector"]',
@@ -177,6 +244,7 @@ const TOURS = {
         side: 'bottom' as const,
         align: 'center' as const,
       },
+      device: 'both',
     },
   ] as TourStep[],
 };
@@ -184,6 +252,34 @@ const TOURS = {
 export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
   const isEnabledRef = useRef(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Filter tour steps based on device size
+  const filterStepsByDevice = (steps: TourStep[], isMobileDevice: boolean) => {
+    return steps.filter(step => {
+      // If no device restriction, always show
+      if (!step.device || step.device === 'both') return true;
+
+      // Show only if device matches
+      if (isMobileDevice && step.device === 'mobile') return true;
+      if (!isMobileDevice && step.device === 'desktop') return true;
+
+      return false;
+    });
+  };
+
+  // Detect viewport size on mount and on resize
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024); // lg breakpoint is 1024px
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     // Check if driver.js is enabled via environment variable
@@ -213,7 +309,9 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
       const timer = setTimeout(() => {
         if (driverRef.current) {
           const steps = TOURS[tourName];
-          driverRef.current.setSteps(steps);
+          // Filter steps based on current device size
+          const filteredSteps = filterStepsByDevice(steps, isMobile);
+          driverRef.current.setSteps(filteredSteps);
           driverRef.current.drive(0);
         }
       }, 500);
@@ -231,7 +329,7 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
         driverRef.current.destroy();
       }
     };
-  }, [tourName]);
+  }, [tourName, isMobile]);
 
   const startTour = useCallback((name: keyof typeof TOURS) => {
     if (!isEnabledRef.current || !driverRef.current) return;
