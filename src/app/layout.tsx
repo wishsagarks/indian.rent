@@ -43,6 +43,7 @@ export const metadata: Metadata = {
 };
 
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { ToastProvider } from "@/providers/ToastProvider";
 
 export default function RootLayout({
   children,
@@ -67,9 +68,11 @@ export default function RootLayout({
       <body className="bg-background text-on-background overflow-y-scroll">
         <PagePreloader />
         <ThemeProvider>
-          <SmoothScroll>
-            {children}
-          </SmoothScroll>
+          <ToastProvider>
+            <SmoothScroll>
+              {children}
+            </SmoothScroll>
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
