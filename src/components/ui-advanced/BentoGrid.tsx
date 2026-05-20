@@ -88,6 +88,7 @@ export function BentoGrid() {
       <motion.div
         variants={cardVariants}
         whileHover={{ y: -5, scale: 1.01 }}
+        whileTap={{ scale: 0.98, y: 2 }}
         className="col-span-1 md:col-span-3 row-span-2 glass-plate rounded-lg p-10 flex flex-col gap-6 relative overflow-hidden group"
       >
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-colors duration-700" />
@@ -113,6 +114,7 @@ export function BentoGrid() {
       <motion.div
         variants={cardVariants}
         whileHover={{ y: -5, scale: 1.01 }}
+        whileTap={{ scale: 0.98, y: 2 }}
         className="col-span-1 md:col-span-3 row-span-1 glass-plate rounded-lg p-8 flex flex-col gap-6 relative overflow-hidden group"
       >
         <div className="absolute right-0 bottom-0 p-8 opacity-10 group-hover:opacity-30 transition-opacity duration-700">
@@ -133,6 +135,7 @@ export function BentoGrid() {
       <motion.div
         variants={cardVariants}
         whileHover={{ y: -5, scale: 1.01 }}
+        whileTap={{ scale: 0.98, y: 2 }}
         className="col-span-1 md:col-span-1 row-span-1 glass-plate rounded-lg p-8 flex flex-col items-center justify-center gap-4 relative overflow-hidden group"
       >
         <motion.div variants={iconVariants}>
@@ -150,6 +153,7 @@ export function BentoGrid() {
       <motion.div
         variants={cardVariants}
         whileHover={{ y: -5, scale: 1.01 }}
+        whileTap={{ scale: 0.98, y: 2 }}
         className="col-span-1 md:col-span-2 row-span-1 glass-plate rounded-lg p-8 flex flex-col justify-center gap-6 relative overflow-hidden group"
       >
         <div className="flex items-center gap-4">

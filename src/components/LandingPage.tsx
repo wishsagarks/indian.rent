@@ -165,6 +165,18 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       delay: 0.3
     });
 
+    // Parallax text depth on hero (mobile: 0.1x, tablet: 0.25x, desktop: 0.4x)
+    gsap.to('.hero-subheading', {
+      y: window.innerWidth >= 1024 ? 80 : window.innerWidth >= 768 ? 30 : 10,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.hero-section',
+        start: 'top top',
+        end: 'center center',
+        scrub: 1,
+      }
+    });
+
     gsap.from('.hero-cta-group', {
       opacity: 0,
       y: 20,
