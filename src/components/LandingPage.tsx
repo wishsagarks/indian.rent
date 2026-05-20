@@ -288,7 +288,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
           <div className="flex items-center gap-4 md:gap-6">
             <div className="hidden md:flex font-technical text-[12px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-               Live
+               BETA
             </div>
             {isEnabled && <TourHelpButton tourName="landing" />}
             <ThemeToggle />
