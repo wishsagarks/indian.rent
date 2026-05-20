@@ -335,22 +335,22 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </section>
 
         {/* Tactical Stats */}
-        <section className="tactical-stats py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
-           <div className="max-w-container mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
+        <section className="tactical-stats py-20 md:py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
+           <div className="max-w-container mx-auto grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
               {[
                 { label: 'Active Satellite Nodes', value: platformStats?.totalBuildings ? platformStats.totalBuildings.toLocaleString() : '—', sub: 'Hyderabad' },
                 { label: 'P2P Value Exchange', value: platformStats?.totalRentMapped ? formatRentMapped(platformStats.totalRentMapped) : '—', sub: 'Good Faith' },
                 { label: 'Network Latency', value: '<200ms', sub: 'Edge Sync' },
                 { label: 'Direct Listings', value: '100%', sub: 'Verified' }
               ].map((stat, i) => (
-                <div key={i} className="stat-item space-y-4 group">
-                   <div className="font-technical text-[9px] uppercase tracking-[0.5em] text-primary font-black opacity-60 group-hover:opacity-100 transition-opacity">
+                <div key={i} className="stat-item space-y-2 md:space-y-4 group">
+                   <div className="font-technical text-[8px] md:text-[9px] uppercase tracking-[0.4em] md:tracking-[0.5em] text-primary font-black opacity-60 group-hover:opacity-100 transition-opacity">
                      {stat.label}
                    </div>
-                   <div className="text-4xl md:text-7xl font-black tracking-tighter group-hover:text-primary transition-colors duration-500 text-on-background">
+                   <div className="text-2xl md:text-4xl lg:text-7xl font-black tracking-tighter group-hover:text-primary transition-colors duration-500 text-on-background leading-none">
                      {stat.value}
                    </div>
-                   <div className="text-[10px] uppercase tracking-widest font-black opacity-20 group-hover:opacity-60 transition-opacity font-technical">
+                   <div className="text-[9px] md:text-[10px] uppercase tracking-widest font-black opacity-20 group-hover:opacity-60 transition-opacity font-technical">
                      {stat.sub}
                    </div>
                 </div>
@@ -359,11 +359,11 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </section>
 
         {/* Final CTA */}
-        <section className="final-cta py-80 px-mobile md:px-desktop flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
+        <section className="final-cta py-40 md:py-80 px-mobile md:px-desktop flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
            <div className="absolute inset-0 bg-primary/5 blur-[200px] animate-pulse" />
            <div className="max-w-container mx-auto relative z-10">
-              <h2 className="final-cta-title text-headline-lg md:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-16 leading-none text-on-background font-display">
-                Take the <br/> market back
+              <h2 className="final-cta-title text-4xl md:text-6xl lg:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-8 md:mb-16 leading-tight md:leading-none text-on-background font-display">
+                Take the <br className="hidden md:block"/> market back
               </h2>
               <StickerButton
                 onClick={handleDeploy}

@@ -5,15 +5,16 @@ import { motion, easeOut, animate, useMotionValue, useTransform } from 'framer-m
 import { useInView } from 'react-intersection-observer';
 import { Shield, Eye, MapPin, Banknote, Navigation2, Zap, Target } from 'lucide-react';
 
-function AnimatedCounter({ target, prefix, suffix, inView }: { target: number; prefix: string; suffix: string; inView: boolean }) {
+function AnimatedCounter({ target, prefix, suffix, inView, isMobile = false }: { target: number; prefix: string; suffix: string; inView: boolean; isMobile?: boolean }) {
   const count = useMotionValue(0);
   const rounded = useTransform(count, v => Math.round(v));
+  const duration = isMobile ? 1.5 : 2;
 
   useEffect(() => {
     if (!inView) return;
-    const ctrl = animate(count, target, { duration: 2, ease: 'easeOut' });
+    const ctrl = animate(count, target, { duration, ease: 'easeOut' });
     return () => ctrl.stop();
-  }, [inView, target, count]);
+  }, [inView, target, count, duration]);
 
   return (
     <motion.span>
@@ -63,6 +64,18 @@ export function BentoGrid() {
     }
   };
 
+  const eyeBlinkVariants = {
+    blink: {
+      scaleY: [1, 0.3, 1],
+      transition: {
+        duration: 0.8,
+        delay: 1.5,
+        repeat: Infinity,
+        repeatDelay: 3
+      }
+    }
+  };
+
   return (
     <motion.div
       ref={triggerRef}
@@ -78,8 +91,11 @@ export function BentoGrid() {
         className="col-span-1 md:col-span-3 row-span-2 glass-plate rounded-lg p-10 flex flex-col gap-6 relative overflow-hidden group"
       >
         <div className="absolute -right-20 -top-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-colors duration-700" />
-        <motion.div variants={iconVariants} className="w-20 h-20 rounded-lg skeuo-raised flex items-center justify-center glow-primary mb-4 metallic-edge border border-white/10">
-          <Eye size={40} className="text-primary animate-pulse" />
+        <motion.div variants={iconVariants} className="w-20 h-20 md:w-24 md:h-24 lg:w-28 lg:h-28 rounded-lg skeuo-raised flex items-center justify-center glow-primary mb-4 metallic-edge border border-white/10">
+          <motion.div variants={eyeBlinkVariants} animate="blink" className="origin-center">
+            <Eye size={36} className="md:block hidden text-primary" />
+            <Eye size={32} className="md:hidden text-primary" />
+          </motion.div>
         </motion.div>
         <div className="space-y-5 text-left">
           <h3 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-on-background leading-tight">Detect Vacancy &rarr;</h3>
@@ -123,9 +139,9 @@ export function BentoGrid() {
           <Banknote size={40} className="text-primary group-hover:scale-110 transition-transform duration-500" />
         </motion.div>
         <div className="text-center">
-           <div className="text-[12px] font-black uppercase tracking-[0.2em] text-primary">Reward</div>
-           <div className="text-3xl font-black text-on-background tracking-tight leading-none mt-2">
-             <AnimatedCounter target={5} prefix="₹" suffix="K+" inView={inView} />
+           <div className="text-[11px] md:text-[12px] font-black uppercase tracking-[0.2em] text-primary">Reward</div>
+           <div className="text-xl md:text-2xl lg:text-3xl font-black text-on-background tracking-tight leading-none mt-2">
+             <AnimatedCounter target={5} prefix="₹" suffix="K+" inView={inView} isMobile={typeof window !== 'undefined' && window.innerWidth < 768} />
            </div>
         </div>
       </motion.div>
