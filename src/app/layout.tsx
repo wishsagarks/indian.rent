@@ -58,8 +58,11 @@ export default function RootLayout({
       data-map-provider="google"
     >
       <head>
-        <meta name="theme-color" content="#cc785c" />
-        <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230066ff' width='180' height='180'/><text x='90' y='90' font-size='100' font-family='Arial,sans-serif' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='central'>ir</text></svg>" />
+        <meta name="theme-color" content="#ff6b35" />
+        <link rel="icon" href="/logo.svg" type="image/svg+xml" />
+        <link rel="icon" href="/icon-192.svg" type="image/svg+xml" sizes="192x192" />
+        <link rel="icon" href="/icon-512.svg" type="image/svg+xml" sizes="512x512" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
