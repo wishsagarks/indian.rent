@@ -12,6 +12,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
   const lenisRef = useRef<any>(null);
   const lastScrollY = useRef(0);
   const lastScrollTime = useRef(0);
+  const velocityRef = useRef(0);
   const [velocityState, setVelocityState] = useState<ScrollVelocityContextType>({
     velocity: 0,
     isFastScroll: false,
@@ -19,6 +20,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
     shouldReduceComplexity: false,
   });
   const isMobileRef = useRef(typeof window !== 'undefined' && window.innerWidth < 768);
+  const tickerFnRef = useRef<any>(null);
 
   useLenis((lenis) => {
     lenisRef.current = lenis;
@@ -31,13 +33,17 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
     const update = () => ScrollTrigger.update();
     const lenis = lenisRef.current;
 
+    // Create ticker function once and reuse same reference
+    const tickerFn = (time: number) => lenis.raf(time * 1000);
+    tickerFnRef.current = tickerFn;
+
     lenis.on('scroll', update);
-    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.add(tickerFn);
     gsap.ticker.lagSmoothing(0);
 
     return () => {
       lenis.off('scroll', update);
-      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      gsap.ticker.remove(tickerFnRef.current);
     };
   }, []);
 
@@ -54,9 +60,11 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
       const pixelsPerMs = deltaTime > 0 ? deltaScroll / deltaTime : 0;
 
       // Smooth velocity using exponential moving average
-      const smoothedVelocity = pixelsPerMs * 0.7 + (velocityState.velocity * 0.3);
+      const smoothedVelocity = pixelsPerMs * 0.7 + (velocityRef.current * 0.3);
       const isFastScroll = smoothedVelocity > 0.8; // fast scroll threshold
       const isSlowScroll = smoothedVelocity < 0.2; // slow scroll threshold
+
+      velocityRef.current = smoothedVelocity;
 
       setVelocityState({
         velocity: smoothedVelocity,
@@ -78,7 +86,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
 
     lenisRef.current.on('scroll', handleScroll);
     return () => lenisRef.current?.off('scroll', handleScroll);
-  }, [velocityState.velocity]);
+  }, []);
 
   return (
     <ScrollVelocityContext.Provider value={velocityState}>
@@ -89,7 +97,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
 
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   return (
-    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2 }}>
+    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2, autoRaf: false }}>
       <ScrollTriggerProxy>
         {children}
       </ScrollTriggerProxy>

@@ -6,8 +6,11 @@ let client: SupabaseClient | undefined;
 export function createClient() {
   if (client) return client;
 
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const isSecure = supabaseUrl.startsWith('https://');
+
   client = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: {
@@ -15,12 +18,12 @@ export function createClient() {
           'x-client-info': 'indian.rent',
         },
       },
-      // Force secure WebSocket (wss) in production
-      // Prevents "WebSocket not available: The operation is insecure" errors
       realtime: {
         params: {
           eventsPerSecond: 10,
         },
+        // Force WebSocket protocol based on page security
+        headers: isSecure ? {} : undefined,
       },
     }
   )

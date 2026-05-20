@@ -12,7 +12,7 @@ const securityHeaders = [
       "script-src 'self' 'unsafe-eval' 'unsafe-inline' maps.googleapis.com",
       "style-src 'self' 'unsafe-inline' fonts.googleapis.com",
       "font-src 'self' fonts.gstatic.com",
-      "img-src 'self' data: blob: *.supabase.co *.googleapis.com *.gstatic.com",
+      "img-src 'self' data: blob: *.supabase.co *.googleapis.com *.gstatic.com images.unsplash.com",
       "connect-src 'self' *.supabase.co *.upstash.io maps.googleapis.com api.mapbox.com events.mapbox.com *.tiles.mapbox.com",
       "frame-ancestors 'none'",
       "worker-src blob:",
