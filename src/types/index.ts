@@ -1,5 +1,33 @@
 export type PropertyCategory = 'gated' | 'semi-gated' | 'standalone' | 'pg' | 'hostel';
 
+export interface SeekerPin {
+  id: string;
+  lat: number;
+  lng: number;
+  bhk_preference: string;
+  budget: string;
+  move_in_timeline: string;
+  food_preference?: string;
+  smoking_preference?: string;
+  gender_preference?: string;
+  created_at: string;
+  ip_hash: string;
+}
+
+export interface MapPoint {
+  id: string;
+  name: string;
+  category: PropertyCategory;
+  lat: number;
+  lng: number;
+  rent?: number;
+  bhk?: number;
+  furnishing?: 'furnished' | 'semi-furnished' | 'unfurnished';
+  reward?: number;
+  verified?: boolean;
+  coordinates: [number, number];
+}
+
 export interface Building {
   id: string;
   name: string;
