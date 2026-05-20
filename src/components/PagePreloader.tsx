@@ -3,11 +3,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Satellite } from 'lucide-react';
-import { useTheme } from '@/hooks/useTheme';
 
 export default function PagePreloader() {
   const [isVisible, setIsVisible] = useState(true);
-  const { theme } = useTheme();
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(false), 2400);
@@ -26,16 +24,11 @@ export default function PagePreloader() {
           <div className="absolute inset-0 overflow-hidden">
             <motion.div
               animate={{
-                background: theme === 'light' ? [
-                  'radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.15) 0%, transparent 50%)',
-                  'radial-gradient(circle at 80% 50%, rgba(255, 107, 53, 0.15) 0%, transparent 50%)',
-                  'radial-gradient(circle at 50% 80%, rgba(79, 172, 254, 0.15) 0%, transparent 50%)',
-                  'radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.15) 0%, transparent 50%)',
-                ] : [
-                  'radial-gradient(circle at 20% 50%, rgba(204, 120, 92, 0.1) 0%, transparent 50%)',
-                  'radial-gradient(circle at 80% 50%, rgba(204, 120, 92, 0.1) 0%, transparent 50%)',
-                  'radial-gradient(circle at 50% 80%, rgba(93, 184, 166, 0.1) 0%, transparent 50%)',
-                  'radial-gradient(circle at 20% 50%, rgba(204, 120, 92, 0.1) 0%, transparent 50%)',
+                background: [
+                  'radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.2) 0%, transparent 50%)',
+                  'radial-gradient(circle at 80% 50%, rgba(255, 107, 53, 0.2) 0%, transparent 50%)',
+                  'radial-gradient(circle at 50% 80%, rgba(79, 172, 254, 0.2) 0%, transparent 50%)',
+                  'radial-gradient(circle at 20% 50%, rgba(255, 107, 53, 0.2) 0%, transparent 50%)',
                 ],
               }}
               transition={{ duration: 4, repeat: Infinity }}
