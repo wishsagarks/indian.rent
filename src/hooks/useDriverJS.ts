@@ -19,8 +19,26 @@ const TOURS = {
     {
       element: '#map-container',
       popover: {
-        title: '🗺️ Interactive Map',
-        description: 'Browse rental listings on the map. Click any orange pin to see details. Zoom in/out to explore different areas.',
+        title: '🏠 Welcome to indian.rent Map',
+        description: 'You\'re viewing a live rental map of your city. Every orange pin = a rental property with real rent from real landlords. No brokers, 100% transparent. Let\'s explore together!',
+        side: 'bottom' as const,
+        align: 'center' as const,
+      },
+    },
+    {
+      element: '#map-container',
+      popover: {
+        title: '📍 Understanding the Pins',
+        description: 'Orange pins = Available rentals. Stacked pins (with +X) = Multiple properties in same building. Blue/green pins = Different property types (gated, PG, etc). Click any pin to see full details!',
+        side: 'bottom' as const,
+        align: 'center' as const,
+      },
+    },
+    {
+      element: '#map-container',
+      popover: {
+        title: '🔍 How to Explore',
+        description: 'Zoom in (scroll up) to see detailed listings. Zoom out (scroll down) to see clustered areas. Pan by clicking and dragging. Pro tip: Zoom into your favorite neighborhoods to see what\'s available!',
         side: 'bottom' as const,
         align: 'center' as const,
       },
@@ -28,8 +46,8 @@ const TOURS = {
     {
       element: '[data-tour="search-button"]',
       popover: {
-        title: '🔍 Quick Search',
-        description: 'Click to search for a specific locality or building. Type an area name to jump to it on the map.',
+        title: '🔎 Quick Search (Top Tip!)',
+        description: 'Know the area you want? Click this and type the locality name (e.g., "Indiranagar", "Whitefield"). Map auto-zooms to that area. Saves you scrolling time!',
         side: 'right' as const,
         align: 'start' as const,
       },
@@ -37,8 +55,8 @@ const TOURS = {
     {
       element: '[data-tour="filter-button"]',
       popover: {
-        title: '⚙️ Filter Listings',
-        description: 'Narrow down results by BHK (1-5), max rent, furnishing type, and other preferences. Filters save automatically!',
+        title: '🎯 Smart Filters',
+        description: 'Set your preferences once: BHK type (1-5), max rent budget, furnishing (unfurnished/semi/full), property type. All results update instantly. Your filters are saved for next time!',
         side: 'right' as const,
         align: 'start' as const,
       },
@@ -46,8 +64,8 @@ const TOURS = {
     {
       element: '[data-tour="metro-button"]',
       popover: {
-        title: '🚇 Metro Lines',
-        description: 'Toggle to see metro routes and public transport on the map. Great for finding properties near transit!',
+        title: '🚇 Metro/Transit Overlay',
+        description: 'Toggle this to see metro lines, bus routes, and transit hubs overlaid on the map. Looking for a place near the metro? Click this and filter by metro distance!',
         side: 'right' as const,
         align: 'start' as const,
       },
@@ -55,8 +73,8 @@ const TOURS = {
     {
       element: '[data-tour="area-stats-button"]',
       popover: {
-        title: '📊 Area Statistics',
-        description: 'Click on any area to see live stats: average rent by BHK, demand level, and market trends.',
+        title: '📊 Area Market Intelligence',
+        description: 'Click an area on the map to see: How many listings are there? Average rent by BHK? Is demand high or low? This helps you understand market rates before clicking individual listings.',
         side: 'right' as const,
         align: 'start' as const,
       },
@@ -64,9 +82,27 @@ const TOURS = {
     {
       element: '[data-tour="add-property-button"]',
       popover: {
-        title: '➕ Add Your Rental',
-        description: 'Share a rental property you know about. Help your community find honest rents without broker fees!',
+        title: '➕ Add a Listing (Help Your Community!)',
+        description: 'Know about a rental that should be here? Add it! Click the big + button, select location, fill details, and post. You\'re helping your neighbors find honest rents. Takes 2 minutes!',
         side: 'top' as const,
+        align: 'center' as const,
+      },
+    },
+    {
+      element: '[data-tour="search-button"]',
+      popover: {
+        title: '💡 Pro Tips for Better Results',
+        description: 'Tip 1: Search → Filter → Look. Tip 2: Zoom close to see street names & nearby landmarks. Tip 3: Save listings to your phone (coming soon). Tip 4: Share favorite areas with friends!',
+        side: 'right' as const,
+        align: 'start' as const,
+      },
+    },
+    {
+      element: '#map-container',
+      popover: {
+        title: '🎉 You\'re Ready!',
+        description: 'Now you know the map like a pro. Try clicking a pin → view details → share with friends via WhatsApp. Questions? The ? button at top right restarts this tour anytime. Happy hunting! 🏡',
+        side: 'bottom' as const,
         align: 'center' as const,
       },
     },
