@@ -51,6 +51,7 @@ function StickerButton({
       disabled={disabled || isLoading}
       onHoverStart={() => !isLoading && setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
+      whileTap={{ scale: 0.95 }}
       className="relative cursor-pointer group disabled:cursor-not-allowed"
     >
       {/* Shadow */}
@@ -84,9 +85,9 @@ function StickerButton({
           )}
           {isSuccess && (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 12, mass: 1 }}
             >
               <CheckCircle2 size={20} strokeWidth={2.5} />
             </motion.div>

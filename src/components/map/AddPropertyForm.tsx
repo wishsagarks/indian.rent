@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X, Info } from 'lucide-react';
+import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X, Info, Building, IndianRupee } from 'lucide-react';
 import { findNearbyBuildings } from '@/app/actions/map-actions';
+import AnimatedFormInput from '@/components/form/AnimatedFormInput';
 
 interface AddPropertyFormProps {
   onClose: () => void;
@@ -231,13 +232,14 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
 
               {formData.category && !formData.existingBuildingId && (
                 <div className="space-y-4 mt-6 p-4 rounded-lg bg-primary/5 border border-primary/20">
-                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Building Name</label>
-                  <input
+                  <AnimatedFormInput
                     type="text"
+                    label="Building Name"
                     placeholder="e.g. Banjara Heights, Jubilee Towers"
                     value={formData.buildingName}
                     onChange={(e) => updateData({ buildingName: e.target.value })}
-                    className="w-full bg-surface border border-white/10 rounded-lg px-4 py-3 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary outline-none focus:bg-surface-container-high transition-all text-sm font-medium"
+                    helperText="Name of your building or residence"
+                    icon={<Building size={18} />}
                   />
                   <button
                     onClick={() => { if (formData.buildingName.trim()) setStep(2); }}
@@ -289,16 +291,14 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                 </div>
               </div>
               <div className="space-y-3 text-left">
-                <div className="flex items-center gap-3">
-                  <Hash size={16} className="text-primary" />
-                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Flat / Unit Identifier</label>
-                </div>
-                <input
+                <AnimatedFormInput
                   type="text"
+                  label="Flat / Unit Identifier"
                   placeholder="e.g. 101, A-3, Ground Floor, Shop 2..."
                   value={formData.flatNumber}
                   onChange={e => updateData({ flatNumber: e.target.value })}
-                  className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none transition-colors"
+                  helperText="How to identify this unit"
+                  icon={<Hash size={18} />}
                 />
               </div>
             </motion.div>
@@ -335,11 +335,15 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
 
               {/* Size - OPTIONAL */}
               <div className="space-y-4 text-left">
-                <div className="flex items-center gap-2 ml-2">
-                  <Ruler size={14} className="text-primary opacity-60" />
-                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface-variant font-black">Size (sq.ft) <span className="text-primary/40 text-[9px]">Optional</span></label>
-                </div>
-                <input type="number" placeholder="e.g. 1200" value={formData.sizeSqft} onChange={e => updateData({ sizeSqft: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none transition-colors" />
+                <AnimatedFormInput
+                  type="number"
+                  label="Size (sq.ft)"
+                  placeholder="e.g. 1200"
+                  value={formData.sizeSqft}
+                  onChange={e => updateData({ sizeSqft: e.target.value })}
+                  helperText="Floor area in square feet (optional)"
+                  icon={<Ruler size={18} />}
+                />
               </div>
 
               {/* Availability Date - OPTIONAL with checkbox */}
@@ -363,11 +367,12 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   </div>
                 </button>
                 {formData.availabilityDate && (
-                  <input
+                  <AnimatedFormInput
                     type="date"
                     value={formData.availabilityDate}
                     onChange={e => updateData({ availabilityDate: e.target.value })}
-                    className="w-full bg-primary/5 border border-primary/20 rounded-lg p-4 text-on-surface font-bold focus:border-primary outline-none transition-colors"
+                    helperText="When the property becomes available"
+                    icon={<Calendar size={18} />}
                   />
                 )}
               </div>
@@ -416,7 +421,15 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Monthly Rent</label>
                   <FormInfoIcon text="Monthly rental amount in INR. This is the primary rent, excluding maintenance & utilities." />
                 </div>
-                <input type="text" placeholder="₹ Rent amount" value={formData.rent} onChange={e => updateData({ rent: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-6 text-primary placeholder:text-primary/20 text-3xl font-black focus:border-primary transition-all outline-none tracking-tighter" />
+                <AnimatedFormInput
+                  type="text"
+                  placeholder="₹ Rent amount"
+                  value={formData.rent}
+                  onChange={e => updateData({ rent: e.target.value })}
+                  helperText="Primary rent amount in INR"
+                  icon={<IndianRupee size={18} />}
+                  className="text-2xl placeholder:text-primary/20"
+                />
               </div>
 
               {/* Security Deposit (months) */}
@@ -445,35 +458,62 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
 
               {formData.maintenanceExtra && (
                 <div className="space-y-3 text-left">
-                  <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black ml-2">Est. Amount (₹/mo)</label>
-                  <input type="number" placeholder="e.g. 1500" value={formData.maintenanceAmount} onChange={e => updateData({ maintenanceAmount: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                  <AnimatedFormInput
+                    type="number"
+                    label="Est. Amount (₹/mo)"
+                    placeholder="e.g. 1500"
+                    value={formData.maintenanceAmount}
+                    onChange={e => updateData({ maintenanceAmount: e.target.value })}
+                    helperText="Estimated monthly maintenance charges"
+                    icon={<IndianRupee size={18} />}
+                  />
                 </div>
               )}
 
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">NoBroker Link</label>
-                <div className="relative">
-                  <input type="text" placeholder="nobroker.in/..." value={formData.noBrokerLink} onChange={e => updateData({ noBrokerLink: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-5 pl-14 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
-                  <LinkIcon size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-on-surface opacity-30" />
-                </div>
+                <AnimatedFormInput
+                  type="text"
+                  label="NoBroker Link"
+                  placeholder="nobroker.in/..."
+                  value={formData.noBrokerLink}
+                  onChange={e => updateData({ noBrokerLink: e.target.value })}
+                  helperText="Link to your NoBroker listing (optional)"
+                  icon={<LinkIcon size={18} />}
+                />
               </div>
 
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Flatmates Link</label>
-                <div className="relative">
-                  <input type="text" placeholder="flatmates.in/..." value={formData.flatmatesLink} onChange={e => updateData({ flatmatesLink: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-5 pl-14 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
-                  <LinkIcon size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-on-surface opacity-30" />
-                </div>
+                <AnimatedFormInput
+                  type="text"
+                  label="Flatmates Link"
+                  placeholder="flatmates.in/..."
+                  value={formData.flatmatesLink}
+                  onChange={e => updateData({ flatmatesLink: e.target.value })}
+                  helperText="Link to your Flatmates listing (optional)"
+                  icon={<LinkIcon size={18} />}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-left">
                 <div className="space-y-3">
-                  <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black ml-2">Contributor</label>
-                  <input type="text" placeholder="e.g. Rahul S." value={formData.contributorName} onChange={e => updateData({ contributorName: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                  <AnimatedFormInput
+                    type="text"
+                    label="Contributor"
+                    placeholder="e.g. Rahul S."
+                    value={formData.contributorName}
+                    onChange={e => updateData({ contributorName: e.target.value })}
+                    helperText="Your name"
+                  />
                 </div>
                 <div className="space-y-3 text-left">
-                  <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black ml-2">UPI (Rewards)</label>
-                  <input type="text" placeholder="yourupi@bank" value={formData.contributorUpi} onChange={e => updateData({ contributorUpi: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-4 text-on-surface placeholder:text-on-surface-variant/30 font-bold focus:border-primary outline-none" />
+                  <AnimatedFormInput
+                    type="text"
+                    label="UPI (Rewards)"
+                    placeholder="yourupi@bank"
+                    value={formData.contributorUpi}
+                    onChange={e => updateData({ contributorUpi: e.target.value })}
+                    helperText="For reward payouts"
+                  />
                 </div>
               </div>
 
