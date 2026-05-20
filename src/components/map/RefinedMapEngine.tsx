@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
 import ThemeToggle from '@/components/ThemeToggle';
+import { TourHelpButton } from '@/components/TourHelpButton';
 import { getMapIntel, deployNode, searchLocalities, deleteOwnPin, subscribeToArea, trackApiUsage, getSeekerPins } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
 import { getIpHash } from '@/utils/ip-hash';
@@ -1034,7 +1035,7 @@ export default function RefinedMapEngine() {
                   <option value="cuttack">CTK</option>
                 </select>
 
-                <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} title="Search location" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={15} /></button>
+                <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} data-tour="search-button" title="Search location" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={15} /></button>
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={15} /></button>
                 <div className="hidden lg:flex items-center gap-2">
                   <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-1.5 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={14} /></button>
@@ -1045,6 +1046,7 @@ export default function RefinedMapEngine() {
                 <div className="w-px h-3 bg-white/10" />
                 <button onClick={fetchIntel} className={`p-1.5 rounded-full md:rounded-lg text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={15} strokeWidth={2.5} /></button>
                 <div className="w-px h-3 bg-white/10" />
+                <TourHelpButton tourName="explore" />
                 <ThemeToggle />
               </div>
             </div>

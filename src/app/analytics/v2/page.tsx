@@ -22,6 +22,7 @@ import SeekerDemandHeatmap from '@/components/analytics/SeekerDemandHeatmap';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { ExperimentBadge } from '@/components/badges/ExperimentBadge';
+import { TourHelpButton } from '@/components/TourHelpButton';
 
 type City = 'bengaluru' | 'hyderabad';
 
@@ -145,6 +146,7 @@ export default function AnalyticsDashboardV2() {
                 <option value="bengaluru">🏙️ Bengaluru</option>
                 <option value="hyderabad">🏙️ Hyderabad</option>
               </select>
+              <TourHelpButton tourName="analytics" />
               <ThemeToggle />
             </div>
           </div>
@@ -169,7 +171,7 @@ export default function AnalyticsDashboardV2() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-8">
         {/* KPI Cards */}
-        <section>
+        <section data-tour="kpi-cards">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xs uppercase tracking-widest font-technical font-bold text-primary">
               Market Health Snapshot
@@ -178,6 +180,7 @@ export default function AnalyticsDashboardV2() {
               <span className="text-xs font-technical text-on-surface-variant uppercase">Select City:</span>
               <select
                 value={selectedCity}
+                data-tour="city-selector"
                 onChange={(e) => setSelectedCity(e.target.value as 'bengaluru' | 'hyderabad')}
                 className="px-3 py-1.5 rounded font-technical text-xs font-bold bg-surface border border-white/10 text-on-surface hover:border-white/20 cursor-pointer focus:outline-none focus:border-primary/50"
               >
