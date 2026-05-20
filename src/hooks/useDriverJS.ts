@@ -238,7 +238,7 @@ const TOURS = {
       popover: {
         title: '🏠 Welcome to indian.rent',
         description: 'Find verified rental properties directly. Real rents from real people. Zero broker fees.',
-        side: 'bottom' as const,
+        side: 'top' as const,
         align: 'center' as const,
       },
       device: 'both',

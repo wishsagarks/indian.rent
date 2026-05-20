@@ -22,6 +22,7 @@ import { BentoGrid } from './ui-advanced/BentoGrid';
 import { CitiesMarquee } from './ui-advanced/CitiesMarquee';
 import HeroText from './ui-advanced/HeroText';
 import { useTheme } from '@/hooks/useTheme';
+import { TourHelpButton } from './TourHelpButton';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -125,7 +126,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
   const { shouldReduceComplexity } = useScrollVelocity();
-  useDriverJS('landing');
+  const { startTour, isEnabled } = useDriverJS();  // Initialize but don't auto-start
 
   const handleDeploy = async () => {
     setIsDeploying(true);
@@ -289,6 +290,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
                Live
             </div>
+            {isEnabled && <TourHelpButton tourName="landing" />}
             <ThemeToggle />
           </div>
         </div>
