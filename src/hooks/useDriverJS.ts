@@ -78,24 +78,44 @@ const TOURS = {
       device: 'desktop',
     },
     {
-      element: '[data-tour="metro-button"], [data-tour="metro-button-mobile"]',
+      element: '[data-tour="metro-button"]',
       popover: {
         title: '🚇 Metro/Transit Overlay',
         description: 'Toggle to see metro lines, bus routes, and transit hubs on the map. Looking near public transit? Enable this to visualize commute options!',
         side: 'right' as const,
         align: 'start' as const,
       },
-      device: 'both',
+      device: 'desktop',
     },
     {
-      element: '[data-tour="area-stats-button"], [data-tour="area-stats-button-mobile"]',
+      element: '[data-tour="metro-button-mobile"]',
+      popover: {
+        title: '🚇 Metro/Transit Overlay',
+        description: 'Toggle to see metro lines, bus routes, and transit hubs on the map. Looking near public transit? Enable this to visualize commute options!',
+        side: 'top' as const,
+        align: 'center' as const,
+      },
+      device: 'mobile',
+    },
+    {
+      element: '[data-tour="area-stats-button"]',
       popover: {
         title: '📊 Area Market Intelligence',
         description: 'Click any area on map to see live stats: listing count, average rent by BHK, demand level. Understand market rates before looking at individual properties!',
         side: 'right' as const,
         align: 'start' as const,
       },
-      device: 'both',
+      device: 'desktop',
+    },
+    {
+      element: '[data-tour="area-stats-button-mobile"]',
+      popover: {
+        title: '📊 Area Market Intelligence',
+        description: 'Click any area on map to see live stats: listing count, average rent by BHK, demand level. Understand market rates before looking at individual properties!',
+        side: 'top' as const,
+        align: 'center' as const,
+      },
+      device: 'mobile',
     },
     {
       element: '[data-tour="legend-button"]',
@@ -108,14 +128,24 @@ const TOURS = {
       device: 'desktop',
     },
     {
-      element: '[data-tour="add-property-button"], [data-tour="add-property-button-desktop"]',
+      element: '[data-tour="add-property-button-desktop"]',
       popover: {
         title: '➕ Add Your Rental Listing',
-        description: 'Know about a rental property? Click the big + button (center bottom on mobile, right sidebar on desktop), select location, and add details. Help your community find honest rents!',
+        description: 'Know about a rental property? Click the big + button to select location and add details. Help your community find honest rents!',
+        side: 'left' as const,
+        align: 'center' as const,
+      },
+      device: 'desktop',
+    },
+    {
+      element: '[data-tour="add-property-button"]',
+      popover: {
+        title: '➕ Add Your Rental Listing',
+        description: 'Know about a rental property? Tap the big + button to select location and add details. Help your community find honest rents!',
         side: 'top' as const,
         align: 'center' as const,
       },
-      device: 'both',
+      device: 'mobile',
     },
     {
       element: '[data-tour="analytics-button"]',
@@ -252,7 +282,8 @@ const TOURS = {
 export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
   const driverRef = useRef<ReturnType<typeof driver> | null>(null);
   const isEnabledRef = useRef(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobileRef = useRef(typeof window !== 'undefined' && window.innerWidth < 1024);
+  const [isMobile, setIsMobile] = useState(isMobileRef.current);
 
   // Filter tour steps based on device size
   const filterStepsByDevice = (steps: TourStep[], isMobileDevice: boolean) => {
@@ -273,7 +304,9 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
     if (typeof window === 'undefined') return;
 
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024); // lg breakpoint is 1024px
+      const newIsMobile = window.innerWidth < 1024;
+      isMobileRef.current = newIsMobile;
+      setIsMobile(newIsMobile);
     };
 
     checkMobile();
@@ -309,8 +342,8 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
       const timer = setTimeout(() => {
         if (driverRef.current) {
           const steps = TOURS[tourName];
-          // Filter steps based on current device size
-          const filteredSteps = filterStepsByDevice(steps, isMobile);
+          // Filter steps based on current device size (use ref for synchronous value)
+          const filteredSteps = filterStepsByDevice(steps, isMobileRef.current);
           driverRef.current.setSteps(filteredSteps);
           driverRef.current.drive(0);
         }
@@ -329,13 +362,16 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
         driverRef.current.destroy();
       }
     };
-  }, [tourName, isMobile]);
+  }, [tourName]);
 
   const startTour = useCallback((name: keyof typeof TOURS) => {
     if (!isEnabledRef.current || !driverRef.current) return;
-    driverRef.current.setSteps(TOURS[name]);
+    const steps = TOURS[name];
+    // Filter steps based on current device size
+    const filteredSteps = filterStepsByDevice(steps, isMobileRef.current);
+    driverRef.current.setSteps(filteredSteps);
     driverRef.current.drive(0);
-  }, []);
+  }, [filterStepsByDevice]);
 
   const stopTour = useCallback(() => {
     if (driverRef.current) {
