@@ -50,10 +50,6 @@ function relativeDate(iso?: string): string {
   return `${Math.floor(days / 30)}mo ago`;
 }
 
-const MOCK_INTEL = [
-  { id: '1', name: 'Banjara Hills Residence', category: 'semi-gated', lat: 17.4156, lng: 78.4347, rent: '₹45,000', deposit: '2 Months', reward: '₹2,500', floor: '4th Floor', verified: true, user: { name: 'Rahul S.', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=200&auto=format&fit=crop' }, image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=800&auto=format&fit=crop' },
-  { id: '2', name: 'Jubilee Towers', category: 'gated', lat: 17.4284, lng: 78.4121, rent: '₹85,000', deposit: '3 Months', reward: '₹5,000', floor: '12th Floor', verified: true, user: { name: 'Priya D.', image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop' }, image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=800&auto=format&fit=crop' }
-];
 
 export default function RefinedMapEngine() {
   const { theme } = useTheme();
@@ -101,7 +97,7 @@ export default function RefinedMapEngine() {
     const saved = localStorage.getItem('ir_city');
     return (saved as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack' | null) ?? 'bengaluru';
   });
-  const [geocodeCache, setGeocodeCache] = useState<Record<string, string>>({});
+  const geocodeCacheRef = useRef<Map<string, string>>(new Map());
   const [mapToast, setMapToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // Mark tour as completed on first visit
@@ -199,12 +195,17 @@ export default function RefinedMapEngine() {
 
   const reverseGeocodeLocation = useCallback(async (lat: number, lng: number): Promise<string> => {
     const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
-    if (geocodeCache[cacheKey]) return geocodeCache[cacheKey];
+    if (geocodeCacheRef.current.has(cacheKey)) return geocodeCacheRef.current.get(cacheKey)!;
 
     try {
       const address = await reverseGeocode(lat, lng);
       if (address) {
-        setGeocodeCache(prev => ({ ...prev, [cacheKey]: address }));
+        geocodeCacheRef.current.set(cacheKey, address);
+        // Bound cache at 200 entries (LRU-lite: delete first entry if over limit)
+        if (geocodeCacheRef.current.size > 200) {
+          const firstKey = geocodeCacheRef.current.keys().next().value as string;
+          if (firstKey) geocodeCacheRef.current.delete(firstKey);
+        }
         return address;
       }
     } catch (err) {
@@ -212,7 +213,7 @@ export default function RefinedMapEngine() {
     }
 
     return `Property at ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-  }, [geocodeCache]);
+  }, []);
 
   const ipHash = typeof window !== 'undefined' ? getIpHash() : '';
 
@@ -276,12 +277,7 @@ export default function RefinedMapEngine() {
         }).filter(Boolean);
         setPoints(featurePoints);
       } else {
-        const rentNum = 45000;
-        setPoints(MOCK_INTEL.map(m => ({ 
-          type: "Feature", 
-          properties: { ...m, propertyId: m.id, allFlats: [{ ...m, rent_amount: rentNum }], rentNum, bhk: '2', furnishing: 'semi-furnished', flatmateNeeded: false, ipHash: '' }, 
-          geometry: { type: "Point", coordinates: [m.lng, m.lat] } 
-        })));
+        setPoints([]);
       }
     } catch (err) {
       console.error('Critical failure in processIntelData:', err);
