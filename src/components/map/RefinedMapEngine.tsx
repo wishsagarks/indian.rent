@@ -1532,7 +1532,7 @@ export default function RefinedMapEngine() {
       </AnimatePresence>
 
       {/* Mobile Nav */}
-      <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-0 left-0 w-full z-[70] pb-5 pt-3 px-6 bg-background/80 backdrop-blur-2xl border-t border-white/10 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] rounded-t-3xl flex justify-between items-end">
+      <nav data-testid="mobile-nav" className="lg:hidden fixed bottom-0 left-0 w-full z-[70] pb-5 pt-3 px-6 bg-background backdrop-blur-2xl border-t border-primary/20 shadow-[0_-10px_40px_rgba(0,0,0,0.6)] rounded-t-3xl flex justify-between items-end">
         
         <button onClick={() => {
           const next = !showAreaStats;
