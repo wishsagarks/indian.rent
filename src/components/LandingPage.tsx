@@ -133,6 +133,9 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
   };
 
   useGSAP(() => {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) return;
+
     // Parallax background effect
     gsap.to('.bg-parallax', {
       y: -200,
@@ -168,6 +171,45 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       duration: 0.8,
       ease: 'power2.out',
       delay: 0.5
+    });
+
+    // Anti-Broker heading reveal on scroll
+    gsap.from('.anti-broker-heading', {
+      opacity: 0,
+      y: 60,
+      duration: 0.8,
+      ease: 'power3.out',
+      scrollTrigger: {
+        trigger: '.anti-broker-section',
+        start: 'top 75%',
+        once: true,
+      }
+    });
+
+    // Tactical Stats reveal on scroll
+    gsap.from('.stat-item', {
+      opacity: 0,
+      y: 30,
+      stagger: 0.1,
+      duration: 0.6,
+      scrollTrigger: {
+        trigger: '.tactical-stats',
+        start: 'top 70%',
+        once: true,
+      }
+    });
+
+    // Final CTA reveal on scroll
+    gsap.from('.final-cta-title', {
+      opacity: 0,
+      scale: 0.92,
+      duration: 1.2,
+      ease: 'expo.out',
+      scrollTrigger: {
+        trigger: '.final-cta',
+        start: 'top 65%',
+        once: true,
+      }
     });
   }, { scope: mainRef });
 
@@ -210,7 +252,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </div>
       </nav>
 
-      <TracingBeam>
+      <TracingBeam checkpoints={[0, 0.2, 0.5, 0.8, 1]}>
         {/* Hero Section */}
         <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-12 pb-20 px-mobile md:px-desktop overflow-hidden w-full">
           <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mx-auto">
@@ -273,10 +315,10 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </section>
 
         {/* Anti-Broker Loop Section */}
-        <section className="py-40 px-mobile md:px-desktop relative z-10 w-full">
+        <section className="anti-broker-section py-40 px-mobile md:px-desktop relative z-10 w-full">
           <div className="max-w-container w-full mx-auto">
             <div className="mb-24 flex flex-col items-start space-y-6">
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
@@ -284,7 +326,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
               >
                 Strategic Protocol
               </motion.div>
-              <h2 className="text-headline-lg md:text-display-hero font-black text-on-background tracking-tighter uppercase leading-[0.9] text-left font-display">
+              <h2 className="anti-broker-heading text-headline-lg md:text-display-hero font-black text-on-background tracking-tighter uppercase leading-[0.9] text-left font-display">
                 The Anti-Broker Loop
               </h2>
             </div>
@@ -293,7 +335,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </section>
 
         {/* Tactical Stats */}
-        <section className="py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
+        <section className="tactical-stats py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
            <div className="max-w-container mx-auto grid grid-cols-2 md:grid-cols-4 gap-12">
               {[
                 { label: 'Active Satellite Nodes', value: platformStats?.totalBuildings ? platformStats.totalBuildings.toLocaleString() : '—', sub: 'Hyderabad' },
@@ -301,7 +343,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                 { label: 'Network Latency', value: '<200ms', sub: 'Edge Sync' },
                 { label: 'Direct Listings', value: '100%', sub: 'Verified' }
               ].map((stat, i) => (
-                <div key={i} className="space-y-4 group">
+                <div key={i} className="stat-item space-y-4 group">
                    <div className="font-technical text-[9px] uppercase tracking-[0.5em] text-primary font-black opacity-60 group-hover:opacity-100 transition-opacity">
                      {stat.label}
                    </div>
@@ -317,17 +359,22 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         </section>
 
         {/* Final CTA */}
-        <section className="py-80 px-mobile md:px-desktop flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
+        <section className="final-cta py-80 px-mobile md:px-desktop flex flex-col items-center justify-center text-center relative overflow-hidden w-full">
            <div className="absolute inset-0 bg-primary/5 blur-[200px] animate-pulse" />
            <div className="max-w-container mx-auto relative z-10">
-              <h2 className="text-headline-lg md:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-16 leading-none text-on-background font-display">
+              <h2 className="final-cta-title text-headline-lg md:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-16 leading-none text-on-background font-display">
                 Take the <br/> market back
               </h2>
-              <Link href="/explore">
-                <StickerButton>
-                   <span className="px-8 font-black uppercase tracking-[0.4em] text-sm">Deploy Now &rarr;</span>
-                </StickerButton>
-              </Link>
+              <StickerButton
+                onClick={handleDeploy}
+                isLoading={isDeploying}
+                isSuccess={deploySuccess}
+                disabled={isDeploying || deploySuccess}
+              >
+                <span className="px-8 font-black uppercase tracking-[0.4em] text-sm">
+                  {isDeploying ? 'Connecting...' : deploySuccess ? 'Connected' : 'Deploy Now →'}
+                </span>
+              </StickerButton>
            </div>
         </section>
       </TracingBeam>

@@ -14,9 +14,14 @@ export default function ThemeToggle() {
       whileTap={{ scale: 0.95 }}
       onClick={toggleTheme}
       className="p-2 rounded-lg bg-surface border border-white/10 text-on-surface-variant hover:text-primary transition-all shadow-lg flex items-center justify-center"
-      title={theme === 'dark' ? 'Switch to Light Protocol' : 'Switch to Dark Tactical'}
+      aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
     >
-      {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      <motion.div
+        animate={{ rotate: theme === 'dark' ? 0 : 180 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+      >
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+      </motion.div>
     </motion.button>
   );
 }

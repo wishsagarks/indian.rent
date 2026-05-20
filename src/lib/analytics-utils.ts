@@ -38,7 +38,7 @@ export function transformMetrics(rawMetrics: CityMetric[]): CityMetricsUI {
     supply: {
       count: metrics.total_listings || 0,
       trend: metrics.total_listings > 5000 ? '↑ Growing' : '→ Stable',
-      change: 8
+      change: metrics.listing_growth_rate ?? 0
     },
     demand: {
       count: metrics.seeker_pins || 0,

@@ -24,7 +24,7 @@ function CheckpointNode({ cp, y1 }: { cp: number, y1: MotionValue<number> }) {
   );
 }
 
-export default function TracingBeam({ children }: { children: React.ReactNode }) {
+export default function TracingBeam({ children, checkpoints: customCheckpoints }: { children: React.ReactNode, checkpoints?: number[] }) {
   const { scrollYProgress } = useScroll();
 
   const y1 = useSpring(scrollYProgress, {
@@ -35,7 +35,7 @@ export default function TracingBeam({ children }: { children: React.ReactNode })
   const heightTransform = useTransform(y1, [0, 1], ["0%", "100%"]);
 
   // Milestone percentages for sections
-  const checkpoints = [0, 0.33, 0.66, 1];
+  const checkpoints = customCheckpoints ?? [0, 0.33, 0.66, 1];
 
   return (
     <div className="relative w-full min-h-screen">

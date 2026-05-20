@@ -357,4 +357,22 @@
   .group {
     position: relative;
   }
+
+  /* Navigation hide-on-scroll */
+  nav {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  nav.nav-hidden {
+    transform: translateY(-100%);
+  }
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

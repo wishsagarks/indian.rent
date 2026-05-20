@@ -6,10 +6,9 @@ import { useInView } from 'react-intersection-observer';
 import { Shield, Eye, MapPin, Banknote, Navigation2, Zap, Target } from 'lucide-react';
 
 export function BentoGrid() {
-  const containerRef = useRef(null);
   const { ref: triggerRef, inView } = useInView({
     threshold: 0.2,
-    triggerOnce: false
+    triggerOnce: true
   });
 
   const containerVariants = {

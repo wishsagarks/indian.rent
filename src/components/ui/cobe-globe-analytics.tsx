@@ -17,12 +17,31 @@ interface GlobeAnalyticsProps {
 }
 
 const defaultMarkers: AnalyticsMarker[] = [
-  { id: "vis-1", location: [40.71, -74.01], visitors: 847, trend: 12 },
-  { id: "vis-2", location: [51.51, -0.13], visitors: 623, trend: -3 },
-  { id: "vis-3", location: [35.68, 139.65], visitors: 412, trend: 8 },
-  { id: "vis-4", location: [48.86, 2.35], visitors: 385, trend: 5 },
-  { id: "vis-5", location: [-33.87, 151.21], visitors: 201, trend: 15 },
-  { id: "vis-6", location: [52.52, 13.41], visitors: 178, trend: -1 },
+  { id: "hyderabad", location: [17.3850, 78.4867], visitors: 5420, trend: 18 },
+  { id: "bengaluru", location: [12.9716, 77.5946], visitors: 4890, trend: 14 },
+  { id: "mumbai", location: [19.0760, 72.8777], visitors: 3840, trend: 9 },
+  { id: "delhi", location: [28.6139, 77.2090], visitors: 2950, trend: 6 },
+  { id: "chennai", location: [13.0827, 80.2707], visitors: 2340, trend: 11 },
+  { id: "pune", location: [18.5204, 73.8567], visitors: 1890, trend: 8 },
+]
+
+const arcPairs: Array<Array<{ from: [number, number]; to: [number, number] }>> = [
+  [
+    { from: [17.3850, 78.4867] as [number, number], to: [12.9716, 77.5946] as [number, number] },
+    { from: [17.3850, 78.4867] as [number, number], to: [19.0760, 72.8777] as [number, number] },
+  ],
+  [
+    { from: [12.9716, 77.5946] as [number, number], to: [13.0827, 80.2707] as [number, number] },
+    { from: [12.9716, 77.5946] as [number, number], to: [18.5204, 73.8567] as [number, number] },
+  ],
+  [
+    { from: [28.6139, 77.2090] as [number, number], to: [12.9716, 77.5946] as [number, number] },
+    { from: [28.6139, 77.2090] as [number, number], to: [19.0760, 72.8777] as [number, number] },
+  ],
+  [
+    { from: [19.0760, 72.8777] as [number, number], to: [13.0827, 80.2707] as [number, number] },
+    { from: [19.0760, 72.8777] as [number, number], to: [18.5204, 73.8567] as [number, number] },
+  ],
 ]
 
 export function GlobeAnalytics({
@@ -37,9 +56,10 @@ export function GlobeAnalytics({
   const thetaOffsetRef = useRef(0)
   const isPausedRef = useRef(false)
   const [data, setData] = useState(initialMarkers)
+  const [currentArcIndex, setCurrentArcIndex] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => {
+    const dataInterval = setInterval(() => {
       setData((prev) =>
         prev.map((m) => ({
           ...m,
@@ -48,7 +68,15 @@ export function GlobeAnalytics({
         }))
       )
     }, 3000)
-    return () => clearInterval(interval)
+
+    const arcInterval = setInterval(() => {
+      setCurrentArcIndex((prev) => (prev + 1) % arcPairs.length)
+    }, 4000)
+
+    return () => {
+      clearInterval(dataInterval)
+      clearInterval(arcInterval)
+    }
   }, [])
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
@@ -99,14 +127,14 @@ export function GlobeAnalytics({
       globe = createGlobe(canvas, {
         devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
         width, height: width,
-        phi: 0, theta: 0.2, dark: 0, diffuse: 1.5,
+        phi: -1.36, theta: 0.2, dark: 0, diffuse: 1.5,
         mapSamples: 16000, mapBrightness: 10,
         baseColor: [1, 1, 1],
-        markerColor: [0.3, 0.85, 0.45],
+        markerColor: [0.8, 0.47, 0.36],
         glowColor: [0.94, 0.93, 0.91],
         markerElevation: 0,
         markers: initialMarkers.map((m) => ({ location: m.location, size: 0.04 })),
-        arcs: [], arcColor: [0.25, 0.9, 0.5],
+        arcs: arcPairs[currentArcIndex], arcColor: [0.8, 0.47, 0.36],
         arcWidth: 0.5, arcHeight: 0.25, opacity: 0.7,
       })
       function animate() {
@@ -137,7 +165,7 @@ export function GlobeAnalytics({
       if (animationId) cancelAnimationFrame(animationId)
       if (globe) globe.destroy()
     }
-  }, [initialMarkers, speed])
+  }, [initialMarkers, speed, currentArcIndex])
 
   return (
     <div className={`relative aspect-square select-none ${className}`}>
