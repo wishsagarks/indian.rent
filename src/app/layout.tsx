@@ -59,10 +59,11 @@ export default function RootLayout({
     >
       <head>
         <meta name="theme-color" content="#ff6b35" />
+        <link rel="icon" href="/ir.ico" type="image/x-icon" />
         <link rel="icon" href="/logo.svg" type="image/svg+xml" />
         <link rel="icon" href="/icon-192.svg" type="image/svg+xml" sizes="192x192" />
         <link rel="icon" href="/icon-512.svg" type="image/svg+xml" sizes="512x512" />
-        <link rel="apple-touch-icon" href="/logo.svg" />
+        <link rel="apple-touch-icon" href="/ir.ico" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
