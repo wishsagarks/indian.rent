@@ -2,16 +2,20 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Shield } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background text-on-background font-sans p-6 md:p-24 selection:bg-primary/20">
+    <div className="min-h-screen bg-background text-on-background font-sans p-6 md:p-24">
       <div className="max-w-3xl mx-auto">
-        <div className="flex items-center gap-4 mb-12">
-          <UnifiedMenu />
-          <Link href="/" className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
-            <ChevronLeft size={16} /> Back to HQ
-          </Link>
+        <div className="flex items-center justify-between gap-4 mb-12">
+          <div className="flex items-center gap-4">
+            <UnifiedMenu />
+            <Link href="/" className="inline-flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
+              <ChevronLeft size={16} /> Back to HQ
+            </Link>
+          </div>
+          <ThemeToggle />
         </div>
         
         <header className="mb-16">

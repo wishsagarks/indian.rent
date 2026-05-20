@@ -68,7 +68,7 @@ export default function OpportunityTable({
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-4 items-center">
                   {/* Locality */}
                   <div className="col-span-2 md:col-span-1">
-                    <p className="text-sm font-bold text-white">{item.locality_name}</p>
+                    <p className="text-sm font-bold text-on-surface">{item.locality_name}</p>
                   </div>
 
                   {/* Score */}

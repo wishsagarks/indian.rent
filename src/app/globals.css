@@ -2,18 +2,228 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   DESIGN.md LIGHT MODE (DEFAULT)
+   ============================================ */
+:root {
+  /* Core Colors — Cream Canvas + Dark Navy */
+  --color-background: #faf9f5;           /* canvas */
+  --color-surface: #f5f0e8;              /* surface-soft */
+  --color-surface-dim: #f5f0e8;
+  --color-surface-bright: #faf9f5;
+  --color-surface-container-lowest: #faf9f5;
+  --color-surface-container-low: #efe9de;    /* surface-card */
+  --color-surface-container: #e8e0d2;        /* surface-cream-strong */
+  --color-surface-container-high: #181715;   /* surface-dark */
+  --color-surface-container-highest: #252320; /* surface-dark-elevated */
+
+  /* Text Colors */
+  --color-on-surface: #141413;           /* ink */
+  --color-on-surface-variant: #3d3d3a;   /* body */
+  --color-inverse-surface: #181715;
+  --color-inverse-on-surface: #faf9f5;   /* on-dark */
+  --color-outline: #6c6a64;              /* muted */
+  --color-outline-variant: #e6dfd8;      /* hairline */
+  --color-surface-variant: #ebe6df;      /* hairline-soft */
+  --color-on-background: #141413;        /* ink */
+
+  /* Semantic Colors */
+  --color-primary: #cc785c;              /* coral */
+  --color-on-primary: #ffffff;
+  --color-secondary: #5db8a6;            /* accent-teal */
+  --color-on-secondary: #ffffff;
+  --color-tertiary: #e8e0d2;
+  --color-on-tertiary: #141413;
+
+  color-scheme: light;
+}
+
+/* DESIGN.md DARK MODE */
+.dark {
+  /* Core Colors — Dark Navy Canvas + Cream */
+  --color-background: #1f1e1b;           /* dark navy canvas */
+  --color-surface: #252320;              /* dark elevated */
+  --color-surface-dim: #1f1e1b;
+  --color-surface-bright: #252320;
+  --color-surface-container-lowest: #181715;
+  --color-surface-container-low: #252320;
+  --color-surface-container: #2a2926;
+  --color-surface-container-high: #faf9f5;   /* inverted: light surfaces */
+  --color-surface-container-highest: #f5f0e8; /* inverted: light elevated */
+
+  /* Text Colors */
+  --color-on-surface: #faf9f5;           /* inverted: cream text */
+  --color-on-surface-variant: #d4cfc5;   /* inverted: light body */
+  --color-inverse-surface: #faf9f5;
+  --color-inverse-on-surface: #1f1e1b;   /* inverted: dark text */
+  --color-outline: #9d9a92;              /* inverted: light muted */
+  --color-outline-variant: #2a2926;      /* inverted: dark hairline */
+  --color-surface-variant: #2a2926;
+  --color-on-background: #faf9f5;        /* inverted: cream text */
+
+  /* Semantic Colors (keep accents for contrast) */
+  --color-primary: #cc785c;              /* coral stays warm */
+  --color-on-primary: #1f1e1b;
+  --color-secondary: #5db8a6;            /* teal stays vibrant */
+  --color-on-secondary: #1f1e1b;
+  --color-tertiary: #2a2926;
+  --color-on-tertiary: #faf9f5;
+
+  color-scheme: dark;
+}
+
 @layer base {
   body {
-    @apply bg-background text-on-background antialiased relative selection:bg-primary/20 selection:text-primary;
-    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+    @apply bg-background text-on-background antialiased relative;
+    font-family: "Inter", var(--font-sans), sans-serif;
+    font-feature-settings: "ss01", "ss02";
+    transition: background-color 300ms ease, color 300ms ease;
   }
 
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    opacity: 0.03; z-index: 9999; pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Cormorant Garamond", var(--font-display), serif;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  a, button, input, select, textarea {
+    @apply transition-colors duration-150;
+  }
+
+  /* Focus states for accessibility */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Remove default focus outline for mouse users, show for keyboard */
+  button:focus:not(:focus-visible),
+  a:focus:not(:focus-visible),
+  input:focus:not(:focus-visible) {
+    outline: none;
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(141, 133, 117, 0.5);
+    border-radius: 4px;
+    box-shadow: 0 0 8px rgba(141, 133, 117, 0.2);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(108, 106, 100, 0.7);
+    box-shadow: 0 0 12px rgba(108, 106, 100, 0.3);
+  }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    background: #cc785c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms;
+  }
+
+  .btn-primary:hover {
+    background: #a9583e;
+  }
+
+  .btn-secondary {
+    background: var(--color-background);
+    color: var(--color-on-background);
+    border: 1px solid var(--color-outline-variant);
+    border-radius: 8px;
+    padding: 12px 20px;
+    height: 40px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms;
+  }
+
+  .btn-secondary:hover {
+    background: var(--color-surface);
+    border-color: var(--color-outline);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--color-surface-container-low);
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 150ms;
+  }
+
+  .card:hover {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  }
+
+  .card-dark {
+    background: var(--color-surface-container-high);
+    border-radius: 12px;
+    padding: 32px;
+    color: var(--color-on-surface-container-high, #faf9f5);
+  }
+
+  /* Glass effects */
+  .glass-plate {
+    background: rgba(var(--tw-bg-opacity, 1), var(--tw-bg-opacity, 1), var(--tw-bg-opacity, 1), 0.1);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 1px 3px rgba(20, 20, 19, 0.1);
+  }
+
+  .skeuo-raised {
+    box-shadow: inset 1px 1px 2px rgba(20, 20, 19, 0.05), inset -1px -1px 2px rgba(20, 20, 19, 0.02);
+  }
+
+  .metallic-edge {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metallic-edge::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%);
+    animation: shine 6s infinite linear;
+    pointer-events: none;
+  }
+
+  @keyframes shine {
+    0% { transform: translateX(-100%) translateY(-100%); }
+    100% { transform: translateX(100%) translateY(100%); }
   }
 }
 
@@ -25,51 +235,107 @@
     margin-right: auto;
   }
 
-  /* DESIGN.md Spacing */
-  .px-desktop { padding-left: 64px; padding-right: 64px; }
-  .px-mobile { padding-left: 16px; padding-right: 16px; }
+  /* Design System Spacing */
+  .px-desktop { @apply px-16; }
+  .px-mobile { @apply px-4; }
 
-  /* Level 1: Plates (Glassmorphism) */
-  .glass-plate {
-    background: linear-gradient(135deg, rgba(15, 15, 15, 0.7) 0%, rgba(10, 10, 10, 0.9) 100%);
-    backdrop-filter: blur(30px);
-    border: 1px solid rgba(0, 102, 255, 0.1);
-    box-shadow: inset 0 1px 2px rgba(47, 248, 1, 0.05);
+  /* Typography */
+  .text-display-xl {
+    font-family: "Cormorant Garamond", var(--font-display), serif;
+    font-size: 64px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -1.5px;
   }
 
-  /* Level 2: Raised (Skeuomorphism) */
-  .skeuo-raised {
-    box-shadow: inset 1px 1px 2px rgba(47, 248, 1, 0.1), inset -1px -1px 2px rgba(0, 0, 0, 0.5);
+  .text-display-lg {
+    font-family: "Cormorant Garamond", var(--font-display), serif;
+    font-size: 48px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -1px;
   }
 
-  /* Level 3: Glow */
-  .glow-primary { filter: drop-shadow(0 0 20px rgba(0, 102, 255, 0.5)); }
-  .glow-secondary { filter: drop-shadow(0 0 20px rgba(47, 248, 1, 0.5)); }
-
-  .metallic-edge {
-    position: relative;
-    overflow: hidden;
+  .text-headline-lg {
+    font-family: "Cormorant Garamond", var(--font-display), serif;
+    font-size: 48px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -1px;
   }
 
-  .metallic-edge::after {
-    content: '';
-    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-    background: linear-gradient(45deg, transparent 45%, rgba(255, 255, 255, 0.1) 50%, transparent 55%);
-    animation: shine 6s infinite linear;
-    pointer-events: none;
+  .text-display-hero {
+    font-family: "Cormorant Garamond", var(--font-display), serif;
+    font-size: 5rem;
+    font-weight: 400;
+    line-height: 1;
+    letter-spacing: -0.06em;
   }
 
-  @keyframes shine {
-    0% { transform: translateX(-100%) translateY(-100%); }
-    100% { transform: translateX(100%) translateY(100%); }
+  .text-body-md {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.55;
   }
 
-  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 102, 255, 0.4); border-radius: 4px; box-shadow: 0 0 8px rgba(0, 102, 255, 0.3); }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 102, 255, 0.6); box-shadow: 0 0 12px rgba(0, 102, 255, 0.5); }
+  .text-body {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.55;
+  }
 
-  /* 3D Card Animations */
+  .text-body-sm {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.55;
+  }
+
+  .text-label {
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .text-technical-sm {
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  /* Surface utilities */
+  .surface-dark {
+    background: var(--color-surface-container-high);
+    color: var(--color-on-surface, #faf9f5);
+  }
+
+  .surface-dark-elevated {
+    background: var(--color-surface-container-highest);
+    color: var(--color-on-surface, #faf9f5);
+  }
+
+  .on-dark-soft {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .hairline-border {
+    border: 1px solid var(--color-outline-variant);
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    filter: drop-shadow(0 0 20px rgba(204, 120, 92, 0.4));
+  }
+
+  .glow-secondary {
+    filter: drop-shadow(0 0 20px rgba(93, 184, 166, 0.4));
+  }
+
+  .inset-glow {
+    box-shadow: inset 0 0 12px rgba(204, 120, 92, 0.05);
+  }
+
+  /* Animations */
   .animate-shimmer {
     animation: shimmer 3s infinite;
   }
@@ -79,17 +345,16 @@
     100% { transform: translateX(100%); }
   }
 
+  .animate-pulse-slow {
+    animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
   .group {
     position: relative;
   }
-}
-
-/* Material Symbols Integration */
-.material-symbols-outlined {
-  font-family: 'Material Symbols Outlined';
-  font-weight: normal; font-style: normal; font-size: 24px;
-  line-height: 1; letter-spacing: normal; text-transform: none;
-  display: inline-block; white-space: nowrap; word-wrap: normal;
-  direction: ltr; -webkit-font-smoothing: antialiased;
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }

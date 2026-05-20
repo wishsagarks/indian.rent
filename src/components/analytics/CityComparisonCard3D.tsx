@@ -115,7 +115,7 @@ export default function CityComparisonCard3D({
           {/* Bengaluru */}
           <div className="p-2 rounded-lg bg-white/5 border border-white/10">
             <p className="text-[10px] text-on-surface-variant mb-1">🏙️</p>
-            <p className="text-sm font-bold text-white">
+            <p className="text-sm font-bold text-on-surface">
               {String(bengaluru).length > 10 ? String(bengaluru).slice(0, 10) + '...' : bengaluru}
             </p>
           </div>
@@ -123,7 +123,7 @@ export default function CityComparisonCard3D({
           {/* Hyderabad */}
           <div className="p-2 rounded-lg bg-white/5 border border-white/10">
             <p className="text-[10px] text-on-surface-variant mb-1">🏙️</p>
-            <p className="text-sm font-bold text-white">
+            <p className="text-sm font-bold text-on-surface">
               {String(hyderabad).length > 10 ? String(hyderabad).slice(0, 10) + '...' : hyderabad}
             </p>
           </div>

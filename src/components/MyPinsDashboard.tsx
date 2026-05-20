@@ -7,6 +7,7 @@ import { MapPin, ChevronLeft, Trash2, Edit2, Check, X, Users, Clock, AlertTriang
 import { getMyListings, getMySeekerPins, updateMyListing, deleteMySeekerPin, deleteOwnPin } from '@/app/actions/map-actions';
 import { rewardFromRent } from '@/lib/constants';
 import UnifiedMenu from './UnifiedMenu';
+import ThemeToggle from './ThemeToggle';
 
 const STATUS_STYLE: Record<string, string> = {
   vacant: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/30',
@@ -74,18 +75,22 @@ export default function MyPinsDashboard() {
   return (
     <div className="min-h-screen bg-background text-on-background pb-24">
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 h-16 bg-background/5 backdrop-blur-xl border-b border-white/10 flex items-center px-4 md:px-8 gap-4">
-        <div className="flex items-center gap-3">
-          <UnifiedMenu />
-          <Link href="/explore" className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
-            <ChevronLeft size={16} /> Map
-          </Link>
+      <nav className="fixed top-0 w-full z-50 h-16 bg-background/80 backdrop-blur-xl border-b border-outline/20 flex items-center px-mobile md:px-desktop gap-4 shadow-xl">
+        <div className="max-w-container w-full mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <UnifiedMenu />
+            <Link href="/explore" className="flex items-center gap-2 text-primary font-black uppercase tracking-widest text-[10px] hover:scale-105 transition-transform font-technical">
+              <ChevronLeft size={16} /> Map
+            </Link>
+          </div>
+          <span className="font-display text-xl text-primary font-black tracking-tighter">My Pins</span>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+          </div>
         </div>
-        <span className="font-display text-xl text-primary font-black tracking-tighter mx-auto">My Pins</span>
-        <div className="w-16" />
       </nav>
 
-      <main className="pt-24 px-4 md:px-8 max-w-3xl mx-auto space-y-10">
+      <main className="pt-24 px-mobile md:px-desktop max-w-container mx-auto space-y-10">
         {listings.length === 0 && seekerPins.length === 0 ? (
           <div className="text-center py-20 text-on-surface-variant">
             <MapPin size={40} className="mx-auto mb-4 opacity-20" />
@@ -101,13 +106,13 @@ export default function MyPinsDashboard() {
               </div>
 
               {listings.length === 0 ? (
-                <div className="bg-surface border border-white/10 rounded-lg p-8 text-center text-on-surface-variant text-sm">
+                <div className="bg-surface border border-outline/20 rounded-lg p-8 text-center text-on-surface-variant text-sm">
                   No listings yet. <Link href="/explore" className="text-primary underline">Deploy a pin</Link> to get started.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {listings.map(l => (
-                    <motion.div key={l.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-surface border border-white/10 rounded-lg p-5 space-y-3">
+                    <motion.div key={l.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-surface border border-outline/20 rounded-lg p-5 space-y-3 shadow-elevated-1">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="font-black text-sm text-on-surface truncate">{l.buildingName || `Flat ${l.flatNumber}`}</div>
@@ -137,7 +142,7 @@ export default function MyPinsDashboard() {
                             <button onClick={() => handleSaveEdit(l.id)} disabled={saving} className="p-1.5 rounded-md bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 transition-colors">
                               <Check size={14} />
                             </button>
-                            <button onClick={() => setEditingId(null)} className="p-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
+                            <button onClick={() => setEditingId(null)} className="p-1.5 rounded-md bg-on-surface/5 border border-outline/20 hover:bg-on-surface/10 transition-colors">
                               <X size={14} />
                             </button>
                           </div>
@@ -159,7 +164,7 @@ export default function MyPinsDashboard() {
                       <div className="flex items-center justify-between">
                         <button
                           onClick={() => handleToggleFlatmate(l.id, l.flatmateNeeded)}
-                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider border transition-all ${l.flatmateNeeded ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/30' : 'bg-white/5 border-white/10 text-on-surface-variant'}`}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider border transition-all ${l.flatmateNeeded ? 'bg-emerald-400/10 text-emerald-400 border-emerald-400/30' : 'bg-on-surface/5 border-outline/20 text-on-surface-variant'}`}
                         >
                           <Users size={12} /> {l.flatmateNeeded ? 'Flatmate Wanted' : 'No Flatmate'}
                         </button>
@@ -188,13 +193,13 @@ export default function MyPinsDashboard() {
               </div>
 
               {seekerPins.length === 0 ? (
-                <div className="bg-surface border border-white/10 rounded-lg p-8 text-center text-on-surface-variant text-sm">
+                <div className="bg-surface border border-outline/20 rounded-lg p-8 text-center text-on-surface-variant text-sm">
                   No active seeker pins. Enter Hunt mode on the map to drop one.
                 </div>
               ) : (
                 <div className="space-y-3">
                   {seekerPins.map(p => (
-                    <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-surface border border-white/10 rounded-lg p-5 flex items-center justify-between gap-4">
+                    <motion.div key={p.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-surface border border-outline/20 rounded-lg p-5 flex items-center justify-between gap-4 shadow-elevated-1">
                       <div className="space-y-1">
                         <div className="font-black text-sm">{p.bhk_preference !== 'any' ? `${p.bhk_preference} BHK` : 'Any BHK'}{p.budget ? ` · up to ₹${Number(p.budget).toLocaleString()}` : ''}</div>
                         <div className="flex items-center gap-1 text-[10px] text-on-surface-variant font-technical">

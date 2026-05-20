@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { Info } from 'lucide-react';
 
 interface PriceData {
   category: string;
@@ -24,6 +25,7 @@ export default function PriceDistributionChartEnhanced({ data, title, descriptio
     P75: true,
     Average: true
   });
+  const [showInfo, setShowInfo] = useState(false);
 
   const toggleMetric = (metric: keyof typeof visibleMetrics) => {
     setVisibleMetrics(prev => ({
@@ -42,7 +44,24 @@ export default function PriceDistributionChartEnhanced({ data, title, descriptio
   return (
     <div className="bg-surface border border-white/10 rounded-lg p-6 space-y-4">
       <div>
-        <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
+          <div className="relative">
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              onMouseEnter={() => setShowInfo(true)}
+              onMouseLeave={() => setShowInfo(false)}
+              className="p-0.5 text-on-surface-variant/60 hover:text-primary transition-colors flex items-center justify-center"
+            >
+              <Info size={14} />
+            </button>
+            {showInfo && (
+              <div className="absolute top-full left-0 mt-2 w-56 bg-surface border border-outline/30 rounded-lg p-2.5 text-[10px] leading-normal text-on-surface z-50 shadow-2xl">
+                P25 = 25th percentile (quarter rent lower). Median = middle price. P75 = 75th percentile (quarter higher). Average = mean of all rents.
+              </div>
+            )}
+          </div>
+        </div>
         {description && <p className="text-xs text-on-surface-variant mt-1">{description}</p>}
       </div>
 

@@ -43,7 +43,7 @@ export default function KPICard({
 
       {/* Main Value */}
       <div className="mb-4">
-        <div className="text-3xl md:text-4xl font-display font-black text-white tracking-tight">
+        <div className="text-3xl md:text-4xl font-display font-black text-on-surface tracking-tight">
           {typeof value === 'number' ? value.toLocaleString() : value}
           {unit && <span className="text-lg md:text-xl ml-2 text-on-surface-variant">{unit}</span>}
         </div>

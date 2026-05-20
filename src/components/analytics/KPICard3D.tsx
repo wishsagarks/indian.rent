@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
+import { Info } from 'lucide-react';
 
 interface KPICard3DProps {
   label: string;
@@ -9,6 +10,7 @@ interface KPICard3DProps {
   unit?: string;
   trend?: number;
   interpretation?: string;
+  description?: string;
   icon?: React.ReactNode;
   highlight?: boolean;
 }
@@ -19,11 +21,13 @@ export default function KPICard3D({
   unit,
   trend,
   interpretation,
+  description,
   icon,
   highlight = false
 }: KPICard3DProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     if (!cardRef.current) return;
@@ -115,11 +119,30 @@ export default function KPICard3D({
         style={{ transformStyle: 'preserve-3d' }}
       >
         {/* Header */}
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between relative">
           <div className="flex-1">
-            <p className="text-xs font-technical font-bold uppercase tracking-widest text-on-surface-variant mb-2">
-              {label}
-            </p>
+            <div className="flex items-center gap-1.5">
+              <p className="text-xs font-technical font-bold uppercase tracking-widest text-on-surface-variant">
+                {label}
+              </p>
+              {description && (
+                <div className="relative">
+                  <button
+                    onClick={() => setShowInfo(!showInfo)}
+                    onMouseEnter={() => setShowInfo(true)}
+                    onMouseLeave={() => setShowInfo(false)}
+                    className="p-0.5 text-on-surface-variant/60 hover:text-primary transition-colors flex items-center justify-center"
+                  >
+                    <Info size={13} />
+                  </button>
+                  {showInfo && (
+                    <div className="absolute bottom-full left-0 mb-2 w-52 bg-surface border border-outline/30 rounded-lg p-2.5 text-[10px] leading-normal text-on-surface z-50 shadow-2xl whitespace-normal">
+                      {description}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           {icon && (
             <div className={`p-2 rounded-lg ${
@@ -136,7 +159,7 @@ export default function KPICard3D({
         <div className="space-y-1">
           <div className="flex items-baseline gap-2">
             <span className={`font-display text-3xl font-black ${
-              highlight ? 'text-primary' : 'text-white'
+              highlight ? 'text-primary' : 'text-on-surface'
             }`}>
               {value}
             </span>

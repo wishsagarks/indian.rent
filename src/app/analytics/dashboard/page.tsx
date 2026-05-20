@@ -10,6 +10,7 @@ import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistribu
 import MarketSegmentChartEnhanced from '@/components/analytics/MarketSegmentChartEnhanced';
 import KPICard3D from '@/components/analytics/KPICard3D';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 type City = 'Bengaluru' | 'Hyderabad';
 
@@ -51,19 +52,22 @@ export default function AnalyticsDashboard() {
                 <ChevronLeft size={20} className="text-primary" />
               </Link>
               <div>
-                <h1 className="font-display text-3xl font-black text-white">Market Dashboard</h1>
+                <h1 className="font-display text-3xl font-black text-on-surface">Market Dashboard</h1>
                 <p className="text-sm text-on-surface-variant mt-1">Real-time rental market metrics</p>
               </div>
             </div>
 
-            <select
-              value={selectedCity}
-              onChange={(e) => setSelectedCity(e.target.value as City)}
-              className="px-4 py-2 rounded-lg font-technical font-bold text-sm bg-surface border border-white/10 text-on-surface hover:border-white/20 cursor-pointer focus:outline-none focus:border-primary/50"
-            >
-              <option value="Bengaluru">🏙️ Bengaluru</option>
-              <option value="Hyderabad">🏙️ Hyderabad</option>
-            </select>
+            <div className="flex gap-3 items-center">
+              <select
+                value={selectedCity}
+                onChange={(e) => setSelectedCity(e.target.value as City)}
+                className="px-4 py-2 rounded-lg font-technical font-bold text-sm bg-surface border border-outline/20 text-on-surface hover:border-outline/40 cursor-pointer focus:outline-none focus:border-primary/50 transition-all"
+              >
+                <option value="Bengaluru">🏙️ Bengaluru</option>
+                <option value="Hyderabad">🏙️ Hyderabad</option>
+              </select>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </div>
@@ -86,12 +90,12 @@ export default function AnalyticsDashboard() {
           <div className="space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-40 bg-surface rounded-xl border border-white/10 animate-pulse" />
+                <div key={i} className="h-40 bg-surface rounded-xl border border-outline/20 animate-pulse" />
               ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-80 bg-surface rounded-xl border border-white/10 animate-pulse" />
+                <div key={i} className="h-80 bg-surface rounded-xl border border-outline/20 animate-pulse" />
               ))}
             </div>
           </div>
@@ -107,24 +111,28 @@ export default function AnalyticsDashboard() {
                   label="Total Listings"
                   value={data.basicStats.totalListings}
                   unit="properties"
+                  description="Total rental listings indexed in this city"
                   icon={<Home size={20} />}
                 />
                 <KPICard3D
                   label="Total Buildings"
                   value={data.basicStats.totalBuildings}
                   unit="buildings"
+                  description="Unique buildings with rental availability"
                   icon={<Home size={20} />}
                 />
                 <KPICard3D
                   label="Seeker Demand"
                   value={data.basicStats.totalSeekers}
                   unit="seekers"
+                  description="People looking for rentals in this market"
                   icon={<Users size={20} />}
                 />
                 <KPICard3D
                   label="Median Rent"
                   value={`₹${(data.basicStats.medianRent / 1000).toFixed(1)}k`}
                   interpretation={`Avg: ₹${(data.basicStats.avgRent / 1000).toFixed(1)}k`}
+                  description="Middle price point — half rent higher, half lower"
                   icon={<TrendingUp size={20} />}
                   highlight
                 />
@@ -162,26 +170,26 @@ export default function AnalyticsDashboard() {
                 )}
 
                 {/* Statistics Card */}
-                <div className="bg-surface border border-white/10 rounded-lg p-6 space-y-4">
+                <div className="bg-surface border border-outline/20 rounded-lg p-6 space-y-4 shadow-elevated-2">
                   <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">
                     Market Health Indicators
                   </h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-on-surface/5">
                       <span className="text-xs text-on-surface-variant">Listings per Building</span>
-                      <span className="text-lg font-bold text-white">
+                      <span className="text-lg font-bold text-on-surface">
                         {(data.basicStats.totalListings / Math.max(data.basicStats.totalBuildings, 1)).toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-on-surface/5">
                       <span className="text-xs text-on-surface-variant">Seeker to Listing Ratio</span>
-                      <span className="text-lg font-bold text-white">
+                      <span className="text-lg font-bold text-on-surface">
                         1:{Math.round(data.basicStats.totalListings / Math.max(data.basicStats.totalSeekers, 1))}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center p-3 rounded-lg bg-white/5">
+                    <div className="flex justify-between items-center p-3 rounded-lg bg-on-surface/5">
                       <span className="text-xs text-on-surface-variant">Avg Rent</span>
-                      <span className="text-lg font-bold text-white">
+                      <span className="text-lg font-bold text-on-surface">
                         ₹{(data.basicStats.avgRent / 1000).toFixed(1)}k
                       </span>
                     </div>
@@ -197,31 +205,31 @@ export default function AnalyticsDashboard() {
             </section>
 
             {/* Data Summary */}
-            <section className="p-6 rounded-lg border border-white/10 bg-surface/50">
+            <section className="p-6 rounded-lg border border-outline/20 bg-surface/50 shadow-elevated-1">
               <h3 className="text-xs uppercase tracking-widest font-technical font-bold text-primary mb-4">
                 Data Summary
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <p className="text-on-surface-variant text-xs mb-1">Total Supply</p>
-                  <p className="text-xl font-bold text-white">{data.basicStats.totalListings}</p>
+                  <p className="text-xl font-bold text-on-surface">{data.basicStats.totalListings}</p>
                   <p className="text-xs text-on-surface-variant mt-1">active listings</p>
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-xs mb-1">Total Demand</p>
-                  <p className="text-xl font-bold text-white">{data.basicStats.totalSeekers}</p>
+                  <p className="text-xl font-bold text-on-surface">{data.basicStats.totalSeekers}</p>
                   <p className="text-xs text-on-surface-variant mt-1">seeker pins</p>
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-xs mb-1">Price Range</p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-xl font-bold text-on-surface">
                     ₹{(data.basicStats.medianRent / 1000).toFixed(0)}-{(data.basicStats.avgRent / 1000).toFixed(0)}k
                   </p>
                   <p className="text-xs text-on-surface-variant mt-1">median to average</p>
                 </div>
                 <div>
                   <p className="text-on-surface-variant text-xs mb-1">Market Segments</p>
-                  <p className="text-xl font-bold text-white">{data.segmentData.length}</p>
+                  <p className="text-xl font-bold text-on-surface">{data.segmentData.length}</p>
                   <p className="text-xs text-on-surface-variant mt-1">BHK categories</p>
                 </div>
               </div>

@@ -4,10 +4,11 @@ import React, { useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Satellite } from 'lucide-react';
+import { Satellite, Loader2, CheckCircle2 } from 'lucide-react';
 
 const GlobeAnalytics = dynamic(() => import('./ui/cobe-globe-analytics').then(m => ({ default: m.GlobeAnalytics })), {
   ssr: false,
@@ -20,45 +21,82 @@ import HeroText from './ui-advanced/HeroText';
 
 gsap.registerPlugin(ScrollTrigger);
 
-function StickerButton({ children }: { children: React.ReactNode }) {
+function StickerButton({
+  children,
+  isLoading = false,
+  isSuccess = false,
+  disabled = false,
+  onClick
+}: {
+  children: React.ReactNode
+  isLoading?: boolean
+  isSuccess?: boolean
+  disabled?: boolean
+  onClick?: () => void
+}) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <motion.div 
-      onHoverStart={() => setIsHovered(true)}
+    <motion.button
+      onClick={onClick}
+      disabled={disabled || isLoading}
+      onHoverStart={() => !isLoading && setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="relative cursor-pointer group"
+      className="relative cursor-pointer group disabled:cursor-not-allowed"
     >
       {/* Shadow */}
-      <div className="absolute inset-0 bg-primary/20 blur-xl rounded-xl translate-y-2 scale-95 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-      
+      <div className={`absolute inset-0 bg-primary/20 blur-xl rounded-xl translate-y-2 scale-95 transition-opacity duration-500 ${isLoading || isSuccess ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} />
+
       {/* Main Button Body */}
       <motion.div
-        animate={{ 
+        animate={{
           rotateX: isHovered ? 5 : 0,
           rotateY: isHovered ? -5 : 0,
           y: isHovered ? -4 : 0,
-          backgroundColor: isHovered ? "#b3c5ff" : "#e5e2e1",
-          color: isHovered ? "#002b75" : "#0a0a0a"
+          backgroundColor: isSuccess
+            ? "#5db8a6"
+            : isLoading
+              ? "#cc785c"
+              : isHovered
+                ? "#b3c5ff"
+                : "#e5e2e1",
+          color: isSuccess || isLoading ? "#ffffff" : isHovered ? "#002b75" : "#0a0a0a"
         }}
-        className="relative z-10 border border-white/10 rounded-DEFAULT px-12 py-6 overflow-hidden shadow-sm metallic-edge"
+        className="relative z-10 border border-white/10 rounded-DEFAULT px-12 py-6 overflow-hidden shadow-sm metallic-edge transition-colors duration-300"
       >
-        <div className="relative z-20">
+        <div className="relative z-20 flex items-center justify-center gap-3">
+          {isLoading && (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            >
+              <Loader2 size={20} strokeWidth={2.5} />
+            </motion.div>
+          )}
+          {isSuccess && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+            >
+              <CheckCircle2 size={20} strokeWidth={2.5} />
+            </motion.div>
+          )}
           {children}
         </div>
-        
+
         {/* The Peeling Sticker Corner */}
-        <motion.div 
+        <motion.div
           initial={false}
-          animate={{ 
-            width: isHovered ? 40 : 0,
-            height: isHovered ? 40 : 0,
-            opacity: isHovered ? 1 : 0
+          animate={{
+            width: (isHovered && !isLoading) ? 40 : 0,
+            height: (isHovered && !isLoading) ? 40 : 0,
+            opacity: (isHovered && !isLoading) ? 1 : 0
           }}
           className="absolute top-0 right-0 bg-white/40 backdrop-blur-md rounded-bl-DEFAULT border-b border-l border-white/20 pointer-events-none shadow-inner z-30"
         />
       </motion.div>
-    </motion.div>
+    </motion.button>
   );
 }
 
@@ -66,11 +104,25 @@ import { Plus } from 'lucide-react';
 import type { PlatformStatsData } from './PlatformStats';
 import { formatRentMapped } from './PlatformStats';
 import UnifiedMenu from './UnifiedMenu';
+import ThemeToggle from './ThemeToggle';
 import { useDriverJS } from '@/hooks/useDriverJS';
 
 export default function LandingPage({ platformStats }: { platformStats?: PlatformStatsData }) {
   const mainRef = useRef(null);
+  const router = useRouter();
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploySuccess, setDeploySuccess] = useState(false);
   useDriverJS('landing');
+
+  const handleDeploy = async () => {
+    setIsDeploying(true);
+    // Simulate connection time
+    await new Promise(r => setTimeout(r, 1500));
+    setDeploySuccess(true);
+    // Brief success state before navigation
+    await new Promise(r => setTimeout(r, 600));
+    router.push('/explore');
+  };
 
   useGSAP(() => {
     // Parallax background effect
@@ -84,10 +136,35 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         scrub: true,
       }
     });
+
+    // Hero section entrance animations
+    gsap.from('.hero-headline', {
+      opacity: 0,
+      y: 30,
+      duration: 0.8,
+      ease: 'power2.out',
+      delay: 0.1
+    });
+
+    gsap.from('.hero-subheading', {
+      opacity: 0,
+      y: 20,
+      duration: 0.8,
+      ease: 'power2.out',
+      delay: 0.3
+    });
+
+    gsap.from('.hero-cta-group', {
+      opacity: 0,
+      y: 20,
+      duration: 0.8,
+      ease: 'power2.out',
+      delay: 0.5
+    });
   }, { scope: mainRef });
 
   return (
-    <div ref={mainRef} className="bg-background text-on-background overflow-x-hidden antialiased font-sans relative selection:bg-primary/20 selection:text-primary">
+    <div ref={mainRef} className="bg-background text-on-background overflow-x-hidden antialiased font-sans relative pt-16">
       {/* Dynamic Background - Dark Tactical */}
       <div className="fixed inset-0 z-0 bg-parallax opacity-20 pointer-events-none">
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
@@ -95,64 +172,86 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       </div>
 
       {/* TopNavBar - DESIGN.md Centered Layout */}
-      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-mobile md:px-desktop">
+      <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background/80 backdrop-blur-xl border-b border-white/5 shadow-2xl px-mobile md:px-desktop">
         <div className="max-w-container w-full flex justify-between items-center">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <UnifiedMenu />
             <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-4">
-                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center shadow-lg glow-primary">
-                    <Satellite className="text-on-primary" size={20} strokeWidth={2.5} />
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 bg-primary rounded-md flex items-center justify-center shadow-lg glow-primary">
+                    <Satellite className="text-on-primary" size={16} strokeWidth={2.5} />
                 </div>
-                <span className="font-display text-2xl md:text-3xl text-primary font-black tracking-tighter uppercase">indian.rent</span>
+                <span className="font-display text-lg md:text-xl text-primary font-black tracking-tighter uppercase">indian.rent</span>
               </div>
-              <div className="font-technical text-[8px] uppercase tracking-[0.6em] text-primary/50 font-black ml-12 hidden md:block">WishLabs Intelligence</div>
+              <div className="font-technical text-[7px] uppercase tracking-[0.5em] text-primary/50 font-black ml-9 hidden md:block">WishLabs</div>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-12 font-technical">
-            <Link href="/explore" className="text-primary font-bold border-b-2 border-primary pb-1 transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]">Interface</Link>
-            <Link href="/analytics" className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]">Intelligence</Link>
-            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]" href="#">Community</a>
-            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.2em] text-[10px]" href="#">Node Map</a>
+          <div className="hidden md:flex items-center gap-8 font-technical">
+            <Link href="/explore" className="text-primary font-bold border-b-2 border-primary pb-0.5 transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]">Interface</Link>
+            <Link href="/analytics" className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]">Intelligence</Link>
+            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="#">Community</a>
+            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="#">Node Map</a>
           </div>
-          <div className="flex items-center gap-6">
-            <div className="font-technical text-[10px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
+          <div className="flex items-center gap-4 md:gap-6">
+            <div className="hidden md:flex font-technical text-[12px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
                <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
-               Live Protocol
+               Live
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </nav>
 
       <TracingBeam>
         {/* Hero Section */}
-        <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-24 px-mobile md:px-desktop overflow-hidden w-full">
+        <section data-tour="hero-section" className="relative min-h-screen flex items-center justify-center pt-12 pb-20 px-mobile md:px-desktop overflow-hidden w-full">
           <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mx-auto">
             <div className="flex flex-col gap-10">
               <div className="space-y-4">
-                 <motion.div 
+                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     className="font-technical text-[10px] font-black uppercase tracking-[0.4em] text-primary"
                  >
                     Tactical Protocol // Active
                  </motion.div>
-                 <HeroText />
+                 <div className="hero-headline">
+                   <HeroText />
+                 </div>
               </div>
-              <p className="text-body-md text-on-surface-variant max-w-lg leading-relaxed font-medium opacity-80 uppercase tracking-widest text-[10px] font-technical">
+              <p className="hero-subheading text-body-md text-on-surface-variant max-w-lg leading-relaxed font-medium opacity-80 uppercase tracking-widest text-[10px] font-technical">
                 Direct community rental protocol. Deploy nodes. Bypass middlemen. Reward intelligence.
               </p>
-              <div className="flex gap-4 items-center mt-6">
-                <MagneticButton>
-                  <Link href="/explore" data-tour="explore-button">
-                    <StickerButton>
-                       <div className="flex items-center gap-4">
-                        <span className="font-black uppercase tracking-[0.3em] text-[11px]">Deploy Interface</span>
+              <div className="hero-cta-group flex gap-4 items-center mt-6">
+                <div className="group relative">
+                  <MagneticButton>
+                    <StickerButton
+                      data-tour="explore-button"
+                      onClick={handleDeploy}
+                      isLoading={isDeploying}
+                      isSuccess={deploySuccess}
+                      disabled={isDeploying || deploySuccess}
+                    >
+                      <span className="font-black uppercase tracking-[0.3em] text-[12px]">
+                        {isDeploying ? 'Connecting...' : deploySuccess ? 'Connected' : 'Deploy Interface'}
+                      </span>
+                      {!isDeploying && !deploySuccess && (
                         <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform font-black text-sm">radar</span>
-                      </div>
+                      )}
                     </StickerButton>
-                  </Link>
-                </MagneticButton>
+                  </MagneticButton>
+                  {!isDeploying && !deploySuccess && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1.2, duration: 0.6 }}
+                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface-container-high text-inverse-on-surface text-[11px] rounded-md whitespace-nowrap pointer-events-none z-50 font-medium"
+                    >
+                      Explore map & listings
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-surface-container-high rotate-45"></div>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -233,17 +332,17 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
                   <Satellite className="text-on-primary" size={20} strokeWidth={2.5} />
                </div>
-               <span className="font-display text-xl text-on-surface font-black tracking-tighter uppercase">indian.rent</span>
+               <span className="font-display text-lg text-on-surface font-black tracking-tighter uppercase">indian.rent</span>
              </div>
-             <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary opacity-60 ml-1 font-black">Product of WishLabs.in</div>
+             <div className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary opacity-60 ml-1 font-black">Product of WishLabs.in</div>
            </div>
-           <div className="flex gap-12 font-technical text-technical-sm uppercase tracking-widest opacity-40">
+           <div className="flex gap-12 font-technical text-[12px] uppercase tracking-widest opacity-60 font-medium">
              <a href="#" className="hover:text-primary transition-colors">Documentation</a>
              <a href="#" className="hover:text-primary transition-colors">Privacy</a>
              <Link href="/terms" className="hover:text-primary transition-colors">T&C</Link>
              <a href="#" className="hover:text-primary transition-colors">HQ Support</a>
            </div>
-           <div className="font-technical text-[9px] uppercase tracking-[0.6em] opacity-20 font-black">&copy; 2026 Direct Rental Protocol • A WishLabs Production</div>
+           <div className="font-technical text-[10px] uppercase tracking-[0.4em] opacity-40 font-black">&copy; 2026 Direct Rental Protocol • A WishLabs Production</div>
          </div>
       </footer>
     </div>

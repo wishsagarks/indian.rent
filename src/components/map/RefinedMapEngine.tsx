@@ -16,11 +16,12 @@ import ConsentSplash from './ConsentSplash';
 import Link from 'next/link';
 import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
-import { getMapIntel, deployNode, searchLocalities, deleteOwnPin, subscribeToArea, trackApiUsage } from '@/app/actions/map-actions';
+import ThemeToggle from '@/components/ThemeToggle';
+import { getMapIntel, deployNode, searchLocalities, deleteOwnPin, subscribeToArea, trackApiUsage, getSeekerPins } from '@/app/actions/map-actions';
 import { createClient } from '@/utils/supabase/client';
 import { getIpHash } from '@/utils/ip-hash';
 import { useGeolocation } from '@/hooks/useGeolocation';
-import { useSystemTheme } from '@/hooks/useSystemTheme';
+import { useTheme } from '@/hooks/useTheme';
 import { PlaceAutocomplete } from './PlaceAutocomplete';
 import { useDriverJS } from '@/hooks/useDriverJS';
 
@@ -55,13 +56,13 @@ const MOCK_INTEL = [
 ];
 
 export default function RefinedMapEngine() {
-  const systemTheme = useSystemTheme();
+  const { theme } = useTheme();
   const shouldShowTour = typeof window !== 'undefined' && !localStorage.getItem('indian_rent_toured');
   useDriverJS(shouldShowTour ? 'explore' : null);
-
-  // State declarations
+  const [mapReady, setMapReady] = useState(false);
   const [consented, setConsented] = useState(false);
   const [points, setPoints] = useState<any[]>([]);
+  const [seekerPins, setSeekerPins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [isAddingProperty, setIsAddingProperty] = useState(false);
@@ -215,7 +216,7 @@ export default function RefinedMapEngine() {
 
   const ipHash = typeof window !== 'undefined' ? getIpHash() : '';
 
-  const mapId = systemTheme === 'dark' ? 'TACTICAL_HUD_MAP' : 'LIGHT_HUD_MAP';
+  const mapId = theme === 'dark' ? 'TACTICAL_HUD_MAP' : 'LIGHT_HUD_MAP';
 
   const processIntelData = useCallback((data: any[]) => {
     try {
@@ -290,8 +291,9 @@ export default function RefinedMapEngine() {
   const fetchIntel = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getMapIntel();
+      const [data, seekers] = await Promise.all([getMapIntel(), getSeekerPins()]);
       processIntelData(data);
+      setSeekerPins(seekers);
     } catch (err) {
       console.error('Intel Fetch Failed:', err);
     } finally {
@@ -775,7 +777,7 @@ export default function RefinedMapEngine() {
 
   return (
     <APIProvider apiKey={GOOGLE_MAPS_API_KEY || ''} libraries={['places', 'marker']}>
-      <div className="h-screen w-full overflow-hidden bg-background relative selection:bg-primary/20 selection:text-primary">
+      <div className="h-screen w-full overflow-hidden bg-background relative">
         {/* Map */}
         <div id="map-container" className="absolute inset-0 z-0 bg-background">
           {MAP_PROVIDER === 'mapbox' ? (
@@ -870,33 +872,17 @@ export default function RefinedMapEngine() {
               zoom={viewState.zoom}
               mapId={mapId}
               disableDefaultUI={true}
-              minZoom={5}
+              minZoom={3}
               maxZoom={18}
-              restriction={{
-                latLngBounds: {
-                  north: cityConfig[selectedCity].bounds[1][1],
-                  south: cityConfig[selectedCity].bounds[0][1],
-                  west: cityConfig[selectedCity].bounds[0][0],
-                  east: cityConfig[selectedCity].bounds[1][0]
-                },
-                strictBounds: false
-              }}
               onCameraChanged={(ev) => {
                 if (ev.detail.center && typeof ev.detail.center.lat === 'number' && typeof ev.detail.center.lng === 'number') {
                   setViewState(prev => ({ ...prev, latitude: ev.detail.center.lat, longitude: ev.detail.center.lng, zoom: ev.detail.zoom }));
                 }
-                if (ev.detail.bounds) {
-                  setGoogleBounds([
-                    Number(ev.detail.bounds.west) || -180, 
-                    Number(ev.detail.bounds.south) || -85, 
-                    Number(ev.detail.bounds.east) || 180, 
-                    Number(ev.detail.bounds.north) || 85
-                  ]);
-                }
               }}
+              onTilesLoaded={() => setMapReady(true)}
               style={{ width: '100%', height: '100%' }}
             >
-              {clusters.map((cluster: any) => {
+              {mapReady && Array.isArray(clusters) && clusters.map((cluster: any) => {
                 try {
                   const coordinates = cluster.geometry?.coordinates;
                   if (!coordinates || !Array.isArray(coordinates)) return null;
@@ -976,7 +962,7 @@ export default function RefinedMapEngine() {
                 }
               })}
               {/* User Location Marker */}
-              {userLocation && (
+              {mapReady && userLocation && (
                 <AdvancedMarker position={{ lat: userLocation.lat, lng: userLocation.lng }}>
                   <div className="relative flex items-center justify-center">
                     {/* Outer pulse ring */}
@@ -988,6 +974,14 @@ export default function RefinedMapEngine() {
                   </div>
                 </AdvancedMarker>
               )}
+              {/* Seeker Pins for Google Maps */}
+              {mapReady && seekerPins.map(sp => (
+                <AdvancedMarker key={sp.id} position={{ lat: sp.latitude, lng: sp.longitude }}>
+                  <div className="w-6 h-6 rounded-full bg-emerald-400/80 border-2 border-white flex items-center justify-center shadow-lg">
+                    <Search size={10} className="text-white" />
+                  </div>
+                </AdvancedMarker>
+              ))}
               {/* Metro Overlay for Google Maps */}
               <MetroOverlay visible={showMetro} />
             </GoogleMap>
@@ -996,7 +990,7 @@ export default function RefinedMapEngine() {
 
         {/* Area Stats Indicator */}
         {showAreaStats && (
-          <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-primary text-background px-4 py-2 rounded-lg font-technical text-[10px] font-black uppercase tracking-widest shadow-xl">
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-primary text-background px-4 py-2 rounded-lg font-technical text-[10px] font-black uppercase tracking-widest shadow-xl">
             Click map to change area
           </div>
         )}
@@ -1018,25 +1012,25 @@ export default function RefinedMapEngine() {
 
         {/* Top HUD */}
         {!isAddingProperty && (
-          <header className="fixed top-0 w-full z-50 flex justify-center h-20 px-4 md:px-8 pointer-events-none pt-2 md:pt-4 font-technical">
-            <div className="max-w-5xl w-full flex justify-between items-center pointer-events-auto h-12 md:h-14 bg-background/80 backdrop-blur-xl rounded-full md:rounded-lg border border-white/10 shadow-2xl px-2 md:px-6">
-              <div className="flex items-center gap-2 md:gap-3 pl-2 md:pl-0">
+          <header className="fixed top-0 w-full z-50 flex justify-center h-20 px-mobile md:px-desktop pointer-events-none pt-3 md:pt-4 font-technical">
+            <div className="max-w-container w-full flex justify-between items-center pointer-events-auto h-14 md:h-16 bg-background/80 backdrop-blur-xl rounded-full md:rounded-xl border border-white/10 shadow-2xl px-3 md:px-6">
+              <div className="flex items-center gap-2 md:gap-2 pl-1 md:pl-0">
                 <UnifiedMenu />
                 <div className="flex flex-col -gap-1 hidden md:flex">
-                  <Link href="/" className="font-display text-lg text-primary font-black tracking-tighter cursor-pointer uppercase">indian.rent</Link>
-                  <span className="text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black hidden md:block">by WishLabs</span>
+                  <Link href="/" className="font-display text-base md:text-lg text-primary font-black tracking-tight cursor-pointer uppercase">indian.rent</Link>
+                  <span className="text-[7px] uppercase tracking-[0.3em] text-primary/40 font-black hidden lg:block">by WishLabs</span>
                 </div>
                 {/* Mobile minimal text logo */}
-                <Link href="/" className="md:hidden font-display text-sm text-primary font-black tracking-tighter cursor-pointer uppercase">IR.</Link>
+                <Link href="/" className="md:hidden font-display text-xs text-primary font-black tracking-tight cursor-pointer uppercase">IR.</Link>
               </div>
 
-              <div className="flex items-center gap-1 md:gap-3 pr-1 md:pr-0">
+              <div className="flex items-center gap-1 md:gap-2 pr-1 md:pr-0">
                 {/* City Selector */}
                 <select
                   value={selectedCity}
                   onChange={(e) => handleCityChange(e.target.value as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')}
                   title={selectedCity}
-                  className="px-2 py-1 md:py-0.5 rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[9px] md:text-[11px] font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all appearance-none"
+                  className="px-2 py-1 rounded-lg bg-surface/50 border border-white/10 text-on-surface font-technical text-[9px] md:text-[10px] font-bold focus:outline-none focus:border-primary/50 cursor-pointer hover:border-white/30 transition-all appearance-none"
                 >
                   <option value="bengaluru">BLR</option>
                   <option value="hyderabad">HYD</option>
@@ -1044,16 +1038,18 @@ export default function RefinedMapEngine() {
                   <option value="cuttack">CTK</option>
                 </select>
 
-                <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} title="Search location" className={`p-2 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={16} /></button>
-                <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-2 rounded-full md:rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={16} /></button>
-                <div className="hidden md:flex items-center gap-4">
-                  <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-2 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={16} /></button>
-                  <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-2 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={16} /></button>
-                  <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-2 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={16} /></button>
-                  <button onClick={() => setShowNotifyModal(true)} className="p-2 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={16} /></button>
+                <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} title="Search location" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={15} /></button>
+                <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={15} /></button>
+                <div className="hidden lg:flex items-center gap-2">
+                  <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-1.5 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={14} /></button>
+                  <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-1.5 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={14} /></button>
+                  <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-1.5 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={14} /></button>
+                  <button onClick={() => setShowNotifyModal(true)} className="p-1.5 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={14} /></button>
                 </div>
-                <div className="w-px h-4 bg-white/10 hidden md:block" />
-                <button onClick={fetchIntel} className={`p-2 rounded-full md:rounded-lg text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={16} strokeWidth={2.5} /></button>
+                <div className="w-px h-3 bg-white/10" />
+                <button onClick={fetchIntel} className={`p-1.5 rounded-full md:rounded-lg text-primary transition-all active:rotate-180 ${loading ? 'animate-spin' : ''}`}><RefreshCcw size={15} strokeWidth={2.5} /></button>
+                <div className="w-px h-3 bg-white/10" />
+                <ThemeToggle />
               </div>
             </div>
           </header>
@@ -1107,7 +1103,7 @@ export default function RefinedMapEngine() {
               <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
               <div className="mt-2 px-3 flex justify-between items-center">
                 <span className="font-technical text-[8px] uppercase tracking-[0.3em] text-primary font-black">Search Locality</span>
-                <button onClick={() => setShowBrowseSearch(false)} className="text-[8px] uppercase tracking-[0.3em] text-on-surface-variant hover:text-white font-black">Close</button>
+                <button onClick={() => setShowBrowseSearch(false)} className="text-[8px] uppercase tracking-[0.3em] text-on-surface-variant hover:text-primary font-black">Close</button>
               </div>
             </div>
           </motion.div>
@@ -1124,7 +1120,7 @@ export default function RefinedMapEngine() {
               animate={{ y: 0, opacity: 1 }} 
               exit={{ y: '100%', opacity: 0 }} 
               transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-              className="relative w-full md:w-[420px] h-[85vh] md:h-full bg-surface md:border-r border-t md:border-t-0 border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col rounded-t-3xl md:rounded-none"
+              className="relative w-full md:w-[440px] h-[85vh] md:h-full bg-surface md:border-r border-t md:border-t-0 border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col rounded-t-3xl md:rounded-none"
             >
               <div className="flex-1 overflow-hidden">
                 <AddPropertyForm
@@ -1232,7 +1228,7 @@ export default function RefinedMapEngine() {
               <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
               <div className="mt-2 px-3 flex justify-between items-center">
                 <span className="font-technical text-[8px] uppercase tracking-[0.3em] text-primary font-black">Search for building location</span>
-                <button onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="text-[8px] uppercase tracking-[0.3em] text-on-surface-variant hover:text-white font-black">Cancel</button>
+                <button onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="text-[8px] uppercase tracking-[0.3em] text-on-surface-variant hover:text-primary font-black">Cancel</button>
               </div>
             </div>
           </motion.div>
@@ -1275,7 +1271,7 @@ export default function RefinedMapEngine() {
       )}
 
       {/* Map Legend */}
-      <div className="hidden lg:block fixed bottom-12 left-12 z-50">
+      <div className="hidden lg:block fixed bottom-16 left-16 z-50">
         <AnimatePresence>
           {showLegend && (
             <motion.div
@@ -1338,7 +1334,7 @@ export default function RefinedMapEngine() {
 
       {/* Floating Action Buttons */}
       {!isAddingProperty && (
-        <div className="hidden lg:flex fixed bottom-12 right-12 z-50 flex-col gap-3">
+        <div className="hidden lg:flex fixed bottom-16 right-16 z-50 flex-col gap-4">
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1346,10 +1342,10 @@ export default function RefinedMapEngine() {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLocateMe}
-            className={`bg-surface text-on-surface-variant w-14 h-14 rounded-lg shadow-lg flex items-center justify-center border border-white/20 transition-all hover:text-primary hover:bg-primary/10 ${geolocating ? 'animate-pulse text-primary' : ''}`}
+            className={`bg-surface text-on-surface-variant w-16 h-16 rounded-xl shadow-lg flex items-center justify-center border border-white/20 transition-all hover:text-primary hover:bg-primary/10 ${geolocating ? 'animate-pulse text-primary' : ''}`}
             title="Locate me"
           >
-            <Navigation size={24} />
+            <Navigation size={26} />
           </motion.button>
           <motion.button
             animate={{ y: [0, -10, 0] }}
@@ -1357,11 +1353,54 @@ export default function RefinedMapEngine() {
             whileHover={{ scale: 1.1, y: -5 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setIsAddingProperty(true)}
-            className="bg-primary text-on-primary w-16 h-16 rounded-lg shadow-[0_30px_60px_-10px_rgba(0,102,255,0.4)] flex items-center justify-center border border-white/30"
+            className="bg-primary text-on-primary w-16 h-16 rounded-xl shadow-[0_30px_60px_-10px_rgba(0,102,255,0.4)] flex items-center justify-center border border-white/30"
             title="Add property"
           >
             <Plus size={30} strokeWidth={3} />
           </motion.button>
+
+          {/* Analytics Dashboard Button - Animated Promo */}
+          <Link href="/analytics/v2">
+            <motion.button
+              animate={{
+                boxShadow: [
+                  '0 0 20px rgba(0, 102, 255, 0.4)',
+                  '0 0 40px rgba(0, 102, 255, 0.8)',
+                  '0 0 20px rgba(0, 102, 255, 0.4)'
+                ],
+                scale: [1, 1.05, 1]
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 2,
+                ease: "easeInOut"
+              }}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-br from-primary to-blue-600 text-on-primary w-16 h-16 rounded-xl flex flex-col items-center justify-center border border-white/40 relative overflow-hidden group"
+              title="Market Analytics Dashboard"
+            >
+              {/* Animated shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
+
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                className="relative z-10"
+              >
+                <BarChart3 size={24} strokeWidth={2.5} />
+              </motion.div>
+
+              <span className="text-[8px] font-black uppercase tracking-wider mt-0.5 relative z-10">Analytics</span>
+
+              {/* Blinking indicator dot */}
+              <motion.div
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ repeat: Infinity, duration: 1.5 }}
+                className="absolute top-1 right-1 w-2 h-2 bg-yellow-300 rounded-full shadow-lg shadow-yellow-400/50"
+              />
+            </motion.button>
+          </Link>
         </div>
       )}
 
@@ -1505,12 +1544,12 @@ export default function RefinedMapEngine() {
           if (next && !areaStatsCenter) {
             setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude });
           }
-        }} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showAreaStats ? 'text-primary' : 'text-on-surface-variant hover:text-white'}`} title="Area stats">
+        }} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showAreaStats ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Area stats">
           <Landmark size={20} className={showAreaStats ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Area</span>
         </button>
 
-        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showMetro ? 'text-primary' : 'text-on-surface-variant hover:text-white'}`} title="Metro">
+        <button onClick={() => setShowMetro(!showMetro)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showMetro ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Metro">
           <Train size={20} className={showMetro ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Metro</span>
         </button>
@@ -1524,12 +1563,12 @@ export default function RefinedMapEngine() {
           </button>
         </div>
 
-        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showLiveStats ? 'text-primary' : 'text-on-surface-variant hover:text-white'}`} title="Live Stats">
+        <button onClick={() => setShowLiveStats(!showLiveStats)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 ${showLiveStats ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'}`} title="Live Stats">
           <BarChart3 size={20} className={showLiveStats ? 'drop-shadow-[0_0_8px_rgba(0,102,255,0.8)]' : ''} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Live</span>
         </button>
 
-        <button onClick={() => setShowNotifyModal(true)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 text-on-surface-variant hover:text-white`} title="Notify">
+        <button onClick={() => setShowNotifyModal(true)} className={`flex flex-col items-center justify-center min-h-12 flex-1 transition-all active:scale-90 text-on-surface-variant hover:text-on-surface`} title="Notify">
           <Bell size={20} />
           <span className="font-technical text-[8px] mt-1.5 font-black uppercase tracking-widest">Alerts</span>
         </button>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X } from 'lucide-react';
+import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X, Info } from 'lucide-react';
 import { findNearbyBuildings } from '@/app/actions/map-actions';
 
 interface AddPropertyFormProps {
@@ -18,6 +18,28 @@ interface AddPropertyFormProps {
   } | null;
   isSubmitting?: boolean;
 }
+
+const FormInfoIcon = ({ text }: { text: string }) => {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative inline-block">
+      <button
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        onClick={() => setShow(!show)}
+        className="p-0.5 text-on-surface-variant/60 hover:text-primary transition-colors flex items-center justify-center"
+        type="button"
+      >
+        <Info size={13} />
+      </button>
+      {show && (
+        <div className="absolute bottom-full left-0 mb-2 w-52 bg-surface border border-outline/30 rounded-lg p-2.5 text-[10px] leading-normal text-on-surface z-50 shadow-2xl">
+          {text}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialData, isSubmitting = false }: AddPropertyFormProps) {
   const [step, setStep] = useState(1);
@@ -103,7 +125,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
               {steps[step - 1].title}
             </h2>
           </div>
-          <button onClick={onClose} className="p-2 -mr-2 rounded-full text-on-surface-variant hover:text-white hover:bg-white/5 transition-all">
+          <button onClick={onClose} className="p-2 -mr-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-on-surface/5 transition-all">
             <X size={24} />
           </button>
         </div>
@@ -144,7 +166,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                       <div className="text-xs font-bold text-on-surface uppercase truncate max-w-[200px]">{formData.buildingName}</div>
                     </div>
                   </div>
-                  <button onClick={() => { updateData({ buildingName: '', address: '', existingBuildingId: null }); }} className="text-[8px] uppercase tracking-widest text-on-surface-variant hover:text-white font-black">Reset</button>
+                  <button onClick={() => { updateData({ buildingName: '', address: '', existingBuildingId: null }); }} className="text-[8px] uppercase tracking-widest text-on-surface-variant hover:text-primary font-black">Reset</button>
                 </motion.div>
               )}
 
@@ -286,7 +308,10 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
             <motion.div key="step3" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
               {/* BHK */}
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">BHK</label>
+                <div className="flex items-center gap-2 ml-2">
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">BHK</label>
+                  <FormInfoIcon text="Bedroom-Hall-Kitchen. 1BHK = 1 bedroom + hall + kitchen. 5+ = 5 or more bedrooms." />
+                </div>
                 <div className="grid grid-cols-5 gap-2">
                   {['1', '2', '3', '4', '5+'].map(b => (
                     <button key={b} onClick={() => updateData({ bhk: b })} className={`py-3.5 rounded-lg font-black text-sm border transition-all ${formData.bhk === b ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{b}</button>
@@ -299,6 +324,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                 <div className="flex items-center gap-2 ml-2">
                   <Sofa size={14} className="text-primary" />
                   <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Furnishing</label>
+                  <FormInfoIcon text="Furnished = all furniture. Semi = some furniture/fixtures. Unfurnished = bare space only." />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[{ id: 'furnished', label: 'Furnished' }, { id: 'semi-furnished', label: 'Semi' }, { id: 'unfurnished', label: 'Unfurnished' }].map(f => (
@@ -348,7 +374,10 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
 
               {/* Tenant Preference */}
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Tenant Preference</label>
+                <div className="flex items-center gap-2 ml-2">
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Tenant Preference</label>
+                  <FormInfoIcon text="Who you prefer to rent to: Any (open), Bachelors (singles/professionals), or Family." />
+                </div>
                 <div className="grid grid-cols-3 gap-2">
                   {[{ id: 'any', label: '🏠 Any' }, { id: 'bachelors', label: '🎓 Bachelors' }, { id: 'family', label: '👨‍👩‍👧 Family' }].map(p => (
                     <button key={p.id} onClick={() => updateData({ tenantPreference: p.id as any })} className={`py-3.5 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all ${formData.tenantPreference === p.id ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{p.label}</button>
@@ -383,13 +412,19 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
           {step === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Monthly Rent</label>
+                <div className="flex items-center gap-2 ml-2">
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Monthly Rent</label>
+                  <FormInfoIcon text="Monthly rental amount in INR. This is the primary rent, excluding maintenance & utilities." />
+                </div>
                 <input type="text" placeholder="₹ Rent amount" value={formData.rent} onChange={e => updateData({ rent: e.target.value })} className="w-full bg-surface-container-low border border-white/5 rounded-lg p-6 text-primary placeholder:text-primary/20 text-3xl font-black focus:border-primary transition-all outline-none tracking-tighter" />
               </div>
 
               {/* Security Deposit (months) */}
               <div className="space-y-4 text-left">
-                <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black ml-2">Security Deposit (months)</label>
+                <div className="flex items-center gap-2 ml-2">
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Security Deposit (months)</label>
+                  <FormInfoIcon text="How many months of rent as deposit. 2 months is standard. Refunded when tenant leaves." />
+                </div>
                 <div className="grid grid-cols-4 gap-2">
                   {['1', '2', '3', '6'].map(m => (
                     <button key={m} onClick={() => updateData({ depositMonths: m })} className={`py-3 rounded-lg font-black text-sm border transition-all ${formData.depositMonths === m ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{m}</button>

@@ -6,6 +6,7 @@ import { Building2, Home, Banknote, Users, Zap, Shield, Target, Map as MapIcon, 
 import Link from 'next/link';
 import type { PlatformStatsData } from '@/components/PlatformStats';
 import UnifiedMenu from '@/components/UnifiedMenu';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData }) {
   const formatCurrency = (val: number) => {
@@ -78,15 +79,15 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
   ];
 
   return (
-    <div className="min-h-screen bg-background text-on-background font-sans selection:bg-primary/20">
+    <div className="min-h-screen bg-background text-on-background font-sans">
       {/* Background Decor */}
       <div className="fixed inset-0 z-0 opacity-30 pointer-events-none">
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/20 via-secondary/5 to-background" />
          <div className="absolute inset-0 bg-[linear-gradient(to_right,_rgba(0,102,255,0.05)_1px,_transparent_1px),_linear-gradient(to_bottom,_rgba(47,248,1,0.05)_1px,_transparent_1px)] bg-[size:40px_40px]" />
       </div>
 
-      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/90 backdrop-blur-xl border-b border-primary/30 shadow-glow-blue-sm px-6">
-        <div className="max-w-7xl w-full flex justify-between items-center">
+      <nav className="fixed top-0 w-full z-50 flex justify-center h-20 bg-background/90 backdrop-blur-xl border-b border-primary/30 shadow-glow-blue-sm px-mobile md:px-desktop">
+        <div className="max-w-container w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
             <UnifiedMenu />
             <Link href="/" className="flex items-center gap-4 group">
@@ -104,11 +105,12 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                <div className="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse" />
                Protocol Link Stable
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </nav>
 
-      <main className="relative z-10 pt-32 pb-24 px-6 max-w-7xl mx-auto">
+      <main className="relative z-10 pt-32 pb-24 px-mobile md:px-desktop max-w-container mx-auto">
         <header className="mb-16">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -479,8 +481,8 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
         </section>
       </main>
 
-      <footer className="py-24 px-6 border-t border-secondary/20 relative z-10 bg-background/50 backdrop-blur-md mt-12">
-         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12 w-full text-center md:text-left">
+      <footer className="py-24 px-mobile md:px-desktop border-t border-secondary/20 relative z-10 bg-background/50 backdrop-blur-md mt-12">
+         <div className="max-w-container mx-auto flex flex-col md:flex-row justify-between items-center gap-12 w-full text-center md:text-left">
            <div className="flex flex-col items-center md:items-start gap-1">
              <div className="flex items-center gap-3">
                <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">

@@ -1,7 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Info } from 'lucide-react';
 
 interface SegmentData {
   name: string;
@@ -15,6 +16,7 @@ interface Props {
 }
 
 export default function MarketSegmentChartEnhanced({ data, title, description }: Props) {
+  const [showInfo, setShowInfo] = useState(false);
   const COLORS = ['#0066ff', '#2f8001', '#ff9500', '#ff3b30', '#5856d6', '#00c7be', '#ff6b6b', '#a78bfa'];
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
@@ -32,7 +34,24 @@ export default function MarketSegmentChartEnhanced({ data, title, description }:
   return (
     <div className="bg-surface border border-white/10 rounded-lg p-6 space-y-4">
       <div>
-        <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
+          <div className="relative">
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              onMouseEnter={() => setShowInfo(true)}
+              onMouseLeave={() => setShowInfo(false)}
+              className="p-0.5 text-on-surface-variant/60 hover:text-primary transition-colors flex items-center justify-center"
+            >
+              <Info size={14} />
+            </button>
+            {showInfo && (
+              <div className="absolute top-full left-0 mt-2 w-56 bg-surface border border-outline/30 rounded-lg p-2.5 text-[10px] leading-normal text-on-surface z-50 shadow-2xl">
+                Market split by BHK type (studio, 1BHK, 2BHK, etc). Shows which segment dominates the rental market.
+              </div>
+            )}
+          </div>
+        </div>
         {description && <p className="text-xs text-on-surface-variant mt-1">{description}</p>}
       </div>
 
@@ -59,7 +78,8 @@ export default function MarketSegmentChartEnhanced({ data, title, description }:
               borderRadius: '8px',
               color: '#fff'
             }}
-            formatter={(value: number) => {
+            formatter={(value: any) => {
+              if (typeof value !== 'number') return value;
               const percent = ((value / total) * 100).toFixed(1);
               return [`${value} listings (${percent}%)`, 'Count'];
             }}
@@ -94,7 +114,7 @@ export default function MarketSegmentChartEnhanced({ data, title, description }:
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: COLORS[index % COLORS.length] }}
                   />
-                  <span className="text-sm font-technical font-bold text-white">{item.name}</span>
+                  <span className="text-sm font-technical font-bold text-on-surface">{item.name}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-bold text-primary">{item.value}</span>

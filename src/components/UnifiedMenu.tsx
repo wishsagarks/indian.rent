@@ -16,10 +16,10 @@ export default function UnifiedMenu() {
   ];
 
   return (
-    <div className="relative">
+    <div className="flex items-center gap-2 relative">
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className={`p-2 -ml-2 rounded-lg transition-all ${showMenu ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}
+        className={`p-2 rounded-lg transition-all ${showMenu ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}
         title="Navigation Menu"
       >
         <Menu size={20} />

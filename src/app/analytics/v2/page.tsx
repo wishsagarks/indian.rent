@@ -18,6 +18,7 @@ import {
 import PriceDistributionChartEnhanced from '@/components/analytics/PriceDistributionChartEnhanced';
 import MarketSegmentChartEnhanced from '@/components/analytics/MarketSegmentChartEnhanced';
 import { BarChart3, TrendingUp, Users, Home, ChevronLeft } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
 
 type City = 'bengaluru' | 'hyderabad';
 
@@ -120,7 +121,7 @@ export default function AnalyticsDashboardV2() {
                 <ChevronLeft size={20} className="text-primary group-hover:translate-x-0.5 transition-transform" />
               </Link>
               <div>
-                <h1 className="font-display text-3xl font-black text-white">Market Analytics</h1>
+                <h1 className="font-display text-3xl font-black text-on-surface">Market Analytics</h1>
                 <p className="text-sm text-on-surface-variant mt-1">
                   Real-time rental market intelligence
                 </p>
@@ -137,6 +138,7 @@ export default function AnalyticsDashboardV2() {
                 <option value="bengaluru">🏙️ Bengaluru</option>
                 <option value="hyderabad">🏙️ Hyderabad</option>
               </select>
+              <ThemeToggle />
             </div>
           </div>
         </div>
@@ -190,6 +192,7 @@ export default function AnalyticsDashboardV2() {
                   unit="listings"
                   trend={currentMetrics.supply.change}
                   interpretation={currentMetrics.supply.trend}
+                  description="Active rental listings available in this market"
                   icon={<Home size={20} />}
                 />
                 <KPICard3D
@@ -197,12 +200,14 @@ export default function AnalyticsDashboardV2() {
                   value={currentMetrics.demand.count}
                   unit="seekers"
                   interpretation={currentMetrics.demand.interpretation}
+                  description="Number of active property seekers in the market"
                   icon={<Users size={20} />}
                 />
                 <KPICard3D
                   label="Median Rent"
                   value={`₹${(currentMetrics.price.median / 1000).toFixed(1)}k`}
                   interpretation={`P75: ₹${(currentMetrics.price.p75 / 1000).toFixed(1)}k`}
+                  description="50th percentile rent — typical price point for this market"
                   icon={<TrendingUp size={20} />}
                   highlight
                 />
@@ -211,6 +216,7 @@ export default function AnalyticsDashboardV2() {
                   value={currentMetrics.quality.transparencyScore.toFixed(0)}
                   unit="%"
                   interpretation="Transparency Score"
+                  description="Quality of market data & listing transparency. Higher = better verified listings"
                   icon={<BarChart3 size={20} />}
                 />
               </>
@@ -243,7 +249,7 @@ export default function AnalyticsDashboardV2() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 rounded-lg border border-white/10 bg-surface/50">
                 <div>
                   <p className="text-xs text-on-surface-variant mb-2">Seeker-Listing Ratio</p>
-                  <p className="text-2xl font-bold text-white">1:{Math.round(1 / currentMetrics.demand.ratio)}</p>
+                  <p className="text-2xl font-bold text-on-surface">1:{Math.round(1 / currentMetrics.demand.ratio)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant mb-2">Market Health</p>
@@ -251,11 +257,11 @@ export default function AnalyticsDashboardV2() {
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant mb-2">Price Volatility</p>
-                  <p className="text-2xl font-bold text-white">{currentMetrics.price.volatility.toFixed(1)}%</p>
+                  <p className="text-2xl font-bold text-on-surface">{currentMetrics.price.volatility.toFixed(1)}%</p>
                 </div>
                 <div>
                   <p className="text-xs text-on-surface-variant mb-2">Premium Index</p>
-                  <p className="text-2xl font-bold text-white">{currentMetrics.price.premiumIndex.toFixed(2)}x</p>
+                  <p className="text-2xl font-bold text-on-surface">{currentMetrics.price.premiumIndex.toFixed(2)}x</p>
                 </div>
               </div>
 
