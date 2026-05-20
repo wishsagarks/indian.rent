@@ -231,15 +231,18 @@ export default function AnalyticsDashboardV2() {
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-4 py-3 text-sm font-technical font-bold uppercase transition-all ${
+                className={`px-4 py-3 text-sm font-technical font-bold uppercase transition-all flex items-center gap-2 ${
                   tab === t
                     ? 'border-b-2 border-primary text-primary'
                     : 'border-b-2 border-transparent text-on-surface-variant hover:text-on-surface'
                 }`}
               >
-                {t === 'overall' && 'Overall'}
-                {t === 'comparison' && 'City Comparison'}
-                {t === 'opportunities' && 'Opportunities'}
+                <span>
+                  {t === 'overall' && 'Overall'}
+                  {t === 'comparison' && 'City Comparison'}
+                  {t === 'opportunities' && 'Opportunities'}
+                </span>
+                <span className="text-[10px] font-black bg-primary/20 text-primary px-2 py-0.5 rounded-full">EXPERIMENT</span>
               </button>
             ))}
           </div>
