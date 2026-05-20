@@ -10,6 +10,7 @@ import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Satellite, Loader2, CheckCircle2 } from 'lucide-react';
 import MobileScrollProgress from './animations/MobileScrollProgress';
+import { useScrollVelocity } from '@/lib/scroll-velocity-context';
 
 const GlobeAnalytics = dynamic(() => import('./ui/cobe-globe-analytics').then(m => ({ default: m.GlobeAnalytics })), {
   ssr: false,
@@ -122,6 +123,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
   const router = useRouter();
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploySuccess, setDeploySuccess] = useState(false);
+  const { shouldReduceComplexity } = useScrollVelocity();
   useDriverJS('landing');
 
   const handleDeploy = async () => {
@@ -137,6 +139,9 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
   useGSAP(() => {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) return;
+
+    // Skip complex scroll animations if user is fast-scrolling on mobile
+    if (shouldReduceComplexity) return;
 
     // Parallax background effect
     gsap.to('.bg-parallax', {

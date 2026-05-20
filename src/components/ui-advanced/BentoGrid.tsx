@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { motion, easeOut, animate, useMotionValue, useTransform } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { Shield, Eye, MapPin, Banknote, Navigation2, Zap, Target } from 'lucide-react';
+import { useScrollVelocity } from '@/lib/scroll-velocity-context';
 
 function AnimatedCounter({ target, prefix, suffix, inView, isMobile = false }: { target: number; prefix: string; suffix: string; inView: boolean; isMobile?: boolean }) {
   const count = useMotionValue(0);
@@ -30,14 +31,15 @@ export function BentoGrid() {
     threshold: 0.2,
     triggerOnce: true
   });
+  const { shouldReduceComplexity } = useScrollVelocity();
 
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
+        staggerChildren: shouldReduceComplexity ? 0.05 : 0.1,
+        delayChildren: shouldReduceComplexity ? 0.1 : 0.2
       }
     }
   };
@@ -49,7 +51,7 @@ export function BentoGrid() {
       scale: 1,
       y: 0,
       transition: {
-        duration: 0.6
+        duration: shouldReduceComplexity ? 0.3 : 0.6
       }
     }
   };
@@ -60,7 +62,12 @@ export function BentoGrid() {
       scale: 1,
       rotate: 0,
       opacity: 1,
-      transition: { type: 'spring' as const, stiffness: 260, damping: 20, delay: 0.3 }
+      transition: {
+        type: 'spring' as const,
+        stiffness: shouldReduceComplexity ? 180 : 260,
+        damping: shouldReduceComplexity ? 25 : 20,
+        delay: shouldReduceComplexity ? 0.15 : 0.3
+      }
     }
   };
 
@@ -68,10 +75,10 @@ export function BentoGrid() {
     blink: {
       scaleY: [1, 0.3, 1],
       transition: {
-        duration: 0.8,
+        duration: shouldReduceComplexity ? 0.6 : 0.8,
         delay: 1.5,
         repeat: Infinity,
-        repeatDelay: 3
+        repeatDelay: shouldReduceComplexity ? 4 : 3
       }
     }
   };
