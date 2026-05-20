@@ -95,9 +95,9 @@ export default function RefinedMapEngine() {
   const [legendManual, setLegendManual] = useState(false);
   const [streetViewFailed, setStreetViewFailed] = useState(false);
   const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>(() => {
-    if (typeof window === 'undefined') return 'bengaluru';
+    if (typeof window === 'undefined') return 'hyderabad';
     const saved = localStorage.getItem('ir_city');
-    return (saved as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack' | null) ?? 'bengaluru';
+    return (saved as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack' | null) ?? 'hyderabad';
   });
   const geocodeCacheRef = useRef<Map<string, string>>(new Map());
   const [mapToast, setMapToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -177,9 +177,9 @@ export default function RefinedMapEngine() {
   };
 
   const [viewState, setViewState] = useState({
-    longitude: cityConfig.bengaluru.longitude,
-    latitude: cityConfig.bengaluru.latitude,
-    zoom: cityConfig.bengaluru.zoom,
+    longitude: cityConfig.hyderabad.longitude,
+    latitude: cityConfig.hyderabad.latitude,
+    zoom: cityConfig.hyderabad.zoom,
     pitch: 0
   });
 
