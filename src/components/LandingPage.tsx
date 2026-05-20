@@ -173,12 +173,13 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       delay: 0.5
     });
 
-    // Anti-Broker heading reveal on scroll
-    gsap.from('.anti-broker-heading', {
+    // Anti-Broker heading word-by-word reveal on scroll
+    gsap.from(['.word-reveal-1', '.word-reveal-2', '.word-reveal-3'], {
       opacity: 0,
-      y: 60,
-      duration: 0.8,
-      ease: 'power3.out',
+      y: 40,
+      duration: 0.6,
+      stagger: 0.08,
+      ease: 'back.out',
       scrollTrigger: {
         trigger: '.anti-broker-section',
         start: 'top 75%',
@@ -199,12 +200,14 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       }
     });
 
-    // Final CTA reveal on scroll
-    gsap.from('.final-cta-title', {
+    // Final CTA letter-cascade reveal on scroll
+    gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
       opacity: 0,
-      scale: 0.92,
-      duration: 1.2,
-      ease: 'expo.out',
+      y: 60,
+      rotate: -5,
+      duration: 0.8,
+      stagger: 0.12,
+      ease: 'back.out',
       scrollTrigger: {
         trigger: '.final-cta',
         start: 'top 65%',
@@ -327,7 +330,11 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                 Strategic Protocol
               </motion.div>
               <h2 className="anti-broker-heading text-headline-lg md:text-display-hero font-black text-on-background tracking-tighter uppercase leading-[0.9] text-left font-display">
-                The Anti-Broker Loop
+                <span className="word-reveal-1 inline-block">The</span>
+                {' '}
+                <span className="word-reveal-2 inline-block">Anti-Broker</span>
+                {' '}
+                <span className="word-reveal-3 inline-block">Loop</span>
               </h2>
             </div>
             <BentoGrid />
@@ -363,7 +370,14 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
            <div className="absolute inset-0 bg-primary/5 blur-[200px] animate-pulse" />
            <div className="max-w-container mx-auto relative z-10">
               <h2 className="final-cta-title text-4xl md:text-6xl lg:text-[10rem] font-black uppercase tracking-[calc(-0.06em)] mb-8 md:mb-16 leading-tight md:leading-none text-on-background font-display">
-                Take the <br className="hidden md:block"/> market back
+                <span className="cta-word-1 inline-block">Take</span>
+                {' '}
+                <span className="cta-word-2 inline-block">the</span>
+                <br className="hidden md:block"/>
+                {' '}
+                <span className="cta-word-3 inline-block">market</span>
+                {' '}
+                <span className="cta-word-4 inline-block">back</span>
               </h2>
               <StickerButton
                 onClick={handleDeploy}
