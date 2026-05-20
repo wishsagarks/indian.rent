@@ -9,6 +9,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Satellite, Loader2, CheckCircle2 } from 'lucide-react';
+import MobileScrollProgress from './animations/MobileScrollProgress';
 
 const GlobeAnalytics = dynamic(() => import('./ui/cobe-globe-analytics').then(m => ({ default: m.GlobeAnalytics })), {
   ssr: false,
@@ -230,6 +231,8 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
   return (
     <div ref={mainRef} className="bg-background text-on-background overflow-x-hidden antialiased font-sans relative pt-16">
+      <MobileScrollProgress />
+
       {/* Dynamic Background - Dark Tactical */}
       <div className="fixed inset-0 z-0 bg-parallax opacity-20 pointer-events-none">
          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
