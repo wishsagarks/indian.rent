@@ -333,7 +333,17 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
       prevBtnText: '← Previous',
       overlayOpacity: 0.6,
       onCloseClick: () => {
-        localStorage.setItem(`indian_rent_tour_dismissed_${tourName}`, 'true');
+        if (tourName) {
+          localStorage.setItem(`indian_rent_tour_dismissed_${tourName}`, 'true');
+        }
+        // Explicitly destroy the driver instance
+        driverInstance.destroy();
+      },
+      onFinish: () => {
+        if (tourName) {
+          localStorage.setItem(`indian_rent_tour_dismissed_${tourName}`, 'true');
+        }
+        driverInstance.destroy();
       },
     });
 
@@ -368,6 +378,11 @@ export function useDriverJS(tourName: keyof typeof TOURS | null = null) {
 
   const startTour = useCallback((name: keyof typeof TOURS) => {
     if (!isEnabledRef.current || !driverRef.current) return;
+
+    // Check if tour has been dismissed
+    const isDismissed = typeof window !== 'undefined' && localStorage.getItem(`indian_rent_tour_dismissed_${name}`) === 'true';
+    if (isDismissed) return;
+
     const steps = TOURS[name];
     // Filter steps based on current device size
     const filteredSteps = filterStepsByDevice(steps, isMobileRef.current);
