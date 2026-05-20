@@ -239,8 +239,8 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
           <div className="hidden md:flex items-center gap-8 font-technical">
             <Link href="/explore" className="text-primary font-bold border-b-2 border-primary pb-0.5 transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]">Interface</Link>
             <Link href="/analytics" className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]">Intelligence</Link>
-            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="#">Community</a>
-            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="#">Node Map</a>
+            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="#tactical-stats">Community</a>
+            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="/explore">Node Map</a>
           </div>
           <div className="flex items-center gap-4 md:gap-6">
             <div className="hidden md:flex font-technical text-[12px] font-black uppercase tracking-widest text-secondary flex items-center gap-2">
@@ -392,10 +392,10 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
              <div className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary opacity-60 ml-1 font-black">Product of WishLabs.in</div>
            </div>
            <div className="flex gap-12 font-technical text-[12px] uppercase tracking-widest opacity-60 font-medium">
-             <a href="#" className="hover:text-primary transition-colors">Documentation</a>
-             <a href="#" className="hover:text-primary transition-colors">Privacy</a>
+             <a href="/terms" className="hover:text-primary transition-colors">Documentation</a>
+             <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
              <Link href="/terms" className="hover:text-primary transition-colors">T&C</Link>
-             <a href="#" className="hover:text-primary transition-colors">HQ Support</a>
+             <a href="mailto:support@wishlabs.in" className="hover:text-primary transition-colors">HQ Support</a>
            </div>
            <div className="font-technical text-[10px] uppercase tracking-[0.4em] opacity-40 font-black">&copy; 2026 Direct Rental Protocol • A WishLabs Production</div>
          </div>

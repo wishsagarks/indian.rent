@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { Menu, Home, Map as MapIcon, LayoutDashboard, Info } from 'lucide-react';
 
 export default function UnifiedMenu() {
   const [showMenu, setShowMenu] = useState(false);
+
+  useEffect(() => {
+    if (!showMenu) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowMenu(false);
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [showMenu]);
 
   const menuItems = [
     { href: '/', label: 'HQ Home', icon: Home },
@@ -20,7 +29,8 @@ export default function UnifiedMenu() {
       <button
         onClick={() => setShowMenu(!showMenu)}
         className={`p-2 rounded-lg transition-all ${showMenu ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}
-        title="Navigation Menu"
+        aria-label="Navigation Menu"
+        aria-expanded={showMenu}
       >
         <Menu size={20} />
       </button>
@@ -31,6 +41,7 @@ export default function UnifiedMenu() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             className="absolute top-full left-0 mt-2 w-48 bg-surface border border-white/10 rounded-lg shadow-3xl overflow-hidden py-1 z-[60]"
+            role="menu"
           >
             {menuItems.map((item) => (
               <Link
