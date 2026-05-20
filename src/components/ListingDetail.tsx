@@ -4,11 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Banknote, Link as LinkIcon, Share2, CircleCheck as CheckCircle2, ChevronLeft, Check, QrCode, ShieldAlert, Star, MessageCircle, Send, Ruler, Calendar, Sofa, Users, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
 import { lockPlace, flagIntel, getFlatRatings, submitRating, getComments, addComment, getFlatDetails, getContributorPaymentDetails } from '@/app/actions/map-actions';
 import { rewardFromRent } from '@/lib/constants';
 import UnifiedMenu from './UnifiedMenu';
 import ThemeToggle from './ThemeToggle';
+import ShareButtons from './ShareButtons';
 import { useDriverJS } from '@/hooks/useDriverJS';
 
 interface ListingPageProps {
@@ -52,7 +52,6 @@ function relativeDate(iso: string): string {
 }
 
 export default function ListingDetail({ id, type }: ListingPageProps) {
-  const { isCopied, copy } = useCopyToClipboard();
   useDriverJS('listing');
 
   const [listing, setListing] = useState<any>(null);
@@ -83,13 +82,6 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     getComments(id).then(setComments);
   }, [id]);
 
-  const handleShare = () => copy(window.location.href);
-
-  const handleWhatsAppShare = () => {
-    const text = `Found a rental on indian.rent — no broker fees! Check it out: ${window.location.href}`;
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-  };
 
   const handleLockPlace = async () => {
     setIsLocking(true);
@@ -165,12 +157,18 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
           <span className="hidden sm:block text-[7px] uppercase tracking-[0.4em] text-primary/40 font-black">by WishLabs</span>
         </div>
         <div className="flex gap-2 min-w-fit items-center">
-          <button onClick={handleShare} title="Copy link" className="p-2 sm:p-2.5 rounded-lg text-primary hover:scale-110 active:scale-90 transition-all border border-outline/20 relative">
-            {isCopied ? <Check size={16} className="sm:w-[18px] sm:h-[18px]" /> : <Share2 size={16} className="sm:w-[18px] sm:h-[18px]" />}
-          </button>
-          <button onClick={handleWhatsAppShare} title="Share on WhatsApp" className="p-2 sm:p-2.5 rounded-lg text-emerald-400 hover:scale-110 active:scale-90 transition-all border border-emerald-500/30 hover:border-emerald-400/60 relative">
-            <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
-          </button>
+          {listing && (
+            <ShareButtons
+              listingId={id}
+              rent={listing.rentAmount}
+              bhk={listing.bhk ? `${listing.bhk} BHK` : 'Property'}
+              location={listing.buildingAddress || listing.buildingCity || 'Hyderabad'}
+              buildingName={listing.buildingName || `Flat ${listing.flatNumber}`}
+              variant="icon-group"
+              size="sm"
+              showLabel={false}
+            />
+          )}
           <ThemeToggle />
         </div>
       </div>
@@ -244,21 +242,6 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     <div className="min-h-screen bg-background text-on-background pb-24">
       {navBar}
 
-      {/* Copy Toast Notification */}
-      <AnimatePresence>
-        {isCopied && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 px-4 py-3 bg-secondary/20 border border-secondary/40 rounded-lg shadow-xl backdrop-blur-sm"
-          >
-            <Check size={16} className="text-secondary" />
-            <span className="font-technical text-[11px] font-black uppercase tracking-widest text-secondary">Link Copied!</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Error/Success Toast */}
       <AnimatePresence>
@@ -526,12 +509,16 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                     {isLocking ? 'Processing...' : listing.status === 'occupied' ? 'Already Locked' : 'I Have Locked This Place'}
                   </button>
 
-                  <button
-                    onClick={handleWhatsAppShare}
-                    className="w-full py-5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-emerald-400 flex items-center justify-center gap-3 transition-all active:scale-[0.98] hover:bg-emerald-500/20"
-                  >
-                    <MessageCircle size={16} strokeWidth={3} /> Share on WhatsApp
-                  </button>
+                  <ShareButtons
+                    listingId={id}
+                    rent={listing.rentAmount}
+                    bhk={listing.bhk ? `${listing.bhk} BHK` : 'Property'}
+                    location={listing.buildingAddress || listing.buildingCity || 'Hyderabad'}
+                    buildingName={listing.buildingName || `Flat ${listing.flatNumber}`}
+                    variant="button"
+                    size="md"
+                    showLabel={true}
+                  />
                 </>
               )}
 

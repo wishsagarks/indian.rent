@@ -13,6 +13,7 @@ import MetroOverlay from './MetroOverlay';
 import CircleAreaSelector from './CircleAreaSelector';
 import LiveStatsPanel from './LiveStatsPanel';
 import ConsentSplash from './ConsentSplash';
+import ShareButtons from '@/components/ShareButtons';
 import Link from 'next/link';
 import { Plus, RefreshCcw, Search, MapPin as MapPinIcon, Heart, Link as LinkIcon, Award, X, Settings, Crosshair, Navigation, SlidersHorizontal, Train, BarChart3, Users, Share2, Trash2, Bell, Menu, LayoutDashboard, Info, Landmark, Shield, ShieldAlert, Building2, Home, Hotel, AlertCircle, MessageCircle } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
@@ -1514,16 +1515,18 @@ export default function RefinedMapEngine() {
                     <Link href={`/flat/${selectedProperty.id}`} className="block w-full mb-3">
                       <button className="w-full py-4 bg-primary text-on-primary rounded-lg font-black transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] shadow-lg border border-white/20 active:scale-[0.98]"><LinkIcon size={14} strokeWidth={3} /> View Details</button>
                     </Link>
-                    <button
-                      onClick={() => {
-                        const text = `Check out this rental on indian.rent — no broker fees! https://${window.location.hostname}/flat/${selectedProperty.id}`;
-                        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-                        window.open(url, '_blank');
-                      }}
-                      className="w-full py-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg font-black text-emerald-400 uppercase tracking-[0.2em] text-[10px] mb-3 flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/20"
-                    >
-                      <MessageCircle size={14} strokeWidth={2} /> Share on WhatsApp
-                    </button>
+                    <div className="mb-3">
+                      <ShareButtons
+                        listingId={selectedProperty.id}
+                        rent={selectedProperty.rent}
+                        bhk={selectedProperty.isStacked ? `${selectedProperty.flatCount} Units` : (selectedProperty.bhk || 'Property')}
+                        location={selectedProperty.area || selectedProperty.buildingCity || 'Hyderabad'}
+                        buildingName={selectedProperty.name}
+                        variant="compact"
+                        size="md"
+                        fullUrl={`https://${typeof window !== 'undefined' ? window.location.hostname : 'indian.rent'}/flat/${selectedProperty.id}`}
+                      />
+                    </div>
                     {selectedProperty.ipHash === ipHash && (
                       <button onClick={() => handleDeletePin(selectedProperty.id)} className="w-full py-3 bg-red-500/10 border border-red-500/20 rounded-lg font-black text-red-400 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 transition-all hover:bg-red-500/20">
                         <Trash2 size={12} /> Delete My Pin
