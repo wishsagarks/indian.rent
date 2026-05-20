@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, ScatterChart, Scatter } from 'recharts';
 import { TrendingUp, AlertCircle } from 'lucide-react';
 
@@ -13,7 +14,13 @@ interface ChartProps {
 
 export function SupplyDemandChart({ data, title, description }: ChartProps) {
   return (
-    <div className="bg-surface border border-white/10 rounded-lg p-6 space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: 'easeOut' }}
+      className="bg-surface border border-white/10 rounded-lg p-6 space-y-4"
+    >
       <div>
         <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
         {description && <p className="text-xs text-on-surface-variant mt-1">{description}</p>}
@@ -32,13 +39,19 @@ export function SupplyDemandChart({ data, title, description }: ChartProps) {
           <Line type="monotone" dataKey="Seekers" stroke="#2f8001" strokeWidth={2} dot={{ r: 4 }} />
         </LineChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   );
 }
 
 export function PriceDistributionChart({ data, title, description }: ChartProps) {
   return (
-    <div className="bg-surface border border-white/10 rounded-lg p-6 space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+      className="bg-surface border border-white/10 rounded-lg p-6 space-y-4"
+    >
       <div>
         <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
         {description && <p className="text-xs text-on-surface-variant mt-1">{description}</p>}
@@ -59,7 +72,7 @@ export function PriceDistributionChart({ data, title, description }: ChartProps)
           <Bar dataKey="Average" fill="rgba(47,248,1,0.5)" />
         </BarChart>
       </ResponsiveContainer>
-    </div>
+    </motion.div>
   );
 }
 

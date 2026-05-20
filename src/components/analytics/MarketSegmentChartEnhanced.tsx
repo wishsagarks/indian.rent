@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Info } from 'lucide-react';
 
@@ -32,7 +33,13 @@ export default function MarketSegmentChartEnhanced({ data, title, description }:
   };
 
   return (
-    <div className="bg-surface border border-white/10 rounded-lg p-6 space-y-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, ease: 'easeOut', delay: 0.1 }}
+      className="bg-surface border border-white/10 rounded-lg p-6 space-y-4"
+    >
       <div>
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-black uppercase tracking-widest text-primary font-technical">{title}</h3>
@@ -131,6 +138,6 @@ export default function MarketSegmentChartEnhanced({ data, title, description }:
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
