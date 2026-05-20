@@ -281,7 +281,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
           <div className="hidden md:flex items-center gap-8 font-technical">
             <Link href="/explore" className="text-primary font-bold border-b-2 border-primary pb-0.5 transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]">Interface</Link>
             <Link href="/analytics" className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]">Intelligence</Link>
-            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="#tactical-stats">Engagement</a>
+            <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="/terms">Terms & Conditions</a>
             <a className="text-on-surface-variant font-medium hover:text-primary transition-all hover:scale-105 active:scale-95 uppercase tracking-[0.1em] text-[12px]" href="/explore">Node Map</a>
           </div>
           <div className="flex items-center gap-4 md:gap-6">
