@@ -20,7 +20,6 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
     shouldReduceComplexity: false,
   });
   const isMobileRef = useRef(typeof window !== 'undefined' && window.innerWidth < 768);
-  const tickerFnRef = useRef<any>(null);
 
   useLenis((lenis) => {
     lenisRef.current = lenis;
@@ -29,13 +28,9 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!lenisRef.current) return;
 
-    // Proxy scroll to GSAP ScrollTrigger
-    const update = () => ScrollTrigger.update();
     const lenis = lenisRef.current;
-
-    // Create ticker function once and reuse same reference
+    const update = () => ScrollTrigger.update();
     const tickerFn = (time: number) => lenis.raf(time * 1000);
-    tickerFnRef.current = tickerFn;
 
     lenis.on('scroll', update);
     gsap.ticker.add(tickerFn);
@@ -43,7 +38,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
 
     return () => {
       lenis.off('scroll', update);
-      gsap.ticker.remove(tickerFnRef.current);
+      gsap.ticker.remove(tickerFn);
     };
   }, []);
 
@@ -97,7 +92,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
 
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   return (
-    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2, autoRaf: false }}>
+    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2 }}>
       <ScrollTriggerProxy>
         {children}
       </ScrollTriggerProxy>
