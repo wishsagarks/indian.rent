@@ -369,21 +369,10 @@ export default function RefinedMapEngine() {
     }
 
     const supabase = createClient();
-    try {
-      const channel = supabase.channel('map-snapshot-changes').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'map_snapshot', filter: 'id=eq.1' }, (payload: any) => {
-        if (payload.new && (payload.new as any).data) processIntelData((payload.new as any).data);
-      }).subscribe((status) => {
-        if (status === 'CHANNEL_ERROR') {
-          console.warn('Realtime channel error - falling back to polling');
-          // Fall back to REST polling if WebSocket fails
-        }
-      });
-      return () => { supabase.removeChannel(channel); };
-    } catch (error) {
-      console.warn('Failed to subscribe to realtime updates:', error);
-      // Continue without realtime if subscription fails
-      return () => {};
-    }
+    const channel = supabase.channel('map-snapshot-changes').on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'map_snapshot', filter: 'id=eq.1' }, (payload: any) => {
+      if (payload.new && (payload.new as any).data) processIntelData((payload.new as any).data);
+    }).subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [processIntelData, consented]);
 
   // Refresh data when city changes to ensure latest data for selected city
