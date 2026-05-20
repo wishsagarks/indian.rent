@@ -1,3 +1,14 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | indian.rent",
+  description: "Data protection and privacy practices for indian.rent. Learn how we collect, use, and safeguard your information.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background text-on-background">

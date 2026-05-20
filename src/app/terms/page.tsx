@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import React from 'react';
 import Link from 'next/link';
 import { ChevronLeft, Shield } from 'lucide-react';
 import UnifiedMenu from '@/components/UnifiedMenu';
 import ThemeToggle from '@/components/ThemeToggle';
+
+export const metadata: Metadata = {
+  title: "Terms of Service | indian.rent",
+  description: "Terms of engagement and community guidelines for indian.rent. Decentralized intelligence grid protocol.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function TermsPage() {
   return (
