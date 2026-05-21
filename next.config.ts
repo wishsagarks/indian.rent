@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
       { protocol: 'https', hostname: '*.supabase.co' },
       { protocol: 'https', hostname: 'maps.googleapis.com' },
+      { protocol: 'https', hostname: 'api.qrserver.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 3600,

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Banknote, Link as LinkIcon, Share2, CircleCheck as CheckCircle2, ChevronLeft, Check, QrCode, ShieldAlert, Star, MessageCircle, Send, Ruler, Calendar, Sofa, Users, RefreshCcw } from 'lucide-react';
 import Link from 'next/link';
@@ -274,8 +275,13 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
       <main className="pt-24 px-3 sm:px-4 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 md:gap-8 text-left">
         {/* Left */}
         <div className="space-y-6">
-          <motion.div data-tour="listing-images" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="aspect-video w-full rounded-lg overflow-hidden border border-outline/20 p-1.5 bg-surface">
-            <img src={PLACEHOLDER_IMAGE} alt={listing.buildingName} className="w-full h-full object-cover rounded-md" />
+          <motion.div data-tour="listing-images" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative aspect-video w-full rounded-lg overflow-hidden border border-outline/20 p-1.5 bg-surface">
+            <Image
+              src={PLACEHOLDER_IMAGE}
+              alt={listing.buildingName}
+              fill
+              className="object-cover rounded-md"
+            />
           </motion.div>
 
           <div className="bg-surface border border-outline/20 rounded-lg p-4 sm:p-6 md:p-8 space-y-6">
@@ -561,7 +567,13 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiLink)}&size=200x200`;
                     return (
                       <>
-                        <img src={qrUrl} alt="UPI Payment QR Code" className="w-40 h-40 mx-auto rounded-md" />
+                        <Image
+                          src={qrUrl}
+                          alt="UPI Payment QR Code"
+                          width={160}
+                          height={160}
+                          className="mx-auto rounded-md"
+                        />
                         <div className="font-technical text-[10px] uppercase tracking-widest text-primary font-black">Scan to Pay Good Faith Reward</div>
                         <div className="text-2xl font-black text-on-surface tracking-tighter">₹{reward.toLocaleString()}</div>
                         <a href={upiLink} className="w-full block">

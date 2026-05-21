@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { MapPin, Banknote, Share2, MessageCircle, Copy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import ShareButtons from './ShareButtons';
@@ -56,10 +57,11 @@ export default function PropertyCard({
         className={`bg-surface border border-outline/20 rounded-lg shadow-xl overflow-hidden ${className}`}
       >
         <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden group">
-          <img
+          <Image
             src={property.image || PLACEHOLDER_IMAGE}
             alt={property.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
           {property.isNew && (
             <div className="absolute top-2 left-2 bg-emerald-500/90 text-white px-2 py-1 rounded text-[8px] font-black uppercase tracking-wider">
@@ -112,11 +114,12 @@ export default function PropertyCard({
         whileHover={{ y: -4 }}
         className={`bg-surface border border-outline/20 rounded-lg overflow-hidden transition-all hover:shadow-lg ${className}`}
       >
-        <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden group">
-          <img
+        <div className="relative aspect-video bg-gradient-to-br from-primary/20 to-primary/5 overflow-hidden group">
+          <Image
             src={property.image || PLACEHOLDER_IMAGE}
             alt={property.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         </div>
 
@@ -159,10 +162,11 @@ export default function PropertyCard({
         className={`bg-surface border border-outline/20 rounded-lg overflow-hidden transition-all hover:shadow-xl ${className}`}
       >
         <div className="relative aspect-square bg-gradient-to-br from-primary/20 to-primary/5 group cursor-pointer">
-          <img
+          <Image
             src={property.image || PLACEHOLDER_IMAGE}
             alt={property.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-300"
           />
           {property.rating && (
             <div className="absolute top-3 left-3 bg-amber-400/90 text-on-background px-2 py-1 rounded-full text-[9px] font-black flex items-center gap-1">
@@ -210,11 +214,14 @@ export default function PropertyCard({
   // Default expanded variant
   return (
     <motion.div className={`bg-surface border border-outline/20 rounded-lg overflow-hidden ${className}`}>
-      <img
-        src={property.image || PLACEHOLDER_IMAGE}
-        alt={property.name}
-        className="w-full aspect-video object-cover"
-      />
+      <div className="relative w-full aspect-video">
+        <Image
+          src={property.image || PLACEHOLDER_IMAGE}
+          alt={property.name}
+          fill
+          className="object-cover"
+        />
+      </div>
 
       <div className="p-6 space-y-6">
         <div>
