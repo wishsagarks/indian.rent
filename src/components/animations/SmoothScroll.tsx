@@ -13,6 +13,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
   const lastScrollY = useRef(0);
   const lastScrollTime = useRef(0);
   const velocityRef = useRef(0);
+  const prevVelocityRef = useRef(0);
   const [velocityState, setVelocityState] = useState<ScrollVelocityContextType>({
     velocity: 0,
     isFastScroll: false,
@@ -42,7 +43,6 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Track scroll velocity and hide nav on scroll down
   useEffect(() => {
     if (!lenisRef.current) return;
 
@@ -50,16 +50,14 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
       const now = Date.now();
       const deltaTime = now - lastScrollTime.current;
 
-      // Calculate velocity in pixels per millisecond
       const deltaScroll = Math.abs(scroll - lastScrollY.current);
       const pixelsPerMs = deltaTime > 0 ? deltaScroll / deltaTime : 0;
 
-      // Smooth velocity using exponential moving average
-      const smoothedVelocity = pixelsPerMs * 0.7 + (velocityRef.current * 0.3);
-      const isFastScroll = smoothedVelocity > 0.8; // fast scroll threshold
-      const isSlowScroll = smoothedVelocity < 0.2; // slow scroll threshold
+      const smoothedVelocity = pixelsPerMs * 0.7 + (prevVelocityRef.current * 0.3);
+      const isFastScroll = smoothedVelocity > 0.8;
+      const isSlowScroll = smoothedVelocity < 0.2;
 
-      velocityRef.current = smoothedVelocity;
+      prevVelocityRef.current = smoothedVelocity;
 
       setVelocityState({
         velocity: smoothedVelocity,
@@ -68,7 +66,6 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
         shouldReduceComplexity: isMobileRef.current && isFastScroll,
       });
 
-      // Hide nav on scroll down
       const isScrollingDown = scroll > lastScrollY.current && scroll > 80;
       const nav = document.querySelector('nav');
       if (nav) {
@@ -92,7 +89,7 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
 
 export default function SmoothScroll({ children }: { children: ReactNode }) {
   return (
-    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2 }}>
+    <ReactLenis root options={{ lerp: 0.18, duration: 0.6, syncTouch: true, wheelMultiplier: 1.2, autoRaf: false }}>
       <ScrollTriggerProxy>
         {children}
       </ScrollTriggerProxy>
