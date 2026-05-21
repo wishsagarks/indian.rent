@@ -1204,26 +1204,6 @@ export default function RefinedMapEngine() {
         )}
       </AnimatePresence>
 
-      {/* Add Property HUD Overlay (Search) */}
-      <AnimatePresence>
-        {isAddingProperty && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-12 md:top-6 left-1/2 z-[110] w-[calc(100%-2rem)] max-w-lg"
-          >
-            <div className="bg-background backdrop-blur-xl border border-primary/20 rounded-lg p-2 shadow-3xl">
-              <PlaceAutocomplete onPlaceSelect={handlePlaceSelect} className="skeuo-concave" />
-              <div className="mt-2 px-3 flex justify-between items-center">
-                <span className="font-technical text-[8px] uppercase tracking-[0.3em] text-primary font-black">Search for building location</span>
-                <button onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="text-[8px] uppercase tracking-[0.3em] text-on-surface-variant hover:text-primary font-black">Cancel</button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Empty State Message */}
       {filteredPoints.length === 0 && clusters.length === 0 && !isAddingProperty && (
         <motion.div
