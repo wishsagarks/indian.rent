@@ -83,6 +83,7 @@ export default function RefinedMapEngine() {
   const [areaStatsCenter, setAreaStatsCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [showLiveStats, setShowLiveStats] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [newlyCreatedFlatId, setNewlyCreatedFlatId] = useState<string | null>(null);
   const [showNotifyModal, setShowNotifyModal] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState('');
   const [notifyRadius, setNotifyRadius] = useState(5);
@@ -602,6 +603,7 @@ export default function RefinedMapEngine() {
       } else {
         setIsAddingProperty(false);
         setAddFormInitialData(null);
+        setNewlyCreatedFlatId(result.flatId);
         setShowShareModal(true);
         fetchIntel();
       }
@@ -1137,28 +1139,31 @@ export default function RefinedMapEngine() {
       <AnimatePresence>
         {showShareModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[150] flex items-center justify-center">
-            <div onClick={() => setShowShareModal(false)} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+            <div onClick={() => { setShowShareModal(false); setNewlyCreatedFlatId(null); if (newlyCreatedFlatId) window.location.href = `/flat/${newlyCreatedFlatId}`; }} className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="relative bg-surface border border-white/10 rounded-lg p-8 max-w-sm w-full mx-4 shadow-2xl text-center">
               <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MapPinIcon size={24} className="text-primary" />
               </div>
               <h3 className="text-xl font-black text-on-surface uppercase tracking-tighter mb-2">Pin Dropped!</h3>
+              {newlyCreatedFlatId && <p className="text-on-surface-variant text-xs mb-4 font-technical">ID: {newlyCreatedFlatId.slice(0, 8)}</p>}
               <p className="text-on-surface-variant text-sm mb-6">Help others find honest rents — share this with your groups</p>
               <button
                 onClick={() => {
-                  const text = `Found indian.rent — real rents from real people, no brokers, no signup. Drop your rent intel: ${window.location.origin}/explore`;
+                  const flatLink = newlyCreatedFlatId ? `${window.location.origin}/flat/${newlyCreatedFlatId}` : `${window.location.origin}/explore`;
+                  const text = `Found this rent on indian.rent — real rents from real people, no brokers, no signup. Check it out: ${flatLink}`;
                   const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
                   window.open(url, '_blank');
                   setShowShareModal(false);
+                  if (newlyCreatedFlatId) setTimeout(() => window.location.href = `/flat/${newlyCreatedFlatId}`, 500);
                 }}
                 className="w-full py-3 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 mb-3 transition-all hover:bg-emerald-500/20"
               >
                 <MessageCircle size={14} /> Share on WhatsApp
               </button>
-              <button onClick={handleShare} className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 mb-3">
+              <button onClick={() => { handleShare(); if (newlyCreatedFlatId) setTimeout(() => window.location.href = `/flat/${newlyCreatedFlatId}`, 500); }} className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 mb-3">
                 <Share2 size={14} /> Copy Share Message
               </button>
-              <button onClick={() => setShowShareModal(false)} className="w-full py-3 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-on-surface-variant">Close</button>
+              <button onClick={() => { setShowShareModal(false); setNewlyCreatedFlatId(null); if (newlyCreatedFlatId) window.location.href = `/flat/${newlyCreatedFlatId}`; }} className="w-full py-3 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-on-surface-variant">View Listing</button>
             </motion.div>
           </motion.div>
         )}
