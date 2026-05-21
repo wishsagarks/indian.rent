@@ -9,7 +9,6 @@ import { ScrollVelocityContext, ScrollVelocityContextType } from '@/lib/scroll-v
 gsap.registerPlugin(ScrollTrigger);
 
 function ScrollTriggerProxy({ children }: { children: ReactNode }) {
-  const lenisRef = useRef<any>(null);
   const lastScrollY = useRef(0);
   const lastScrollTime = useRef(0);
   const velocityRef = useRef(0);
@@ -22,29 +21,43 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
   });
   const isMobileRef = useRef(typeof window !== 'undefined' && window.innerWidth < 768);
 
-  useLenis((lenis) => {
-    lenisRef.current = lenis;
-  });
+  // Get Lenis instance directly — returns null until ReactLenis mounts
+  const lenisInstance = useLenis();
 
+  // Register ticker callback once instance is available
   useEffect(() => {
-    if (!lenisRef.current) return;
+    if (!lenisInstance) return;
 
-    const lenis = lenisRef.current;
     const update = () => ScrollTrigger.update();
-    const tickerFn = (time: number) => lenis.raf(time * 1000);
+    const tickerFn = (time: number) => lenisInstance.raf(time * 1000);
 
-    lenis.on('scroll', update);
+    lenisInstance.on('scroll', update);
     gsap.ticker.add(tickerFn);
     gsap.ticker.lagSmoothing(0);
 
-    return () => {
-      lenis.off('scroll', update);
-      gsap.ticker.remove(tickerFn);
-    };
-  }, []);
+    // Set up ScrollTrigger proxy for proper scroll detection
+    ScrollTrigger.scrollerProxy(document.documentElement, {
+      scrollTop(value?: number) {
+        if (arguments.length && value !== undefined) {
+          lenisInstance.scrollTo(value, { immediate: true });
+        }
+        return lenisInstance.scroll;
+      },
+      getBoundingClientRect() {
+        return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+      },
+    });
 
+    return () => {
+      lenisInstance.off('scroll', update);
+      gsap.ticker.remove(tickerFn);
+      ScrollTrigger.scrollerProxy(null);
+    };
+  }, [lenisInstance]); // Re-run when instance becomes available
+
+  // Track scroll velocity and nav hide behavior
   useEffect(() => {
-    if (!lenisRef.current) return;
+    if (!lenisInstance) return;
 
     const handleScroll = ({ scroll, velocity }: { scroll: number; velocity: number }) => {
       const now = Date.now();
@@ -76,9 +89,9 @@ function ScrollTriggerProxy({ children }: { children: ReactNode }) {
       lastScrollTime.current = now;
     };
 
-    lenisRef.current.on('scroll', handleScroll);
-    return () => lenisRef.current?.off('scroll', handleScroll);
-  }, []);
+    lenisInstance.on('scroll', handleScroll);
+    return () => lenisInstance.off('scroll', handleScroll);
+  }, [lenisInstance]);
 
   return (
     <ScrollVelocityContext.Provider value={velocityState}>

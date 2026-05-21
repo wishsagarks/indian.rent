@@ -259,10 +259,10 @@ export async function getFlatDetails(flatId: string) {
       created_at,
       updated_at,
       floor_id,
-      floors!inner (
+      floors (
         floor_number,
         building_id,
-        buildings!inner (
+        buildings (
           id,
           name,
           category,
@@ -286,22 +286,51 @@ export async function getFlatDetails(flatId: string) {
       .maybeSingle();
 
     if (snapshotData?.data && Array.isArray(snapshotData.data)) {
-      const cached = snapshotData.data.find((item: any) => item.id === flatId);
-      if (cached) {
+      // Snapshot is building-centric: buildings[].floors[].flats[]
+      // Walk the structure to find flat by ID
+      let cachedFlat: any = null;
+      let cachedBuilding: any = null;
+      let cachedFloor: any = null;
+
+      for (const building of snapshotData.data) {
+        for (const floor of building.floors || []) {
+          const flat = (floor.flats || []).find((f: any) => f.id === flatId);
+          if (flat) {
+            cachedFlat = flat;
+            cachedBuilding = building;
+            cachedFloor = floor;
+            break;
+          }
+        }
+        if (cachedFlat) break;
+      }
+
+      if (cachedFlat) {
         console.log('Found flat in map_snapshot cache');
         return {
-          id: cached.id,
-          flatNumber: cached.flat_number || 'N/A',
-          status: cached.status || 'vacant',
-          rentAmount: cached.rent_amount,
-          bhk: cached.bhk,
-          furnishing: cached.furnishing,
-          sizeSqft: cached.size_sqft,
-          buildingName: cached.name,
-          buildingCity: cached.city,
-          buildingAddress: cached.address,
-          buildingCategory: cached.category,
-          createdAt: cached.created_at,
+          id: cachedFlat.id,
+          flatNumber: cachedFlat.flat_number || 'N/A',
+          status: cachedFlat.status || 'vacant',
+          rentAmount: cachedFlat.rent_amount,
+          bhk: cachedFlat.bhk,
+          furnishing: cachedFlat.furnishing,
+          sizeSqft: cachedFlat.size_sqft,
+          maintenanceExtra: cachedFlat.maintenance_extra,
+          maintenanceAmount: cachedFlat.maintenance_amount,
+          tenantPreference: cachedFlat.tenant_preference,
+          petsAllowed: cachedFlat.pets_allowed,
+          depositMonths: cachedFlat.deposit_months,
+          isTransparencyPin: cachedFlat.is_transparency_pin,
+          noBrokerLink: cachedFlat.no_broker_link,
+          flatmatesLink: cachedFlat.flatmates_link,
+          contributorName: cachedFlat.contributor_name,
+          createdAt: cachedFlat.created_at,
+          floorNumber: cachedFloor.floor_number,
+          buildingId: cachedBuilding.id,
+          buildingName: cachedBuilding.name,
+          buildingCity: cachedBuilding.city,
+          buildingAddress: cachedBuilding.address,
+          buildingCategory: cachedBuilding.category,
           isCached: true, // Flag to show banner
         };
       }

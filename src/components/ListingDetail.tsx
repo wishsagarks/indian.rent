@@ -20,6 +20,7 @@ interface ListingPageProps {
 }
 
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop';
+const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 const FURNISHING_LABELS: Record<string, string> = {
   furnished: 'Furnished',
@@ -246,7 +247,13 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const extraSpecs = [
     listing.furnishing && { label: 'Furnishing', value: FURNISHING_LABELS[listing.furnishing] || listing.furnishing, icon: Sofa },
     listing.sizeSqft && { label: 'Size', value: `${listing.sizeSqft} sq.ft`, icon: Ruler },
-    listing.maintenanceExtra && { label: 'Maintenance', value: listing.maintenanceAmount ? `₹${listing.maintenanceAmount.toLocaleString()}/mo` : 'Variable', icon: Banknote },
+    (listing.maintenanceExtra || listing.maintenanceAmount) && {
+      label: 'Maintenance',
+      value: listing.maintenanceAmount
+        ? `₹${listing.maintenanceAmount.toLocaleString()}/mo`
+        : (listing.maintenanceExtra ? 'Extra' : '—'),
+      icon: Banknote
+    },
     listing.availabilityDate && { label: 'Available', value: new Date(listing.availabilityDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), icon: Calendar },
     listing.flatmateNeeded && { label: 'Flatmate', value: 'Needed', icon: Users },
   ].filter(Boolean) as { label: string; value: string; icon: any }[];
@@ -292,9 +299,10 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
           <motion.div data-tour="listing-images" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative aspect-video w-full rounded-lg overflow-hidden border border-outline/20 p-1.5 bg-surface">
             <Image
               src={PLACEHOLDER_IMAGE}
-              alt={listing.buildingName}
+              alt={`${listing.buildingName} location`}
               fill
               className="object-cover rounded-md"
+              priority
             />
           </motion.div>
 
@@ -453,7 +461,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
             </div>
 
             {comments.length > 0 ? (
-              <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
+              <div data-lenis-prevent className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar">
                 {comments.map(c => (
                   <div key={c.id} className="bg-on-surface/5 border border-outline/10 rounded-lg p-4">
                     <p className="text-xs text-on-surface font-medium">{c.content}</p>
