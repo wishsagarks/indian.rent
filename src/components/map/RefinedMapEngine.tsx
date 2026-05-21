@@ -594,15 +594,22 @@ export default function RefinedMapEngine() {
   const handleAddPropertySubmit = async (data: any) => {
     setIsSubmittingProperty(true);
     setLoading(true);
-    const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
-    const result = await deployNode(payload);
-    setIsSubmittingProperty(false);
-    if (result.error) { setMapToast({ message: result.error, type: 'error' }); setLoading(false); }
-    else {
-      setIsAddingProperty(false);
-      setAddFormInitialData(null);
-      setShowShareModal(true);
-      fetchIntel();
+    try {
+      const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
+      const result = await deployNode(payload);
+      if (result.error) {
+        setMapToast({ message: result.error, type: 'error' });
+      } else {
+        setIsAddingProperty(false);
+        setAddFormInitialData(null);
+        setShowShareModal(true);
+        fetchIntel();
+      }
+    } catch (err) {
+      setMapToast({ message: 'Submission failed. Please try again.', type: 'error' });
+    } finally {
+      setIsSubmittingProperty(false);
+      setLoading(false);
     }
   };
 

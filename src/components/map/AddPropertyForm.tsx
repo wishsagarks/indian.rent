@@ -171,6 +171,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                         updateData({
                           buildingName: place.name || formData.buildingName,
                           address: place.formatted_address || formData.address,
+                          existingBuildingId: null,
                         });
                       }
                     }}
@@ -197,6 +198,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                     }
                   }}
                   className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/10 h-10 sm:h-11"
+                  type="button"
                 >
                   <MapPin className="w-4 h-4" />
                   <span>Locate Me</span>
@@ -288,6 +290,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   />
                   <button
                     onClick={() => { if (formData.buildingName.trim()) setStep(2); }}
+            type="button"
                     disabled={!formData.buildingName.trim()}
                     className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] disabled:opacity-40 transition-all"
                   >
@@ -394,9 +397,12 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
               {/* Availability Date - OPTIONAL with checkbox */}
               <div className="space-y-4 text-left">
                 <button
+                  type="button"
                   onClick={() => {
                     if (formData.availabilityDate) {
                       updateData({ availabilityDate: '' });
+                    } else {
+                      updateData({ availabilityDate: new Date().toISOString().split('T')[0] });
                     }
                   }}
                   className="w-full flex items-center gap-3 p-4 rounded-lg border transition-all bg-surface-container-low/50 hover:border-primary/40 border-white/5"
@@ -595,13 +601,14 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
         )}
         <div className="flex gap-3 sm:gap-4">
           {step > 1 && !isSubmitting && (
-            <button onClick={prevStep} className="flex-1 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-lg text-on-surface font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] transition-all active:scale-95 flex items-center justify-center gap-2 font-technical hover:bg-white/10 min-h-[44px] sm:min-h-[48px]">
+            <button type="button" onClick={prevStep} className="flex-1 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-lg text-on-surface font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] transition-all active:scale-95 flex items-center justify-center gap-2 font-technical hover:bg-white/10 min-h-[44px] sm:min-h-[48px]">
               <ChevronLeft size={14} strokeWidth={3} className="sm:w-4 sm:h-4" /> Back
             </button>
           )}
           <button
+            type="button"
             onClick={step === 4 ? () => onSubmit(formData) : nextStep}
-            disabled={(step === 1 && !formData.category && !formData.existingBuildingId) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
+            disabled={(step === 1 && !formData.existingBuildingId && (!formData.category || !formData.buildingName.trim())) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
             className="flex-[2] py-3 sm:py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-2 disabled:opacity-20 border border-white/10 min-h-[44px] sm:min-h-[48px]"
           >
             {isSubmitting ? 'Deploying...' : (step === 4 ? 'Deploy Node' : 'Next')} {!isSubmitting && <ChevronRight size={14} strokeWidth={3} className="sm:w-4 sm:h-4" />}
