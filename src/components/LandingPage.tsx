@@ -253,6 +253,9 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
   return (
     <div ref={mainRef} className="bg-background text-on-background overflow-x-hidden antialiased font-sans relative pt-16">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-on-primary focus:rounded focus:outline-none">
+        Skip to content
+      </a>
       <MobileScrollProgress />
 
       {/* Dynamic Background - Dark Tactical with Parallax */}
@@ -262,7 +265,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       </div>
 
       {/* TopNavBar - DESIGN.md Centered Layout */}
-      <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background backdrop-blur-xl border-b border-primary/20 shadow-2xl px-mobile md:px-desktop">
+      <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background backdrop-blur-xl border-b border-primary/20 shadow-2xl px-mobile md:px-desktop" aria-label="Main navigation">
         <div className="max-w-container w-full flex justify-between items-center">
           <div className="flex items-center gap-3">
             <UnifiedMenu />
@@ -294,7 +297,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
       <TracingBeam checkpoints={[0, 0.2, 0.5, 0.8, 1]}>
         {/* Hero Section */}
-        <section data-tour="hero-section" className="hero-section relative min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-12 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
+        <section id="main-content" data-tour="hero-section" className="hero-section relative min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-12 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
           <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center mx-auto">
             <div className="flex flex-col gap-10">
               <div className="space-y-4">
