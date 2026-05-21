@@ -1028,10 +1028,10 @@ export default function RefinedMapEngine() {
 
                 <button onClick={() => setShowBrowseSearch(!showBrowseSearch)} data-tour="search-button" title="Search location" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showBrowseSearch ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`}><Search size={15} /></button>
                 <button onClick={() => setShowFilters(!showFilters)} data-tour="filter-button" className={`p-1.5 rounded-full md:rounded-lg transition-all ${showFilters ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Filters"><SlidersHorizontal size={15} /></button>
-                <div className="hidden lg:flex items-center gap-2">
+                <div className="hidden md:flex items-center gap-2">
                   <button onClick={() => setShowMetro(!showMetro)} data-tour="metro-button" className={`p-1.5 rounded-lg transition-all ${showMetro ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Metro"><Train size={14} /></button>
                   <button onClick={() => { setShowAreaStats(!showAreaStats); if (!showAreaStats && viewState) { setAreaStatsCenter({ lat: viewState.latitude, lng: viewState.longitude }); } }} data-tour="area-stats-button" className={`p-1.5 rounded-lg transition-all ${showAreaStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Area Stats"><BarChart3 size={14} /></button>
-                  <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-1.5 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Live Stats"><BarChart3 size={14} /></button>
+                  <button onClick={() => setShowLiveStats(!showLiveStats)} className={`p-1.5 rounded-lg transition-all ${showLiveStats ? 'bg-primary/20 text-primary' : 'text-on-surface-variant hover:text-primary'}`} title="Analytics"><BarChart3 size={14} /></button>
                   <button onClick={() => setShowNotifyModal(true)} className="p-1.5 rounded-lg transition-all text-on-surface-variant hover:text-primary" title="Notify"><Bell size={14} /></button>
                 </div>
                 <div className="w-px h-3 bg-white/10" />
@@ -1104,14 +1104,14 @@ export default function RefinedMapEngine() {
         {isAddingProperty && (
           <div className="fixed inset-0 z-[100] flex md:items-center items-end justify-start pointer-events-none">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => { setIsAddingProperty(false); setAddFormInitialData(null); }} className="absolute inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto" />
-            <motion.div 
-              initial={{ y: '100%', opacity: 0 }} 
-              animate={{ y: 0, opacity: 1 }} 
-              exit={{ y: '100%', opacity: 0 }} 
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }} 
-              className="relative w-full md:w-[440px] h-[85vh] md:h-full bg-surface md:border-r border-t md:border-t-0 border-white/10 shadow-3xl pointer-events-auto overflow-hidden flex flex-col rounded-t-3xl md:rounded-none"
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="relative w-full md:w-[440px] h-[85vh] md:h-full bg-surface md:border-r border-t md:border-t-0 border-white/10 shadow-3xl pointer-events-auto flex flex-col rounded-t-3xl md:rounded-none overflow-hidden"
             >
-              <div className="flex-1 overflow-hidden">
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
                 <AddPropertyForm
                   onClose={() => { setIsAddingProperty(false); setAddFormInitialData(null); }}
                   onSubmit={handleAddPropertySubmit}
@@ -1260,7 +1260,7 @@ export default function RefinedMapEngine() {
       )}
 
       {/* Map Legend */}
-      <div className="hidden lg:block fixed bottom-16 left-16 z-50">
+      <div className="fixed bottom-20 left-4 sm:left-16 z-50">
         <AnimatePresence>
           {showLegend && (
             <motion.div
@@ -1315,16 +1315,16 @@ export default function RefinedMapEngine() {
             setShowLegend(true);
             setLegendManual(true);
           }}
-          className={`w-11 h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-lg border shadow-lg flex items-center justify-center transition-all ${showLegend ? 'bg-primary text-background border-primary' : 'bg-surface text-on-surface-variant border-white/20 hover:text-primary hover:border-primary/40'}`}
           title="Show Map Legend"
         >
-          <Info size={18} />
+          <Info size={16} className="sm:w-5 sm:h-5" />
         </motion.button>
       </div>
 
       {/* Floating Action Buttons */}
       {!isAddingProperty && (
-        <div className="hidden lg:flex fixed bottom-16 right-16 z-50 flex-col gap-4">
+        <div className="flex fixed bottom-20 right-4 sm:right-16 z-50 flex-col gap-3 sm:gap-4">
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -1333,10 +1333,10 @@ export default function RefinedMapEngine() {
             whileTap={{ scale: 0.95 }}
             data-tour="locate-button"
             onClick={handleLocateMe}
-            className={`bg-surface text-on-surface-variant w-16 h-16 rounded-xl shadow-lg flex items-center justify-center border border-white/20 transition-all hover:text-primary hover:bg-primary/10 ${geolocating ? 'animate-pulse text-primary' : ''}`}
+            className={`bg-surface text-on-surface-variant w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl shadow-lg flex items-center justify-center border border-white/20 transition-all hover:text-primary hover:bg-primary/10 ${geolocating ? 'animate-pulse text-primary' : ''}`}
             title="Locate me"
           >
-            <Navigation size={26} />
+            <Navigation size={20} className="sm:w-6 sm:h-6" />
           </motion.button>
           <motion.button
             animate={{ y: [0, -10, 0] }}
@@ -1345,10 +1345,10 @@ export default function RefinedMapEngine() {
             whileTap={{ scale: 0.95 }}
             data-tour="add-property-button-desktop"
             onClick={() => setIsAddingProperty(true)}
-            className="bg-primary text-on-primary w-16 h-16 rounded-xl shadow-[0_30px_60px_-10px_rgba(0,102,255,0.4)] flex items-center justify-center border border-white/30"
+            className="bg-primary text-on-primary w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl shadow-[0_30px_60px_-10px_rgba(0,102,255,0.4)] flex items-center justify-center border border-white/30"
             title="Add property"
           >
-            <Plus size={30} strokeWidth={3} />
+            <Plus size={24} strokeWidth={3} className="sm:w-8 sm:h-8" />
           </motion.button>
 
           {/* Analytics Dashboard Button - Animated Promo */}
@@ -1370,7 +1370,7 @@ export default function RefinedMapEngine() {
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.95 }}
               data-tour="analytics-button"
-              className="bg-gradient-to-br from-primary to-blue-600 text-on-primary w-16 h-16 rounded-xl flex flex-col items-center justify-center border border-white/40 relative overflow-hidden group"
+              className="bg-gradient-to-br from-primary to-blue-600 text-on-primary w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl flex flex-col items-center justify-center border border-white/40 relative overflow-hidden group"
               title="Market Analytics Dashboard"
             >
               {/* Animated shine effect */}
@@ -1381,10 +1381,10 @@ export default function RefinedMapEngine() {
                 transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
                 className="relative z-10"
               >
-                <BarChart3 size={24} strokeWidth={2.5} />
+                <BarChart3 size={18} strokeWidth={2.5} className="sm:w-6 sm:h-6" />
               </motion.div>
 
-              <span className="text-[8px] font-black uppercase tracking-wider mt-0.5 relative z-10">Analytics</span>
+              <span className="text-[7px] sm:text-[8px] font-black uppercase tracking-wider mt-0 sm:mt-0.5 relative z-10">Analytics</span>
 
               {/* Blinking indicator dot */}
               <motion.div

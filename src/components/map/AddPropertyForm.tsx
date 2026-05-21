@@ -2,15 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X, Info, Building, IndianRupee } from 'lucide-react';
+import { Shield, ShieldAlert, Building2, Home, Hotel, ChevronRight, ChevronLeft, Check, Layers, Hash, Link as LinkIcon, Landmark, RefreshCcw, Sofa, Ruler, Calendar, Users, X, Info, Building, IndianRupee, Compass, MapPin, Search as SearchIcon } from 'lucide-react';
 import { findNearbyBuildings } from '@/app/actions/map-actions';
 import AnimatedFormInput from '@/components/form/AnimatedFormInput';
+import { PlaceAutocomplete } from './PlaceAutocomplete';
 
 interface AddPropertyFormProps {
   onClose: () => void;
   onSubmit: (data: any) => void;
   lat: number;
   lng: number;
+  onSearchPlace?: (place: any) => void;
+  onLocateGPS?: () => void;
   initialData?: {
     buildingName?: string;
     address?: string;
@@ -42,7 +45,7 @@ const FormInfoIcon = ({ text }: { text: string }) => {
   );
 };
 
-export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialData, isSubmitting = false }: AddPropertyFormProps) {
+export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialData, isSubmitting = false, onLocateGPS }: AddPropertyFormProps) {
   const [step, setStep] = useState(1);
   const [nearbyBuildings, setNearbyBuildings] = useState<any[]>([]);
   const [loadingNearby, setLoadingNearby] = useState(false);
@@ -115,23 +118,23 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
   ];
 
   return (
-    <div className="flex flex-col h-full bg-surface text-on-surface font-sans antialiased">
-      <div className="border-b border-white/5 bg-surface-container-low">
-        <div className="p-6 md:p-8 flex justify-between items-center">
-          <div>
-            <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-1">
+    <div className="flex flex-col h-full min-h-0 bg-surface text-on-surface font-sans antialiased overflow-hidden">
+      <div className="border-b border-white/5 bg-surface-container-low flex-shrink-0">
+        <div className="p-4 sm:p-6 md:p-8 flex justify-between items-start gap-4">
+          <div className="flex-1">
+            <div className="font-technical text-[8px] sm:text-[9px] uppercase tracking-[0.4em] text-primary font-black mb-1">
               Node Deployment // Step {step} of 4
             </div>
-            <h2 className="text-xl md:text-2xl font-black text-on-surface uppercase tracking-tighter leading-none font-display text-left">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-black text-on-surface uppercase tracking-tighter leading-tight font-display text-left">
               {steps[step - 1].title}
             </h2>
           </div>
-          <button onClick={onClose} className="p-2 -mr-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-on-surface/5 transition-all">
-            <X size={24} />
+          <button onClick={onClose} className="p-2 -mr-2 rounded-full text-on-surface-variant hover:text-on-surface hover:bg-on-surface/5 transition-all flex-shrink-0 touch-target-min">
+            <X size={20} className="sm:w-6 sm:h-6" />
           </button>
         </div>
         {/* Progress Bar */}
-        <div className="px-8 pb-6 space-y-2">
+        <div className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-6 space-y-2">
           <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden border border-white/5">
             <motion.div
               initial={{ width: 0 }}
@@ -147,7 +150,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 md:p-8 pb-32 md:pb-8 custom-scrollbar">
+      <div data-lenis-prevent className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6 md:p-8" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-8">
@@ -156,6 +159,48 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                 <p className="text-[10px] text-on-surface-variant leading-relaxed">
                   <strong>Already listed?</strong> Select your building below. <strong>New building?</strong> Scroll down to enter details.
                 </p>
+              </div>
+
+              {/* Search & Locate Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-black text-on-surface mb-2 uppercase tracking-wide">Find Your Building</label>
+                  <PlaceAutocomplete
+                    onPlaceSelect={(place) => {
+                      if (place.geometry?.location) {
+                        updateData({
+                          buildingName: place.name || formData.buildingName,
+                          address: place.formatted_address || formData.address,
+                        });
+                      }
+                    }}
+                    className="w-full"
+                  />
+                  <p className="text-[9px] text-on-surface-variant/60 mt-1 font-technical">Search for better accuracy</p>
+                </div>
+                <button
+                  onClick={() => {
+                    if ('geolocation' in navigator) {
+                      navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                          onLocateGPS?.();
+                        },
+                        (error) => {
+                          console.error('Geolocation error:', error);
+                        },
+                        {
+                          enableHighAccuracy: true,
+                          timeout: 10000,
+                          maximumAge: 0
+                        }
+                      );
+                    }
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs sm:text-sm font-black uppercase tracking-wider transition-all border border-white/10 h-10 sm:h-11"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Locate Me</span>
+                </button>
               </div>
 
               {formData.buildingName && (
@@ -284,9 +329,9 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   <Layers size={16} className="text-primary" />
                   <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-on-surface font-black">Floor</label>
                 </div>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-3">
                   {['G', '1', '2', '3', '4', '5', '6', '7+'].map((f) => (
-                    <button key={f} onClick={() => updateData({ floor: f })} className={`py-4 rounded-lg font-black transition-all border text-sm ${formData.floor === f ? 'bg-primary text-background border-primary shadow-lg shadow-primary/20 scale-105' : 'bg-white/5 border-white/5 text-on-surface hover:bg-primary/5'}`}>{f}</button>
+                    <button key={f} onClick={() => updateData({ floor: f })} className={`py-3 sm:py-4 rounded-lg font-black transition-all border text-xs sm:text-sm min-h-[40px] sm:min-h-[44px] ${formData.floor === f ? 'bg-primary text-background border-primary shadow-lg shadow-primary/20 scale-105' : 'bg-white/5 border-white/5 text-on-surface hover:bg-primary/5'}`}>{f}</button>
                   ))}
                 </div>
               </div>
@@ -312,9 +357,9 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">BHK</label>
                   <FormInfoIcon text="Bedroom-Hall-Kitchen. 1BHK = 1 bedroom + hall + kitchen. 5+ = 5 or more bedrooms." />
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-2 sm:gap-2.5">
                   {['1', '2', '3', '4', '5+'].map(b => (
-                    <button key={b} onClick={() => updateData({ bhk: b })} className={`py-3.5 rounded-lg font-black text-sm border transition-all ${formData.bhk === b ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{b}</button>
+                    <button key={b} onClick={() => updateData({ bhk: b })} className={`py-3 sm:py-3.5 rounded-lg font-black text-xs sm:text-sm border transition-all min-h-[40px] sm:min-h-[44px] ${formData.bhk === b ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{b}</button>
                   ))}
                 </div>
               </div>
@@ -326,9 +371,9 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-primary font-black">Furnishing</label>
                   <FormInfoIcon text="Furnished = all furniture. Semi = some furniture/fixtures. Unfurnished = bare space only." />
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                   {[{ id: 'furnished', label: 'Furnished' }, { id: 'semi-furnished', label: 'Semi' }, { id: 'unfurnished', label: 'Unfurnished' }].map(f => (
-                    <button key={f.id} onClick={() => updateData({ furnishing: f.id })} className={`py-3.5 rounded-lg font-black text-[10px] uppercase tracking-wider border transition-all ${formData.furnishing === f.id ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{f.label}</button>
+                    <button key={f.id} onClick={() => updateData({ furnishing: f.id })} className={`py-3 sm:py-3.5 rounded-lg font-black text-[9px] sm:text-[10px] uppercase tracking-wider border transition-all min-h-[40px] sm:min-h-[44px] ${formData.furnishing === f.id ? 'bg-primary text-background border-primary shadow-lg' : 'bg-white/5 border-white/5 hover:bg-primary/5'}`}>{f.label}</button>
                   ))}
                 </div>
               </div>
@@ -531,12 +576,12 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
         </AnimatePresence>
       </div>
 
-      <div className="p-6 border-t border-white/5 flex flex-col gap-4 bg-surface-container-low/50 mt-auto">
+      <div className="p-4 sm:p-6 border-t border-white/5 flex flex-col gap-4 bg-surface-container-low/50 flex-shrink-0">
         {isSubmitting && (
           <div className="w-full">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Deploying...</span>
-              <span className="font-technical text-[9px] uppercase tracking-widest text-primary font-black">Creating building</span>
+              <span className="font-technical text-[8px] sm:text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Deploying...</span>
+              <span className="font-technical text-[8px] sm:text-[9px] uppercase tracking-widest text-primary font-black">Creating building</span>
             </div>
             <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
               <motion.div
@@ -548,18 +593,18 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
             </div>
           </div>
         )}
-        <div className="flex gap-4">
+        <div className="flex gap-3 sm:gap-4">
           {step > 1 && !isSubmitting && (
-            <button onClick={prevStep} className="flex-1 py-4 bg-white/5 border border-white/10 rounded-lg text-on-surface font-black uppercase tracking-[0.3em] text-[10px] transition-all active:scale-95 flex items-center justify-center gap-3 font-technical">
-              <ChevronLeft size={16} strokeWidth={3} /> Back
+            <button onClick={prevStep} className="flex-1 py-3 sm:py-4 bg-white/5 border border-white/10 rounded-lg text-on-surface font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] transition-all active:scale-95 flex items-center justify-center gap-2 font-technical hover:bg-white/10 min-h-[44px] sm:min-h-[48px]">
+              <ChevronLeft size={14} strokeWidth={3} className="sm:w-4 sm:h-4" /> Back
             </button>
           )}
           <button
             onClick={step === 4 ? () => onSubmit(formData) : nextStep}
             disabled={(step === 1 && !formData.category && !formData.existingBuildingId) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
-            className="flex-[2] py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-3 disabled:opacity-20 border border-white/10"
+            className="flex-[2] py-3 sm:py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-2 disabled:opacity-20 border border-white/10 min-h-[44px] sm:min-h-[48px]"
           >
-            {isSubmitting ? 'Deploying...' : (step === 4 ? 'Deploy Node' : 'Next')} {!isSubmitting && <ChevronRight size={16} strokeWidth={3} />}
+            {isSubmitting ? 'Deploying...' : (step === 4 ? 'Deploy Node' : 'Next')} {!isSubmitting && <ChevronRight size={14} strokeWidth={3} className="sm:w-4 sm:h-4" />}
           </button>
         </div>
       </div>
