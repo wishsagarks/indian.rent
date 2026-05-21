@@ -276,7 +276,37 @@ export async function getFlatDetails(flatId: string) {
     .maybeSingle();
 
   if (error || !data) {
-    console.error('getFlatDetails failed:', error || 'no data returned', { error, data });
+    console.error('getFlatDetails failed (trying cache):', error || 'no data returned', { error, data });
+
+    // Fallback: try to fetch from map_snapshot cache
+    const { data: snapshotData } = await supabase
+      .from('map_snapshot')
+      .select('data')
+      .eq('id', 1)
+      .maybeSingle();
+
+    if (snapshotData?.data && Array.isArray(snapshotData.data)) {
+      const cached = snapshotData.data.find((item: any) => item.id === flatId);
+      if (cached) {
+        console.log('Found flat in map_snapshot cache');
+        return {
+          id: cached.id,
+          flatNumber: cached.flat_number || 'N/A',
+          status: cached.status || 'vacant',
+          rentAmount: cached.rent_amount,
+          bhk: cached.bhk,
+          furnishing: cached.furnishing,
+          sizeSqft: cached.size_sqft,
+          buildingName: cached.name,
+          buildingCity: cached.city,
+          buildingAddress: cached.address,
+          buildingCategory: cached.category,
+          createdAt: cached.created_at,
+          isCached: true, // Flag to show banner
+        };
+      }
+    }
+
     return null;
   }
 
@@ -314,6 +344,7 @@ export async function getFlatDetails(flatId: string) {
     buildingCategory: building?.category,
     buildingAddress: building?.address,
     buildingCity: building?.city,
+    isCached: false,
   };
 }
 

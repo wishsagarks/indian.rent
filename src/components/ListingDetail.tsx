@@ -62,6 +62,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const [listing, setListing] = useState<any>(null);
   const [listingLoading, setListingLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [isCached, setIsCached] = useState(false);
 
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
@@ -81,7 +82,10 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   useEffect(() => {
     getFlatDetails(id).then(data => {
       if (!data) setNotFound(true);
-      else setListing(data);
+      else {
+        setListing(data);
+        setIsCached(data.isCached || false);
+      }
       setListingLoading(false);
     });
     getFlatRatings(id).then(setRatings);
@@ -251,6 +255,16 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     <div className="min-h-screen bg-background text-on-background pb-24">
       {navBar}
 
+      {/* Cache Banner */}
+      {isCached && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-500/10 border-t border-b border-yellow-500/30 px-4 py-3 text-center text-yellow-600 dark:text-yellow-400 text-sm font-medium flex items-center justify-center gap-2"
+        >
+          <span className="inline-block">This listing is showing cached data. Real-time details may not be available.</span>
+        </motion.div>
+      )}
 
       {/* Error/Success Toast */}
       <AnimatePresence>
