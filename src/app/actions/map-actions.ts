@@ -258,9 +258,11 @@ export async function getFlatDetails(flatId: string) {
       intel_flags,
       created_at,
       updated_at,
-      floors (
+      floor_id,
+      floors!inner (
         floor_number,
-        buildings (
+        building_id,
+        buildings!inner (
           id,
           name,
           category,
@@ -274,12 +276,14 @@ export async function getFlatDetails(flatId: string) {
     .maybeSingle();
 
   if (error || !data) {
-    console.error('getFlatDetails failed:', error?.message);
+    console.error('getFlatDetails failed:', error || 'no data returned', { error, data });
     return null;
   }
 
-  const floor = (data.floors as any);
-  const building = floor?.buildings;
+  const floorsArray = Array.isArray(data.floors) ? data.floors : [data.floors];
+  const floor = floorsArray?.[0];
+  const buildingsArray = Array.isArray(floor?.buildings) ? floor?.buildings : [floor?.buildings];
+  const building = buildingsArray?.[0];
 
   return {
     id: data.id,
