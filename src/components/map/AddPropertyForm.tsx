@@ -171,7 +171,6 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                         updateData({
                           buildingName: place.name || formData.buildingName,
                           address: place.formatted_address || formData.address,
-                          category: formData.category || 'gated',
                         });
                       }
                     }}
@@ -602,7 +601,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
           )}
           <button
             onClick={step === 4 ? () => onSubmit(formData) : nextStep}
-            disabled={(step === 1 && !formData.category && !formData.existingBuildingId && !formData.buildingName) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
+            disabled={(step === 1 && !formData.category && !formData.existingBuildingId) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
             className="flex-[2] py-3 sm:py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-2 disabled:opacity-20 border border-white/10 min-h-[44px] sm:min-h-[48px]"
           >
             {isSubmitting ? 'Deploying...' : (step === 4 ? 'Deploy Node' : 'Next')} {!isSubmitting && <ChevronRight size={14} strokeWidth={3} className="sm:w-4 sm:h-4" />}
