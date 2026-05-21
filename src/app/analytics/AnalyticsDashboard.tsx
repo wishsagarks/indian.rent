@@ -497,9 +497,8 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
              <div className="font-technical text-[9px] uppercase tracking-[0.4em] text-primary opacity-60 ml-1 font-black">WishLabs Intelligence HQ</div>
            </div>
            <div className="flex gap-12 font-technical text-technical-sm uppercase tracking-widest opacity-40">
-             <a href="/terms" className="hover:text-primary transition-colors">Documentation</a>
+             <a href="/terms" className="hover:text-primary transition-colors">Terms</a>
              <a href="/privacy" className="hover:text-primary transition-colors">Privacy</a>
-             <a href="/terms" className="hover:text-primary transition-colors">T&C</a>
              <a href="mailto:support@wishlabs.in" className="hover:text-primary transition-colors">HQ Support</a>
            </div>
            <div className="font-technical text-[9px] uppercase tracking-[0.6em] opacity-20 font-black">&copy; 2026 Direct Rental Protocol • A WishLabs Production</div>
