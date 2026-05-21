@@ -559,8 +559,8 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                 <div className="inline-flex bg-primary/10 p-5 rounded-full text-primary border border-primary/20">
                   <Check size={40} strokeWidth={3} />
                 </div>
-                <h2 className="text-3xl font-black uppercase tracking-tighter font-display">Place Locked</h2>
-                <p className="text-on-surface-variant text-sm">Listing secured without broker interference. Pay the contributor their good faith reward.</p>
+                <h2 className="text-3xl font-black uppercase tracking-tighter font-display">Listing Shared</h2>
+                <p className="text-on-surface-variant text-sm">If you secure the flat through this listing, you may reward the contributor at your discretion. Payment is optional and can be made offline.</p>
                 <div className="bg-on-surface/5 border border-outline/10 rounded-lg p-6 space-y-4">
                   {(() => {
                     const upiLink = `upi://pay?pa=${encodeURIComponent(upiDetails.upiId)}&pn=${encodeURIComponent(upiDetails.contributorName || 'Contributor')}&am=${reward}&cu=INR`;
@@ -574,11 +574,12 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                           height={160}
                           className="mx-auto rounded-md"
                         />
-                        <div className="font-technical text-[10px] uppercase tracking-widest text-primary font-black">Scan to Pay Good Faith Reward</div>
+                        <div className="font-technical text-[10px] uppercase tracking-widest text-primary font-black">Suggested Reward Amount (Optional)</div>
                         <div className="text-2xl font-black text-on-surface tracking-tighter">₹{reward.toLocaleString()}</div>
+                        <p className="text-xs text-on-surface-variant opacity-70">Pay online via UPI if you prefer, or settle offline — entirely your choice.</p>
                         <a href={upiLink} className="w-full block">
-                          <button className="w-full py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:shadow-lg active:scale-95">
-                            ✓ Pay via UPI App
+                          <button className="w-full py-3 bg-primary/20 text-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] transition-all hover:shadow-lg active:scale-95 border border-primary/30">
+                            💳 Pay via UPI (Optional)
                           </button>
                         </a>
                       </>
