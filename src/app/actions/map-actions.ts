@@ -276,7 +276,9 @@ export async function getFlatDetails(flatId: string) {
     .maybeSingle();
 
   if (error || !data) {
-    console.error('getFlatDetails failed (trying cache):', error || 'no data returned', { error, data });
+    if (error) {
+      console.warn('getFlatDetails query error (trying cache):', error.message);
+    }
 
     // Fallback: try to fetch from map_snapshot cache
     const { data: snapshotData } = await supabase
