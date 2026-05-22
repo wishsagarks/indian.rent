@@ -13,6 +13,7 @@ import Link from 'next/link';
 import {
   lockPlace, flagIntel, getFlatRatings, submitRating,
   getComments, addComment, getFlatDetails, getContributorPaymentDetails,
+  countActiveSeekersInArea,
 } from '@/app/actions/map-actions';
 import { rewardFromRent } from '@/lib/constants';
 import UnifiedMenu from './UnifiedMenu';
@@ -99,10 +100,22 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   // Photo carousel
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
+  // Social proof - seeker count
+  const [seekerCount, setSeekerCount] = useState(0);
+
   useEffect(() => {
-    getFlatDetails(id).then(data => {
-      if (!data) setNotFound(true);
-      else setListing(data);
+    getFlatDetails(id).then(result => {
+      if (result.error || !result.data) {
+        setNotFound(true);
+      } else {
+        setListing(result.data);
+        // Fetch seeker count for this area
+        if (result.data.buildingLat && result.data.buildingLng) {
+          countActiveSeekersInArea(result.data.buildingLat, result.data.buildingLng, 1).then(res => {
+            setSeekerCount(res.count);
+          });
+        }
+      }
       setListingLoading(false);
     });
     getFlatRatings(id).then(setRatings);
@@ -523,6 +536,19 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                   <span className="text-on-surface-variant">{areaStats.non_gated_count} non-gated</span>
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {/* ── Seeker Social Proof ────────────────────────────────────────── */}
+          {seekerCount > 0 && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+              className="bg-gradient-to-br from-emerald-500/10 to-teal-500/10 border border-emerald-400/30 rounded-xl p-4 flex items-center gap-3">
+              <div className="flex-1">
+                <div className="text-xs font-black text-emerald-400 uppercase tracking-wider">Active Seekers</div>
+                <div className="text-2xl font-black text-on-surface mt-1">
+                  🔍 <span className="text-emerald-400">{seekerCount}</span> seeking in this area
+                </div>
+              </div>
             </motion.div>
           )}
 

@@ -699,3 +699,32 @@ export async function subscribeToArea(
   if (!success) return { error: 'Failed to subscribe to notifications. Please try again.' };
   return { success: true };
 }
+
+export async function countActiveSeekersInArea(lat: number, lng: number, radiusKm: number = 1) {
+  const supabase = await createClient();
+  const seekerPins = await mapRepo.fetchActiveSeekerPins(supabase);
+
+  if (!seekerPins || seekerPins.length === 0) {
+    return { count: 0 };
+  }
+
+  // Calculate distance in km using Haversine formula
+  const getDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+    const R = 6371; // Earth's radius in km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const count = seekerPins.filter(pin => {
+    if (!pin.latitude || !pin.longitude) return false;
+    const distance = getDistance(lat, lng, pin.latitude, pin.longitude);
+    return distance <= radiusKm;
+  }).length;
+
+  return { count };
+}
