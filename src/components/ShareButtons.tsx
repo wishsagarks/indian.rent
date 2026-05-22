@@ -98,12 +98,12 @@ export default function ShareButtons({
 
   if (variant === 'compact') {
     return (
-      <div className={`relative ${className}`}>
+      <div className={`relative w-full ${className}`}>
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.98 }}
           onClick={() => setShowMenu(!showMenu)}
-          className={`bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 ${sizeStyles[size]} shadow-lg hover:shadow-xl transition-all`}
+          className={`w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-black uppercase tracking-wider rounded-lg flex items-center justify-center gap-2 ${sizeStyles[size]} shadow-lg hover:shadow-xl transition-all`}
         >
           <Share2 size={iconSizes[size]} strokeWidth={2.5} />
           {showLabel && 'Share'}
@@ -112,23 +112,23 @@ export default function ShareButtons({
         <AnimatePresence>
           {showMenu && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              initial={{ opacity: 0, scale: 0.95, y: -5 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              exit={{ opacity: 0, scale: 0.95, y: -5 }}
               transition={{ duration: 0.15 }}
-              className="absolute top-full right-0 mt-2 bg-surface border border-outline/20 rounded-lg shadow-xl z-50 overflow-hidden"
+              className="absolute left-0 right-0 top-full mt-2 bg-surface-container border border-outline/40 rounded-lg shadow-2xl z-50 overflow-hidden"
             >
               <button
                 onClick={() => { handleWhatsApp(); setShowMenu(false); }}
-                className="w-full px-4 py-3 flex items-center gap-2 text-emerald-400 hover:bg-emerald-500/10 text-left text-[10px] font-black uppercase tracking-wider border-b border-outline/10"
+                className="w-full px-4 py-3 flex items-center gap-3 text-emerald-400 hover:bg-emerald-500/15 active:bg-emerald-500/25 text-left text-[9px] font-black uppercase tracking-wider border-b border-outline/20 transition-colors"
               >
-                <MessageCircle size={14} /> WhatsApp
+                <MessageCircle size={16} strokeWidth={2} /> WhatsApp
               </button>
               <button
                 onClick={() => { handleCopyLink(); setShowMenu(false); }}
-                className="w-full px-4 py-3 flex items-center gap-2 text-primary hover:bg-primary/10 text-left text-[10px] font-black uppercase tracking-wider"
+                className="w-full px-4 py-3 flex items-center gap-3 text-primary hover:bg-primary/15 active:bg-primary/25 text-left text-[9px] font-black uppercase tracking-wider transition-colors"
               >
-                <Copy size={14} /> Copy Link
+                <Copy size={16} strokeWidth={2} /> {copied ? 'Copied!' : 'Copy Link'}
               </button>
             </motion.div>
           )}
