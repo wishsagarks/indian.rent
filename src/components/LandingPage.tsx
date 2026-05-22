@@ -23,6 +23,7 @@ import { CitiesMarquee } from './ui-advanced/CitiesMarquee';
 import HeroText from './ui-advanced/HeroText';
 import { useTheme } from '@/hooks/useTheme';
 import { TourHelpButton } from './TourHelpButton';
+import { CommunityBenefitsSection } from './ui-advanced/CommunityBenefitsSection';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -383,6 +384,9 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
             <BentoGrid />
           </div>
         </section>
+
+        {/* Community Benefits Section with GSAP */}
+        <CommunityBenefitsSection />
 
         {/* Tactical Stats */}
         <section className="tactical-stats py-20 md:py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
