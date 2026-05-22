@@ -5,7 +5,10 @@ import { getFlatDetails } from "@/app/actions/map-actions";
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const result = await getFlatDetails(id);
-  if (result.error || !result.data) return { title: 'Listing Not Found — indian.rent by WishLabs' };
+
+  if (result.error || !result.data) {
+    return { title: 'Listing Not Found — indian.rent by WishLabs' };
+  }
 
   const listing = result.data;
   const rent = listing.rentAmount ? `₹${Number(listing.rentAmount).toLocaleString()}/mo` : '';
@@ -20,13 +23,14 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     openGraph: {
       title,
       description,
-      images: [{ url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop' }],
+      images: [{ url: `/flat/${id}/og-image`, alt: `${bhk} flat in ${location}` }],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title,
       description,
+      image: `/flat/${id}/og-image`,
     },
   };
 }
