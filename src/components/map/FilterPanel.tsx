@@ -38,17 +38,16 @@ const InfoTooltip = ({ text }: { text: string }) => {
   const [showTooltip, setShowTooltip] = useState(false);
   return (
     <div className="relative inline-block">
-      <motion.button
+      <motion.div
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onMouseEnter={() => setShowTooltip(true)}
         onMouseLeave={() => setShowTooltip(false)}
         onClick={() => setShowTooltip(!showTooltip)}
-        className="p-0.5 text-on-surface-variant/60 hover:text-primary transition-colors flex items-center justify-center"
-        type="button"
+        className="p-0.5 text-on-surface-variant/60 hover:text-primary transition-colors flex items-center justify-center cursor-pointer"
       >
         <Info size={14} />
-      </motion.button>
+      </motion.div>
       {showTooltip && (
         <motion.div
           initial={{ opacity: 0, y: -5 }}

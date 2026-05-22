@@ -597,8 +597,8 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
               {!listing.isRemoved && (
                 <button onClick={() => setShowFlagConfirm(true)}
-                  className="w-full py-3 bg-red-500/5 text-red-400 rounded-lg font-black uppercase tracking-[0.2em] text-[9px] flex items-center justify-center gap-2 border border-red-500/20 opacity-40 hover:opacity-100 transition-all">
-                  <ShieldAlert size={12} /> Report Fake or Stale
+                  className="w-full py-3 bg-gradient-to-r from-red-500/30 to-orange-600/20 text-red-400 rounded-lg font-black uppercase tracking-[0.2em] text-[9px] flex items-center justify-center gap-2 border border-red-500/50 hover:from-red-500/50 hover:to-orange-600/40 hover:border-red-400/80 hover:shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-all">
+                  <ShieldAlert size={12} /> 🚨 Report Fake or Stale (Flags: {listing.intelFlags || 0}/3)
                 </button>
               )}
             </div>

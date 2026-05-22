@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Menu, Home, Map as MapIcon, LayoutDashboard, Info } from 'lucide-react';
+import { Menu, Home, Map as MapIcon, LayoutDashboard, Info, Shield } from 'lucide-react';
 
 export default function UnifiedMenu() {
   const [showMenu, setShowMenu] = useState(false);
@@ -21,6 +21,7 @@ export default function UnifiedMenu() {
     { href: '/', label: 'HQ Home', icon: Home },
     { href: '/explore', label: 'Explore Map', icon: MapIcon },
     { href: '/analytics', label: 'Intelligence', icon: LayoutDashboard },
+    { href: '/admin/moderation', label: '🚨 Moderation Queue', icon: Shield, admin: true },
     { href: '/terms', label: 'Engagement', icon: Info },
   ];
 
@@ -43,11 +44,15 @@ export default function UnifiedMenu() {
             className="absolute top-full left-0 mt-2 w-48 bg-surface border border-white/10 rounded-lg shadow-3xl overflow-hidden py-1 z-[60]"
             role="menu"
           >
-            {menuItems.map((item) => (
+            {menuItems.map((item: any) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest text-on-surface hover:bg-primary/10 hover:text-primary transition-colors"
+                className={`flex items-center gap-3 px-4 py-2.5 text-[10px] font-black uppercase tracking-widest transition-colors ${
+                  item.admin
+                    ? 'text-red-400 hover:bg-red-500/10 border-l-2 border-red-500'
+                    : 'text-on-surface hover:bg-primary/10 hover:text-primary'
+                }`}
                 onClick={() => setShowMenu(false)}
               >
                 <item.icon size={14} /> {item.label}

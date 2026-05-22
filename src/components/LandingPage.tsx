@@ -150,72 +150,64 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     // Skip complex scroll animations if user is fast-scrolling or on low-power device
     if (shouldReduceComplexity) return;
 
-    // Disable parallax entirely on mobile for performance
-    if (!isMobile) {
-      gsap.to('.bg-parallax', {
-        y: -200,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: mainRef.current,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: true,
-        }
-      });
-    }
+    // Reduced parallax on mobile (light effect), full on desktop
+    gsap.to('.bg-parallax', {
+      y: isMobile ? -40 : -200,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: mainRef.current,
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: isMobile ? 3 : true,
+      }
+    });
 
-    // Disable parallax text on mobile - only animate on desktop
-    if (!isMobile) {
-      gsap.to('.hero-subheading', {
-        y: isTablet ? 60 : 200,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: '.hero-section',
-          start: 'top top',
-          end: 'bottom center',
-          scrub: 1.2,
-        }
-      });
-    }
+    // Reduce parallax text on mobile but keep it visible
+    gsap.to('.hero-subheading', {
+      y: isMobile ? 10 : isTablet ? 60 : 200,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: '.hero-section',
+        start: 'top top',
+        end: 'bottom center',
+        scrub: isMobile ? 2 : 1.2,
+      }
+    });
 
-    // Disable background parallax on mobile
-    if (!isMobile) {
-      gsap.to('.bg-parallax-container', {
-        y: -300,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: 'body',
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 2,
-        }
-      });
-    }
+    // Reduced background parallax on mobile
+    gsap.to('.bg-parallax-container', {
+      y: isMobile ? -60 : -300,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: 'body',
+        start: 'top top',
+        end: 'bottom bottom',
+        scrub: isMobile ? 3 : 2,
+      }
+    });
 
-    // Anti-Broker heading word-by-word reveal on scroll - disabled on mobile
-    if (!isMobile) {
-      gsap.from(['.word-reveal-1', '.word-reveal-2', '.word-reveal-3'], {
-        opacity: 0,
-        y: 80,
-        rotate: -5,
-        duration: 0.6,
-        stagger: 0.15,
-        ease: 'back.out',
-        scrollTrigger: {
-          trigger: '.anti-broker-section',
-          start: 'top 75%',
-          onEnter: () => {},
-        }
-      });
-    }
+    // Anti-Broker heading word-by-word reveal on scroll - reduced on mobile
+    gsap.from(['.word-reveal-1', '.word-reveal-2', '.word-reveal-3'], {
+      opacity: 0,
+      y: isMobile ? 40 : 80,
+      rotate: isMobile ? -2 : -5,
+      duration: isMobile ? 0.4 : 0.6,
+      stagger: isMobile ? 0.1 : 0.15,
+      ease: 'back.out',
+      scrollTrigger: {
+        trigger: '.anti-broker-section',
+        start: 'top 75%',
+        onEnter: () => {},
+      }
+    });
 
     // Tactical Stats reveal on scroll - reduced stagger on mobile
     gsap.from('.stat-item', {
       opacity: 0,
-      y: isMobile ? 30 : 50,
-      scale: 0.9,
-      stagger: isMobile ? 0.1 : 0.15,
-      duration: 0.4,
+      y: isMobile ? 25 : 50,
+      scale: isMobile ? 0.95 : 0.85,
+      stagger: isMobile ? 0.08 : 0.15,
+      duration: isMobile ? 0.35 : 0.6,
       ease: 'back.out',
       scrollTrigger: {
         trigger: '.tactical-stats',
@@ -225,22 +217,20 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     });
 
     // Final CTA letter-cascade reveal on scroll - reduced on mobile
-    if (!isMobile) {
-      gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
-        opacity: 0,
-        y: 100,
-        rotate: -10,
-        scale: 0.8,
-        duration: 0.8,
-        stagger: 0.2,
-        ease: 'back.out',
-        scrollTrigger: {
-          trigger: '.final-cta',
-          start: 'top 70%',
-          onEnter: () => {},
-        }
-      });
-    }
+    gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
+      opacity: 0,
+      y: isMobile ? 50 : 100,
+      rotate: isMobile ? -5 : -10,
+      scale: isMobile ? 0.9 : 0.8,
+      duration: isMobile ? 0.5 : 0.8,
+      stagger: isMobile ? 0.12 : 0.2,
+      ease: 'back.out',
+      scrollTrigger: {
+        trigger: '.final-cta',
+        start: 'top 70%',
+        onEnter: () => {},
+      }
+    });
   }, { scope: mainRef });
 
   return (
