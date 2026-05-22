@@ -22,6 +22,15 @@ interface ListingPageProps {
 const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=1200&auto=format&fit=crop';
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
+function getPhotoUrl(listing: any): string {
+  // Use Google Street View if coordinates are available
+  if (listing.buildingLat && listing.buildingLng && GOOGLE_MAPS_API_KEY) {
+    return `https://maps.googleapis.com/maps/api/streetview?size=800x450&location=${listing.buildingLat},${listing.buildingLng}&key=${GOOGLE_MAPS_API_KEY}`;
+  }
+  // Fallback to placeholder image
+  return PLACEHOLDER_IMAGE;
+}
+
 const FURNISHING_LABELS: Record<string, string> = {
   furnished: 'Furnished',
   'semi-furnished': 'Semi-Furnished',
@@ -298,7 +307,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
         <div className="space-y-6">
           <motion.div data-tour="listing-images" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative aspect-video w-full rounded-lg overflow-hidden border border-outline/20 p-1.5 bg-surface">
             <Image
-              src={PLACEHOLDER_IMAGE}
+              src={getPhotoUrl(listing)}
               alt={`${listing.buildingName} location`}
               fill
               className="object-cover rounded-md"

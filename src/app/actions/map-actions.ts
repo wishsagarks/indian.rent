@@ -233,6 +233,25 @@ export async function deployNode(formData: any) {
   }
 }
 
+function parseLocation(location: any): { lat?: number; lng?: number } {
+  if (!location) return {};
+
+  // Handle GeoJSON format: { type: "Point", coordinates: [lng, lat] }
+  if (location.type === 'Point' && Array.isArray(location.coordinates)) {
+    return { lng: location.coordinates[0], lat: location.coordinates[1] };
+  }
+
+  // Handle WKT string format: "POINT(lng lat)"
+  if (typeof location === 'string') {
+    const match = location.match(/POINT\s*\(\s*([\d.-]+)\s+([\d.-]+)\s*\)/i);
+    if (match) {
+      return { lng: parseFloat(match[1]), lat: parseFloat(match[2]) };
+    }
+  }
+
+  return {};
+}
+
 /**
  * Fetch full details for a single flat by ID, joining building and floor info
  * NOTE: Does not return ipHash or contributorUpiId (use getContributorPaymentDetails for UPI)
@@ -321,6 +340,7 @@ export async function getFlatDetails(flatId: string) {
 
       if (cachedFlat) {
         console.log('Found flat in map_snapshot cache');
+        const { lat, lng } = parseLocation(cachedBuilding.location);
         return {
           id: cachedFlat.id,
           flatNumber: cachedFlat.flat_number || 'N/A',
@@ -345,6 +365,8 @@ export async function getFlatDetails(flatId: string) {
           buildingCity: cachedBuilding.city,
           buildingAddress: cachedBuilding.address,
           buildingCategory: cachedBuilding.category,
+          buildingLat: lat,
+          buildingLng: lng,
           isCached: true, // Flag to show banner
         };
       }
@@ -357,6 +379,7 @@ export async function getFlatDetails(flatId: string) {
   const floor = floorsArray?.[0];
   const buildingsArray = Array.isArray(floor?.buildings) ? floor?.buildings : [floor?.buildings];
   const building = buildingsArray?.[0];
+  const { lat, lng } = parseLocation(building?.location);
 
   return {
     id: data.id,
@@ -387,6 +410,8 @@ export async function getFlatDetails(flatId: string) {
     buildingCategory: building?.category,
     buildingAddress: building?.address,
     buildingCity: building?.city,
+    buildingLat: lat,
+    buildingLng: lng,
     isCached: false,
   };
 }
