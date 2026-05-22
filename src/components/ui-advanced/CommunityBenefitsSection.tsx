@@ -55,36 +55,34 @@ const benefits = [
 
 export function CommunityBenefitsSection() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement[]>([]);
+  const cardsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const cards = cardsRef.current;
+    // Animate cards on scroll
+    cardsRef.current.forEach((card, index) => {
+      if (!card) return;
 
-    // Stagger animation on scroll
-    cards.forEach((card, index) => {
       gsap.fromTo(
         card,
         {
           opacity: 0,
-          y: 60,
-          rotateX: -10
+          y: 40
         },
         {
           opacity: 1,
           y: 0,
-          rotateX: 0,
-          duration: 0.8,
-          ease: 'power3.out',
+          duration: 0.6,
+          ease: 'power2.out',
           scrollTrigger: {
             trigger: card,
-            start: 'top 80%',
-            end: 'top 50%',
-            scrub: 0.5,
+            start: 'top 85%',
+            end: 'top 60%',
+            scrub: 0.3,
             markers: false
           },
-          delay: index * 0.1
+          delay: index * 0.08
         }
       );
     });
@@ -133,14 +131,14 @@ export function CommunityBenefitsSection() {
               <div
                 key={index}
                 ref={(el) => {
-                  if (el) cardsRef.current[index] = el;
+                  cardsRef.current[index] = el;
                 }}
-                className="group perspective"
+                className="group h-full"
               >
                 <motion.div
-                  whileHover={{ y: -8, rotateX: 2 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                  className={`relative h-full p-6 md:p-8 rounded-2xl border border-outline/20 bg-gradient-to-br ${benefit.color} backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-outline/40`}
+                  whileHover={{ y: -6 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+                  className={`relative h-full p-6 md:p-8 rounded-2xl border border-outline/30 bg-gradient-to-br ${benefit.color} backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-outline/60 hover:shadow-lg hover:shadow-primary/20`}
                 >
                   {/* Shine effect */}
                   <div className="absolute inset-0 opacity-0 group-hover:opacity-40 transition-opacity duration-300" style={{
