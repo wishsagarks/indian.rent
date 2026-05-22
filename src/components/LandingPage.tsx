@@ -140,18 +140,20 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) return;
 
+    const isMobile = window.innerWidth < 768;
+
     // Skip complex scroll animations if user is fast-scrolling on mobile
     if (shouldReduceComplexity) return;
 
-    // Parallax background effect
+    // Parallax background effect - reduced on mobile
     gsap.to('.bg-parallax', {
-      y: -200,
+      y: isMobile ? -80 : -200,
       ease: 'none',
       scrollTrigger: {
         trigger: mainRef.current,
         start: 'top top',
         end: 'bottom bottom',
-        scrub: true,
+        scrub: isMobile ? 2 : true,
       }
     });
 
@@ -210,13 +212,13 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       }
     });
 
-    // Tactical Stats reveal on scroll
+    // Tactical Stats reveal on scroll - optimized for mobile
     gsap.from('.stat-item', {
       opacity: 0,
-      y: 60,
+      y: isMobile ? 40 : 60,
       scale: 0.85,
-      stagger: 0.22,
-      duration: 0.6,
+      stagger: isMobile ? 0.15 : 0.22,
+      duration: isMobile ? 0.5 : 0.6,
       ease: 'back.out',
       scrollTrigger: {
         trigger: '.tactical-stats',
@@ -241,15 +243,15 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       }
     });
 
-    // Powerful background parallax
+    // Powerful background parallax - optimized for mobile
     gsap.to('.bg-parallax-container', {
-      y: -300,
+      y: isMobile ? -120 : -300,
       ease: 'none',
       scrollTrigger: {
         trigger: 'body',
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 2,
+        scrub: isMobile ? 2.5 : 2,
       }
     });
   }, { scope: mainRef });
@@ -300,9 +302,9 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
       <TracingBeam checkpoints={[0, 0.2, 0.5, 0.8, 1]}>
         {/* Hero Section */}
-        <section id="main-content" data-tour="hero-section" className="hero-section relative min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-12 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
+        <section id="main-content" data-tour="hero-section" className="hero-section relative min-h-auto md:min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-8 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
           <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center mx-auto">
-            <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-10 order-1 md:order-1">
               <div className="space-y-4">
                  <motion.div
                     initial={{ opacity: 0, x: -20 }}
@@ -351,12 +353,35 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
               </div>
             </div>
 
-            <div className="hidden md:flex items-center justify-center relative w-full group">
-               <div className="absolute w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-primary/5 blur-[150px] rounded-full group-hover:bg-primary/10 transition-colors duration-1000" />
-               <div className="w-full max-w-[400px] md:max-w-[600px] aspect-square relative z-10">
+            {/* Mobile Globe - Visible on all screens */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 30 }}
+              whileInView={{ opacity: 1, scale: 1, y: 0 }}
+              viewport={{ once: false, margin: '-100px' }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="flex items-center justify-center relative w-full group order-2 md:order-2"
+            >
+               {/* Gradient glow background */}
+               <motion.div
+                 className="absolute w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] md:w-[400px] md:h-[400px] lg:w-[600px] lg:h-[600px] bg-primary/5 blur-[100px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none"
+                 animate={{
+                   scale: [1, 1.1, 1],
+                 }}
+                 transition={{
+                   duration: 6,
+                   repeat: Infinity,
+                   ease: 'easeInOut'
+                 }}
+               />
+               {/* Globe Container */}
+               <motion.div
+                 className="w-full max-w-[250px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[600px] aspect-square relative z-10"
+                 whileHover={{ scale: 1.05 }}
+                 transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+               >
                  <GlobeAnalytics className="w-full h-full" />
-               </div>
-            </div>
+               </motion.div>
+            </motion.div>
           </div>
         </section>
 
