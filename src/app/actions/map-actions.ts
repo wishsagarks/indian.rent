@@ -444,7 +444,7 @@ export async function lockPlace(flatId: string) {
 /**
  * Flag a listing with rate limiting (max 3 flags per 15 min per flat)
  */
-export async function flagIntel(flatId: string) {
+export async function flagIntel(flatId: string, userAgent?: string) {
   // Validate UUID format
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidRegex.test(flatId)) {
@@ -459,17 +459,64 @@ export async function flagIntel(flatId: string) {
 
   const supabase = await createClient();
   try {
+    // Increment the intel flags counter
     const { error: incError } = await supabase.rpc('increment_intel_flags', { target_id: flatId });
     if (incError) throw incError;
 
-    // Check if the flat is now removed (3+ flags triggered removal)
+    // Get the updated flag count
     const { data: flat } = await supabase
       .from('flats')
       .select('is_removed, intel_flags')
       .eq('id', flatId)
       .maybeSingle();
 
-    return { success: true, removed: flat?.is_removed === true };
+    const flagCount = flat?.intel_flags || 0;
+
+    // Log the flag event
+    await supabase.from('flag_events').insert({
+      flat_id: flatId,
+      user_agent: userAgent,
+      created_at: new Date().toISOString(),
+    }).catch(err => console.warn('Failed to log flag event:', err));
+
+    // If flags reach 3, move to moderation queue and mark as removed
+    if (flagCount >= 3) {
+      // Try to create or update moderation queue entry
+      const { error: modError } = await supabase
+        .from('moderation_queue')
+        .upsert(
+          {
+            flat_id: flatId,
+            flag_count: flagCount,
+            status: 'pending',
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'flat_id' }
+        );
+
+      if (!modError) {
+        // Mark flat as removed
+        await supabase
+          .from('flats')
+          .update({ is_removed: true, updated_at: new Date().toISOString() })
+          .eq('id', flatId)
+          .catch(err => console.warn('Failed to mark flat as removed:', err));
+      }
+
+      return {
+        success: true,
+        removed: true,
+        flagCount,
+        message: 'Listing has been flagged and moved to moderation queue.'
+      };
+    }
+
+    return {
+      success: true,
+      removed: false,
+      flagCount,
+      message: `Listing flagged (${flagCount}/3 flags)`
+    };
   } catch (err: any) {
     console.error('Flagging Failure:', err.message);
     return { error: sanitizeError(err) };

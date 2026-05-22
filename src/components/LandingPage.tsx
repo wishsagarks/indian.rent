@@ -145,84 +145,77 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
     if (reducedMotion) return;
 
     const isMobile = window.innerWidth < 768;
+    const isTablet = window.innerWidth < 1024;
 
-    // Skip complex scroll animations if user is fast-scrolling on mobile
+    // Skip complex scroll animations if user is fast-scrolling or on low-power device
     if (shouldReduceComplexity) return;
 
-    // Parallax background effect - reduced on mobile
-    gsap.to('.bg-parallax', {
-      y: isMobile ? -80 : -200,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: mainRef.current,
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: isMobile ? 2 : true,
-      }
-    });
+    // Disable parallax entirely on mobile for performance
+    if (!isMobile) {
+      gsap.to('.bg-parallax', {
+        y: -200,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: mainRef.current,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: true,
+        }
+      });
+    }
 
-    // Hero section entrance animations
-    gsap.from('.hero-headline', {
-      opacity: 0,
-      y: 60,
-      rotate: -3,
-      duration: 0.7,
-      ease: 'back.out',
-      delay: 0.1
-    });
+    // Disable parallax text on mobile - only animate on desktop
+    if (!isMobile) {
+      gsap.to('.hero-subheading', {
+        y: isTablet ? 60 : 200,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: '.hero-section',
+          start: 'top top',
+          end: 'bottom center',
+          scrub: 1.2,
+        }
+      });
+    }
 
-    gsap.from('.hero-subheading', {
-      opacity: 0,
-      y: 60,
-      duration: 0.9,
-      ease: 'back.out',
-      delay: 0.4,
-      clearProps: 'all'
-    });
+    // Disable background parallax on mobile
+    if (!isMobile) {
+      gsap.to('.bg-parallax-container', {
+        y: -300,
+        ease: 'none',
+        scrollTrigger: {
+          trigger: 'body',
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 2,
+        }
+      });
+    }
 
-    // Parallax text depth on hero (mobile: 0.15x, tablet: 0.35x, desktop: 0.8x)
-    gsap.to('.hero-subheading', {
-      y: window.innerWidth >= 1024 ? 200 : window.innerWidth >= 768 ? 60 : 25,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: '.hero-section',
-        start: 'top top',
-        end: 'bottom center',
-        scrub: 1.2,
-      }
-    });
+    // Anti-Broker heading word-by-word reveal on scroll - disabled on mobile
+    if (!isMobile) {
+      gsap.from(['.word-reveal-1', '.word-reveal-2', '.word-reveal-3'], {
+        opacity: 0,
+        y: 80,
+        rotate: -5,
+        duration: 0.6,
+        stagger: 0.15,
+        ease: 'back.out',
+        scrollTrigger: {
+          trigger: '.anti-broker-section',
+          start: 'top 75%',
+          onEnter: () => {},
+        }
+      });
+    }
 
-    gsap.from('.hero-cta-group', {
-      opacity: 0,
-      y: 50,
-      scale: 0.9,
-      duration: 0.7,
-      ease: 'back.out',
-      delay: 0.5
-    });
-
-    // Anti-Broker heading word-by-word reveal on scroll
-    gsap.from(['.word-reveal-1', '.word-reveal-2', '.word-reveal-3'], {
-      opacity: 0,
-      y: 80,
-      rotate: -5,
-      duration: 0.6,
-      stagger: 0.2,
-      ease: 'back.out',
-      scrollTrigger: {
-        trigger: '.anti-broker-section',
-        start: 'top 75%',
-        onEnter: () => {},
-      }
-    });
-
-    // Tactical Stats reveal on scroll - optimized for mobile
+    // Tactical Stats reveal on scroll - reduced stagger on mobile
     gsap.from('.stat-item', {
       opacity: 0,
-      y: isMobile ? 40 : 60,
-      scale: 0.85,
-      stagger: isMobile ? 0.15 : 0.22,
-      duration: isMobile ? 0.5 : 0.6,
+      y: isMobile ? 30 : 50,
+      scale: 0.9,
+      stagger: isMobile ? 0.1 : 0.15,
+      duration: 0.4,
       ease: 'back.out',
       scrollTrigger: {
         trigger: '.tactical-stats',
@@ -231,33 +224,23 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       }
     });
 
-    // Final CTA letter-cascade reveal on scroll - MAKE DRAMATIC AND VISIBLE
-    gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
-      opacity: 0,
-      y: 150,
-      rotate: -15,
-      scale: 0.7,
-      duration: 1,
-      stagger: 0.3,
-      ease: 'back.out',
-      scrollTrigger: {
-        trigger: '.final-cta',
-        start: 'top 70%',
-        onEnter: () => {},
-      }
-    });
-
-    // Powerful background parallax - optimized for mobile
-    gsap.to('.bg-parallax-container', {
-      y: isMobile ? -120 : -300,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: 'body',
-        start: 'top top',
-        end: 'bottom bottom',
-        scrub: isMobile ? 2.5 : 2,
-      }
-    });
+    // Final CTA letter-cascade reveal on scroll - reduced on mobile
+    if (!isMobile) {
+      gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
+        opacity: 0,
+        y: 100,
+        rotate: -10,
+        scale: 0.8,
+        duration: 0.8,
+        stagger: 0.2,
+        ease: 'back.out',
+        scrollTrigger: {
+          trigger: '.final-cta',
+          start: 'top 70%',
+          onEnter: () => {},
+        }
+      });
+    }
   }, { scope: mainRef });
 
   return (

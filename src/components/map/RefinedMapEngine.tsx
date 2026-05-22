@@ -754,7 +754,7 @@ export default function RefinedMapEngine() {
               <span className={`font-black leading-none font-technical ${isEmpty ? 'text-white/20' : 'text-on-surface'}`} style={{ fontSize: `${sizes.textSize}px` }}>{prop.rent}</span>
               {!isEmpty && (
                 <div className="flex items-center gap-1 mt-0.5">
-                  {prop.flatmateNeeded && <span className="bg-emerald-400/20 text-emerald-400 px-1 rounded font-black" style={{ fontSize: `${sizes.badgeSize}px` }}>FM</span>}
+                  {prop.flatmateNeeded && <span className="bg-secondary/30 text-secondary px-1.5 py-0.5 rounded-md font-black shadow-[0_0_8px_rgba(47,248,1,0.4)] animate-pulse" style={{ fontSize: `${sizes.badgeSize}px` }}>FM★</span>}
                   {isOwn && <span className="bg-primary/20 text-primary px-1 rounded font-black" style={{ fontSize: `${sizes.badgeSize}px` }}>YOU</span>}
                   {!prop.flatmateNeeded && !isOwn && (
                     <>
@@ -1506,7 +1506,7 @@ export default function RefinedMapEngine() {
                 ) : (
                   <>
                     <div className="flex items-center gap-2 mb-6">
-                      {selectedProperty.flatmateNeeded && <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-400/20 text-emerald-400">Flatmate Needed</span>}
+                      {selectedProperty.flatmateNeeded && <span className="px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-wider bg-secondary/20 text-secondary shadow-[0_0_12px_rgba(47,248,1,0.3)]">🤝 Flatmate Wanted</span>}
                       {selectedProperty.ipHash === ipHash && <span className="px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-primary/20 text-primary">Your Pin</span>}
                     </div>
                     <div className="grid grid-cols-2 gap-4 mb-6">

@@ -317,7 +317,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
             <h3 className="text-xl font-black uppercase tracking-tight mb-8">Grid Distribution</h3>
             {(() => {
               const areaData = (stats.areaDistribution || []).slice(0, 6);
-              const colors = ['bg-primary', 'bg-secondary', 'bg-emerald-400', 'bg-amber-400', 'bg-orange-400', 'bg-violet-400'];
+              const colors = ['bg-primary shadow-glow-blue-sm', 'bg-secondary shadow-glow-green-sm', 'bg-primary/80 shadow-glow-blue-sm', 'bg-secondary/80 shadow-glow-green-sm', 'bg-primary/60 shadow-glow-blue-sm', 'bg-secondary/60 shadow-glow-green-sm'];
 
               return (
                 <>
@@ -334,9 +334,7 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
                               initial={{ width: 0 }}
                               animate={{ width: `${item.pct}%` }}
                               transition={{ delay: 1 + (i * 0.1), duration: 1 }}
-                              className={`h-full ${colors[i]} ${
-                                i === 0 || i === 1 ? 'shadow-glow-blue-sm' : 'shadow-lg'
-                              }`}
+                              className={`h-full ${colors[i]}`}
                             />
                           </div>
                         </div>

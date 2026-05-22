@@ -109,13 +109,13 @@ export default function LiveStatsPanel({ points, onClose }: LiveStatsPanelProps)
         <div className="space-y-3">
           <div className="font-technical text-[10px] text-primary uppercase tracking-widest font-black">Society Type</div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center hover:bg-blue-500/15 transition-colors">
-              <div className="text-xl font-black text-blue-400">{stats.gated}</div>
-              <div className="font-technical text-[9px] text-blue-300/80 uppercase tracking-wider mt-1">Gated</div>
-            </div>
             <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 text-center hover:bg-primary/15 transition-colors">
-              <div className="text-xl font-black text-primary">{stats.nonGated}</div>
-              <div className="font-technical text-[9px] text-primary/70 uppercase tracking-wider mt-1">Open</div>
+              <div className="text-xl font-black text-primary">{stats.gated}</div>
+              <div className="font-technical text-[9px] text-primary/70 uppercase tracking-wider mt-1">Gated</div>
+            </div>
+            <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-3 text-center hover:bg-secondary/15 transition-colors">
+              <div className="text-xl font-black text-secondary">{stats.nonGated}</div>
+              <div className="font-technical text-[9px] text-secondary/70 uppercase tracking-wider mt-1">Open</div>
             </div>
           </div>
         </div>
