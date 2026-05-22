@@ -87,6 +87,10 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const [newComment, setNewComment] = useState('');
   const [commentLoading, setCommentLoading] = useState(false);
 
+  // Contact Owner flow
+  const [showMaskedPhone, setShowMaskedPhone] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
+
   useEffect(() => {
     getFlatDetails(id).then(data => {
       if (!data) setNotFound(true);
@@ -132,6 +136,51 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
     if (result.error) showError(result.error);
     else { setNewComment(''); getComments(id).then(setComments); }
     setCommentLoading(false);
+  };
+
+  const handleContactOwner = async () => {
+    if (!listing?.ownerPhone) {
+      showError('Owner contact not available');
+      return;
+    }
+    setContactLoading(true);
+    try {
+      // Track contact click event
+      await fetch('/api/track-contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ flatId: id, action: 'contact_reveal' })
+      }).catch(() => {}); // Don't block on tracking failure
+      setShowMaskedPhone(true);
+      showSuccess('Contact number revealed');
+    } catch (err) {
+      showError('Failed to reveal contact');
+    } finally {
+      setContactLoading(false);
+    }
+  };
+
+  const handleOpenWhatsApp = () => {
+    if (!listing?.ownerPhone) return;
+    const phone = listing.ownerPhone.replace(/\D/g, '');
+    const flatUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/flat/${id}`;
+    const message = `Hi, I'm interested in the flat listed on indian.rent: ${flatUrl}`;
+    const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+
+    // Track WhatsApp click
+    fetch('/api/track-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ flatId: id, action: 'contact_whatsapp' })
+    }).catch(() => {});
+  };
+
+  const maskPhoneNumber = (phone: string): string => {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 10) return `+91 98${digits.slice(2, 4)}xx xx${digits.slice(8)}`;
+    if (digits.length === 12) return `+${digits.slice(0, 2)} ${digits.slice(2, 4)}xx xx${digits.slice(8)}`;
+    return '****';
   };
 
   // ── Nav ────────────────────────────────────────────────────────────────────
@@ -516,6 +565,48 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
         {/* ── RIGHT: Sticky pricing + actions ──────────────────────────────── */}
         <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
           className="sticky top-20 sm:top-24 md:top-24 lg:top-24 h-fit space-y-4 pb-32 sm:pb-24 md:pb-20 lg:pb-0 z-30">
+
+          {/* Contact Owner Card */}
+          {listing?.ownerPhone && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/30 rounded-xl p-5 shadow-lg">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                    <span className="text-sm font-black text-primary">📱</span>
+                  </div>
+                  <span className="text-sm font-black text-on-surface uppercase tracking-wider">Contact Owner</span>
+                </div>
+
+                {!showMaskedPhone ? (
+                  <button
+                    onClick={handleContactOwner}
+                    disabled={contactLoading}
+                    className="w-full py-4 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] shadow-lg flex items-center justify-center gap-2.5 border border-white/20 transition-all hover:shadow-xl active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {contactLoading ? 'Loading...' : 'Reveal Phone Number'}
+                  </button>
+                ) : (
+                  <>
+                    <div className="bg-on-surface/5 border border-primary/20 rounded-lg p-4 text-center">
+                      <div className="text-[9px] uppercase tracking-widest text-on-surface-variant font-black mb-2">Owner Phone</div>
+                      <div className="text-xl font-black text-primary font-mono">{maskPhoneNumber(listing.ownerPhone)}</div>
+                      <div className="text-[8px] text-on-surface-variant mt-2">Full number masked for privacy</div>
+                    </div>
+                    <button
+                      onClick={handleOpenWhatsApp}
+                      className="w-full py-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/20 active:scale-95"
+                    >
+                      💬 Open WhatsApp
+                    </button>
+                  </>
+                )}
+                <p className="text-[8px] text-on-surface-variant/60 text-center leading-relaxed">
+                  Direct contact with property owner. No broker involved.
+                </p>
+              </div>
+            </motion.div>
+          )}
 
           {/* Pricing card */}
           <div className="bg-surface border border-outline/20 rounded-xl p-5 shadow-xl">

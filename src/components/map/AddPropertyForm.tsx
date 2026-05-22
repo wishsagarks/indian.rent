@@ -56,6 +56,8 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
     flatNumber: '',
     status: 'vacant',
     rent: '',
+    ownerPhone: '',
+    ownerContactPreference: 'both' as 'whatsapp' | 'call' | 'both',
     noBrokerLink: '',
     flatmatesLink: '',
     contributorName: '',
@@ -481,6 +483,39 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
                   icon={<IndianRupee size={18} />}
                   className="text-2xl placeholder:text-primary/20"
                 />
+              </div>
+
+              {/* Owner Phone */}
+              <div className="space-y-4 text-left">
+                <div className="flex items-center gap-2 ml-2">
+                  <label className="font-technical text-[10px] uppercase tracking-[0.3em] text-secondary font-black">📱 Owner Contact</label>
+                  <FormInfoIcon text="Your phone number (optional). Seekers can contact you directly. Format: +91XXXXXXXXXX" />
+                </div>
+                <AnimatedFormInput
+                  type="tel"
+                  placeholder="+91 98XX XX XXXX"
+                  value={formData.ownerPhone}
+                  onChange={e => updateData({ ownerPhone: e.target.value })}
+                  helperText="Optional. Direct contact for seekers. Phone or WhatsApp."
+                  icon={<Users size={18} />}
+                />
+                {formData.ownerPhone && (
+                  <div className="flex gap-2 mt-3">
+                    {(['whatsapp', 'call', 'both'] as const).map(pref => (
+                      <button
+                        key={pref}
+                        onClick={() => updateData({ ownerContactPreference: pref })}
+                        className={`flex-1 py-2 text-[10px] font-black rounded border transition-all ${
+                          formData.ownerContactPreference === pref
+                            ? 'bg-secondary text-background border-secondary'
+                            : 'bg-white/5 border-white/5 hover:border-secondary/40'
+                        }`}
+                      >
+                        {pref === 'whatsapp' ? '💬 WhatsApp' : pref === 'call' ? '☎️ Call' : '📱 Both'}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Security Deposit (months) */}

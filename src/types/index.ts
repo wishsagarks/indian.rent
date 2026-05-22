@@ -177,6 +177,9 @@ export interface Flat {
   contributor_upi_id?: string;
   intel_flags?: number;
   ip_hash?: string;
+  owner_phone?: string; // E.164 format (+91XXXXXXXXXX)
+  owner_contact_preference?: 'whatsapp' | 'call' | 'both';
+  photos?: string[]; // Array of photo URLs from Supabase Storage
   created_at: string;
   updated_at?: string;
 }
