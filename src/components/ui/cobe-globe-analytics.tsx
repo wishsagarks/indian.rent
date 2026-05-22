@@ -136,12 +136,15 @@ export function GlobeAnalytics({
         phi: -1.36, theta: 0.2, dark: 0, diffuse: 1.5,
         mapSamples: 16000, mapBrightness: 10,
         baseColor: [1, 1, 1],
-        markerColor: [0.8, 0.47, 0.36],
+        markerColor: [1, 0.5, 0.2],
         glowColor: [0.94, 0.93, 0.91],
-        markerElevation: 0,
-        markers: initialMarkers.map((m) => ({ location: m.location, size: 0.04 })),
-        arcs: arcPairs[currentArcIndexRef.current], arcColor: [0.8, 0.47, 0.36],
-        arcWidth: 0.5, arcHeight: 0.25, opacity: 0.7,
+        markerElevation: 0.2,
+        markers: initialMarkers.map((m) => ({ location: m.location, size: 0.06 })),
+        arcs: arcPairs[currentArcIndexRef.current],
+        arcColor: [1, 0.5, 0.2],
+        arcWidth: 1,
+        arcHeight: 0.35,
+        opacity: 0.8,
       })
       function animate() {
         if (!isPausedRef.current) phi += speed
@@ -153,11 +156,17 @@ export function GlobeAnalytics({
         animationId = requestAnimationFrame(animate)
       }
       animate()
-      setTimeout(() => { if (canvas) canvas.style.opacity = "1" })
+      // Fade in the canvas more dramatically
+      setTimeout(() => {
+        if (canvas) {
+          canvas.style.opacity = "1"
+          canvas.style.filter = "drop-shadow(0 25px 50px rgba(255, 107, 53, 0.25))"
+        }
+      }, 100)
     }
 
     if (canvas.offsetWidth > 0) {
-      init()
+      setTimeout(() => init(), 0)
     } else {
       const ro = new ResizeObserver((entries) => {
         if (entries[0]?.contentRect.width > 0) {
@@ -171,6 +180,7 @@ export function GlobeAnalytics({
     return () => {
       if (animationId) cancelAnimationFrame(animationId)
       if (globeRef.current) globeRef.current.destroy()
+      globeRef.current = null
     }
   }, [initialMarkers, speed])
 

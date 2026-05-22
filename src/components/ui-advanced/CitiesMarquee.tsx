@@ -6,14 +6,14 @@ import gsap from 'gsap';
 import { MapPin, Zap } from 'lucide-react';
 
 const cities = [
-  { name: 'BLR', fullName: 'BENGALURU', active: true },
-  { name: 'HYD', fullName: 'HYDERABAD', active: true },
-  { name: 'BBSR', fullName: 'BHUBANESWAR', active: true },
-  { name: 'CTC', fullName: 'CUTTACK', active: true },
-  { name: 'BOM', fullName: 'MUMBAI', active: false, comingSoon: true },
-  { name: 'DEL', fullName: 'DELHI', active: false, comingSoon: true },
-  { name: 'CHE', fullName: 'CHENNAI', active: false, comingSoon: true },
-  { name: 'PUN', fullName: 'PUNE', active: false, comingSoon: true },
+  { name: 'BENGALURU', active: true },
+  { name: 'HYDERABAD', active: true },
+  { name: 'BHUBANESWAR', active: true },
+  { name: 'CUTTACK', active: true },
+  { name: 'MUMBAI', active: false, comingSoon: true },
+  { name: 'DELHI', active: false, comingSoon: true },
+  { name: 'CHENNAI', active: false, comingSoon: true },
+  { name: 'PUNE', active: false, comingSoon: true },
 ];
 
 export function CitiesMarquee() {
@@ -120,23 +120,20 @@ export function CitiesMarquee() {
                     : 'border border-white/15 bg-surface/40 text-on-surface-variant/50 hover:bg-surface/60 hover:border-white/25'
                 } rounded-xl`}
               >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex items-center gap-2 w-full">
-                    {city.active && (
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="w-2 h-2 bg-primary rounded-full flex-shrink-0"
-                      />
-                    )}
-                    <span className="text-sm md:text-base font-black tracking-tight">{city.name}</span>
-                    {city.comingSoon && (
-                      <span className="text-[7px] md:text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black tracking-wider ml-auto">
-                        SOON
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-[7px] md:text-[8px] text-on-surface-variant/50 font-technical uppercase tracking-widest">{city.fullName}</span>
+                <div className="flex items-center gap-3 w-full">
+                  {city.active && (
+                    <motion.div
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="w-2 h-2 bg-primary rounded-full flex-shrink-0"
+                    />
+                  )}
+                  <span className="text-xs md:text-sm font-black uppercase tracking-tight">{city.name}</span>
+                  {city.comingSoon && (
+                    <span className="text-[7px] md:text-[8px] px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black tracking-wider ml-auto">
+                      Soon
+                    </span>
+                  )}
                 </div>
 
                 {/* Hover shine effect for active */}

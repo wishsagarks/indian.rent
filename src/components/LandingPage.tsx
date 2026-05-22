@@ -205,7 +205,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       scrollTrigger: {
         trigger: '.anti-broker-section',
         start: 'top 75%',
-        once: true,
+        onEnter: () => {},
       }
     });
 
@@ -220,22 +220,23 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       scrollTrigger: {
         trigger: '.tactical-stats',
         start: 'top 70%',
-        once: true,
+        onEnter: () => {},
       }
     });
 
-    // Final CTA letter-cascade reveal on scroll
+    // Final CTA letter-cascade reveal on scroll - MAKE DRAMATIC AND VISIBLE
     gsap.from(['.cta-word-1', '.cta-word-2', '.cta-word-3', '.cta-word-4'], {
       opacity: 0,
-      y: 100,
-      rotate: -12,
-      duration: 0.7,
-      stagger: 0.25,
+      y: 150,
+      rotate: -15,
+      scale: 0.7,
+      duration: 1,
+      stagger: 0.3,
       ease: 'back.out',
       scrollTrigger: {
         trigger: '.final-cta',
-        start: 'top 65%',
-        once: true,
+        start: 'top 70%',
+        onEnter: () => {},
       }
     });
 
@@ -349,9 +350,9 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
               </div>
             </div>
 
-            <div className="hidden lg:flex items-center justify-center relative w-full group">
-               <div className="absolute w-[600px] h-[600px] bg-primary/5 blur-[150px] rounded-full group-hover:bg-primary/10 transition-colors duration-1000" />
-               <div className="w-full max-w-[600px] aspect-square relative z-10">
+            <div className="hidden md:flex items-center justify-center relative w-full group">
+               <div className="absolute w-[400px] h-[400px] md:w-[600px] md:h-[600px] bg-primary/5 blur-[150px] rounded-full group-hover:bg-primary/10 transition-colors duration-1000" />
+               <div className="w-full max-w-[400px] md:max-w-[600px] aspect-square relative z-10">
                  <GlobeAnalytics className="w-full h-full" />
                </div>
             </div>
