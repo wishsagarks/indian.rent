@@ -56,14 +56,14 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed lg:absolute left-2 lg:left-1/2 right-2 lg:right-auto top-20 lg:top-1/2 bottom-auto lg:bottom-auto w-auto lg:w-[380px] lg:-translate-x-1/2 lg:-translate-y-1/2 max-h-[75vh] lg:max-h-none bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl z-[80] lg:z-50 overflow-hidden"
+      className="fixed lg:absolute left-2 lg:left-1/2 right-2 lg:right-auto top-20 lg:top-1/2 bottom-auto lg:bottom-auto w-auto lg:w-[380px] lg:-translate-x-1/2 lg:-translate-y-1/2 max-h-[75vh] lg:max-h-none bg-background backdrop-blur-xl border border-primary/20 rounded-xl shadow-2xl z-[80] lg:z-50 overflow-hidden"
     >
-      <div className="p-3 sm:p-5 border-b border-white/5 flex items-center justify-between">
+      <div className="p-3 sm:p-5 border-b border-primary/10 sticky top-0 bg-background/80 backdrop-blur-sm flex items-center justify-between">
         <div className="flex items-center gap-2 sm:gap-3">
           <BarChart3 size={16} className="text-primary" />
           <span className="font-technical text-[9px] sm:text-[10px] text-primary font-black uppercase tracking-[0.2em]">Area Stats</span>
         </div>
-        <button onClick={onClose} className="p-1 sm:p-1.5 rounded-lg hover:bg-white/5 text-on-surface-variant"><X size={16} /></button>
+        <button onClick={onClose} className="p-1 sm:p-1.5 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all"><X size={16} /></button>
       </div>
 
       <div className="p-3 sm:p-5 overflow-y-auto max-h-[calc(75vh-50px)]">

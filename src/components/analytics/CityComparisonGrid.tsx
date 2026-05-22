@@ -60,7 +60,7 @@ export default function CityComparisonGrid({
       metric: 'ratio',
       label: 'Market Balance',
       getValue: (m?: CityMetricsUI) => m?.demand.ratio || 0,
-      format: (v: number) => `1:${(1 / v).toFixed(1)}`
+      format: (v: number) => v === 0 ? 'No data' : `1:${(1 / v).toFixed(1)}`
     },
     {
       category: 'Price',

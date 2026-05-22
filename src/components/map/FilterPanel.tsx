@@ -90,7 +90,7 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
         </div>
       </div>
 
-      <div className="p-3 sm:p-5 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb:hover]:bg-white/30">
+      <div className="p-3 sm:p-5 space-y-6 custom-scrollbar [&::-webkit-scrollbar-track]:bg-white/5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb:hover]:bg-white/30">
         {/* BHK */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
@@ -107,19 +107,19 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
         {/* Rent Range */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Rent Range</label>
+            <label className="font-technical text-[9px] uppercase tracking-widest text-white/80 font-black">Rent Range</label>
             <InfoTooltip text="Monthly rent in rupees. Leave empty for no limit. Shows listings within your budget range." />
           </div>
           <div className="grid grid-cols-2 gap-2">
-            <input type="number" placeholder="Min ₹" value={filters.rentMin} onChange={e => update('rentMin', e.target.value)} className="bg-gradient-to-r from-primary/25 to-blue-600/15 border border-primary/40 rounded-md p-2.5 text-on-surface text-xs font-bold focus:border-primary/80 focus:shadow-[0_0_8px_rgba(0,102,255,0.3)] outline-none placeholder:text-on-surface-variant/50" />
-            <input type="number" placeholder="Max ₹" value={filters.rentMax} onChange={e => update('rentMax', e.target.value)} className="bg-gradient-to-r from-primary/25 to-blue-600/15 border border-primary/40 rounded-md p-2.5 text-on-surface text-xs font-bold focus:border-primary/80 focus:shadow-[0_0_8px_rgba(0,102,255,0.3)] outline-none placeholder:text-on-surface-variant/50" />
+            <input type="number" placeholder="Min ₹" value={filters.rentMin} onChange={e => update('rentMin', e.target.value)} className="bg-gradient-to-r from-primary/25 to-blue-600/15 border border-primary/40 rounded-md p-2.5 text-white text-xs font-bold focus:border-primary/80 focus:shadow-[0_0_8px_rgba(0,102,255,0.3)] outline-none placeholder:text-white/40" />
+            <input type="number" placeholder="Max ₹" value={filters.rentMax} onChange={e => update('rentMax', e.target.value)} className="bg-gradient-to-r from-primary/25 to-blue-600/15 border border-primary/40 rounded-md p-2.5 text-white text-xs font-bold focus:border-primary/80 focus:shadow-[0_0_8px_rgba(0,102,255,0.3)] outline-none placeholder:text-white/40" />
           </div>
         </div>
 
         {/* Furnishing */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Furnishing</label>
+            <label className="font-technical text-[9px] uppercase tracking-widest text-white/80 font-black">Furnishing</label>
             <InfoTooltip text="Furnished = all furniture. Semi = some furniture. Unfurnished = bare space." />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -132,7 +132,7 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
         {/* Society Type */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Society Type</label>
+            <label className="font-technical text-[9px] uppercase tracking-widest text-white/80 font-black">Society Type</label>
             <InfoTooltip text="Gated = secure community. Non-Gated = open access. PG/Hostel = shared living." />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -145,7 +145,7 @@ export default function FilterPanel({ filters, onChange, onClose }: FilterPanelP
         {/* Tenant Preference */}
         <div className="space-y-3">
           <div className="flex items-center gap-2">
-            <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Tenant Type</label>
+            <label className="font-technical text-[9px] uppercase tracking-widest text-white/80 font-black">Tenant Type</label>
             <InfoTooltip text="Filter by tenant type. Bachelors = professionals. Family = groups with dependents." />
           </div>
           <div className="grid grid-cols-3 gap-2">
