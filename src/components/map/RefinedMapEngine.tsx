@@ -596,8 +596,16 @@ export default function RefinedMapEngine() {
     setIsSubmittingProperty(true);
     setLoading(true);
     try {
+      console.log('=== FORM_SUBMISSION_INITIATED ===');
+      console.log('FORM_DATA:', JSON.stringify(data, null, 2));
+      console.log('LAT:', viewState.latitude, 'LNG:', viewState.longitude);
+
       const payload = { ...data, lat: viewState.latitude, lng: viewState.longitude, ipHash };
+      console.log('FINAL_PAYLOAD:', JSON.stringify(payload, null, 2));
+
       const result = await deployNode(payload);
+      console.log('DEPLOY_RESULT:', JSON.stringify(result, null, 2));
+
       if (result.error) {
         setMapToast({ message: result.error, type: 'error' });
       } else {
@@ -608,6 +616,7 @@ export default function RefinedMapEngine() {
         fetchIntel();
       }
     } catch (err) {
+      console.error('FORM_SUBMISSION_ERROR:', err);
       setMapToast({ message: 'Submission failed. Please try again.', type: 'error' });
     } finally {
       setIsSubmittingProperty(false);

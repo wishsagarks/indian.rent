@@ -125,11 +125,16 @@ export async function findNearbyBuildings(lat: number, lng: number, radiusMeters
  * Deploy a new listing with rate limiting (max 5 deploys per 15 min window)
  */
 export async function deployNode(formData: any) {
+  console.log('=== DEPLOY_NODE_CALLED ===');
+  console.log('INCOMING_FORMDATA:', JSON.stringify(formData, null, 2));
+
   // Input validation
   const validationError = validateDeployForm(formData);
   if (validationError) {
+    console.log('VALIDATION_ERROR:', validationError);
     return { error: validationError };
   }
+  console.log('VALIDATION_PASSED');
 
   // Get server-derived IP hash
   const serverIpHash = await getServerIpHash();
@@ -173,7 +178,7 @@ export async function deployNode(formData: any) {
 
   const attemptDeploy = async (): Promise<any> => {
     try {
-      const { data, error } = await supabase.rpc('deploy_node_atomic', {
+      const payload = {
         p_building_id: formData.existingBuildingId || null,
         p_building_name: formData.buildingName || `${formData.category.toUpperCase()} NODE ${Math.floor(Math.random() * 1000)}`,
         p_category: formData.category,
@@ -199,7 +204,14 @@ export async function deployNode(formData: any) {
         p_is_transparency_pin: formData.isTransparencyPin || false,
         p_availability_date: formData.availabilityDate || null,
         p_flatmate_needed: formData.flatmateNeeded || false,
-      });
+      };
+
+      console.log('DEPLOY_PAYLOAD:', JSON.stringify(payload, null, 2));
+
+      const { data, error } = await supabase.rpc('deploy_node_atomic', payload);
+
+      console.log('DEPLOY_RESPONSE_DATA:', JSON.stringify(data, null, 2));
+      console.log('DEPLOY_RESPONSE_ERROR:', error ? JSON.stringify(error, null, 2) : 'null');
 
       if (error) throw error;
       return { success: true, flatId: data.flat_id };
