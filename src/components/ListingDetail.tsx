@@ -73,6 +73,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   const [listingLoading, setListingLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [isCached, setIsCached] = useState(false);
+  const [isPartial, setIsPartial] = useState(false);
 
   const [showRewardModal, setShowRewardModal] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
@@ -95,6 +96,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
       else {
         setListing(data);
         setIsCached(data.isCached || false);
+        setIsPartial(data.isPartial || false);
       }
       setListingLoading(false);
     });
@@ -279,6 +281,18 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
           className="bg-yellow-500/10 border-t border-b border-yellow-500/30 px-4 py-3 text-center text-yellow-600 dark:text-yellow-400 text-sm font-medium flex items-center justify-center gap-2"
         >
           <span className="inline-block">This listing is showing cached data. Real-time details may not be available.</span>
+        </motion.div>
+      )}
+
+      {/* Partial Data Banner */}
+      {isPartial && !isCached && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-500/10 border-t border-b border-blue-500/30 px-4 py-3 text-center text-blue-600 dark:text-blue-400 text-sm font-medium flex items-center justify-center gap-2"
+        >
+          <ShieldAlert size={16} />
+          <span className="inline-block">Some details like building information are not available. Showing available rental information.</span>
         </motion.div>
       )}
 

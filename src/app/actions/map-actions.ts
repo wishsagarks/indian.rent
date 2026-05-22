@@ -311,7 +311,7 @@ export async function getFlatDetails(flatId: string) {
       console.warn('getFlatDetails query error (trying cache):', error.message);
     }
 
-    // Fallback: try to fetch from map_snapshot cache
+    // Fallback 1: try to fetch from map_snapshot cache
     const { data: snapshotData } = await supabase
       .from('map_snapshot')
       .select('data')
@@ -368,8 +368,59 @@ export async function getFlatDetails(flatId: string) {
           buildingLat: lat,
           buildingLng: lng,
           isCached: true, // Flag to show banner
+          isPartial: false, // Cache has full data
         };
       }
+    }
+
+    // Fallback 2: Fetch bare flat record without building details
+    // This ensures we show SOMETHING instead of 404
+    console.log('Trying fallback: fetch bare flat record');
+    const { data: bareFlat, error: bareError } = await supabase
+      .from('flats')
+      .select('*')
+      .eq('id', flatId)
+      .maybeSingle();
+
+    if (bareError) {
+      console.warn('Even bare fetch failed:', bareError.message);
+      return null;
+    }
+
+    if (bareFlat) {
+      console.log('Returning partial flat data (no building details)');
+      return {
+        id: bareFlat.id,
+        flatNumber: bareFlat.flat_number || 'N/A',
+        status: bareFlat.status || 'vacant',
+        rentAmount: bareFlat.rent_amount,
+        bhk: bareFlat.bhk,
+        furnishing: bareFlat.furnishing,
+        sizeSqft: bareFlat.size_sqft,
+        maintenanceExtra: bareFlat.maintenance_extra,
+        maintenanceAmount: bareFlat.maintenance_amount,
+        tenantPreference: bareFlat.tenant_preference,
+        petsAllowed: bareFlat.pets_allowed,
+        depositMonths: bareFlat.deposit_months,
+        isTransparencyPin: bareFlat.is_transparency_pin,
+        isRemoved: bareFlat.is_removed,
+        availabilityDate: bareFlat.availability_date,
+        flatmateNeeded: bareFlat.flatmate_needed,
+        noBrokerLink: bareFlat.no_broker_link,
+        flatmatesLink: bareFlat.flatmates_link,
+        contributorName: bareFlat.contributor_name,
+        intelFlags: bareFlat.intel_flags,
+        createdAt: bareFlat.created_at,
+        updatedAt: bareFlat.updated_at,
+        floorNumber: null,
+        buildingId: null,
+        buildingName: 'Building details unavailable',
+        buildingCity: null,
+        buildingAddress: null,
+        buildingCategory: null,
+        isCached: false,
+        isPartial: true, // Flag showing this is incomplete data
+      };
     }
 
     return null;
@@ -413,6 +464,7 @@ export async function getFlatDetails(flatId: string) {
     buildingLat: lat,
     buildingLng: lng,
     isCached: false,
+    isPartial: false, // Full data loaded successfully
   };
 }
 
