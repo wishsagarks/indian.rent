@@ -823,12 +823,18 @@ export default function RefinedMapEngine() {
                           whileTap={{ scale: 0.95 }}
                           className="flex flex-col items-center justify-center bg-surface border-2 border-primary text-primary rounded-full font-black text-xs cursor-pointer shadow-[0_0_25px_rgba(0,102,255,0.4)] hover:shadow-[0_0_35px_rgba(0,102,255,0.6)] transition-all active:scale-90"
                           style={{ width: size, height: size }}
-                          onClick={() => { 
+                          onClick={() => {
                             try {
-                              const z = Math.min(supercluster.getClusterExpansionZoom(cluster.id), 20); 
-                              setViewState({ ...viewState, longitude, latitude, zoom: z }); 
+                              let z = supercluster.getClusterExpansionZoom(cluster.id);
+                              // For small clusters (2-3 pins), ensure minimum zoom to ungroup
+                              if ((cluster.properties?.point_count || 0) <= 3) {
+                                z = Math.max(z, 16);
+                              }
+                              z = Math.min(z, 20);
+                              setViewState({ ...viewState, longitude, latitude, zoom: z });
                             } catch (e) {
-                              setViewState({ ...viewState, longitude, latitude, zoom: viewState.zoom + 2 });
+                              // Fallback: zoom in enough to separate pins
+                              setViewState({ ...viewState, longitude, latitude, zoom: Math.min(viewState.zoom + 3, 18) });
                             }
                           }}
                         >
