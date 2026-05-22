@@ -506,7 +506,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
         {/* ── RIGHT: Sticky pricing + actions ──────────────────────────────── */}
         <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
-          className="sticky top-20 sm:top-24 md:top-24 lg:top-24 h-fit space-y-4 pb-8 lg:pb-0 z-30">
+          className="sticky top-20 sm:top-24 md:top-24 lg:top-24 h-fit space-y-4 pb-32 sm:pb-24 md:pb-20 lg:pb-0 z-30">
 
           {/* Pricing card */}
           <div className="bg-surface border border-outline/20 rounded-xl p-5 shadow-xl">
