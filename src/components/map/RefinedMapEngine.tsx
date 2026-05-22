@@ -1438,9 +1438,9 @@ export default function RefinedMapEngine() {
       {/* Detail Card */}
       <AnimatePresence>
         {selectedProperty && !isAddingProperty && (
-          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-20 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[55vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
-            <div className="bg-background rounded-lg flex flex-col">
-              <div className="h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
+          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-24 sm:bottom-32 lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[60vh] sm:max-h-[65vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
+            <div className="bg-background rounded-lg flex flex-col h-full overflow-hidden flex-col">
+              <div className="h-24 sm:h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
                 {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (
                   <img
                     key={`sv-${selectedProperty.id}`}
@@ -1468,7 +1468,7 @@ export default function RefinedMapEngine() {
                 </div>
                 <button onClick={() => setSelectedProperty(null)} className="absolute top-3 left-3 bg-background backdrop-blur-md border border-primary/20 rounded-lg p-1.5 text-on-surface hover:bg-white/20 transition-all"><X size={14} /></button>
               </div>
-              <div className="p-6 text-left flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-4 sm:p-6 text-left flex-1 overflow-y-auto custom-scrollbar">
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-2xl font-black text-on-surface tracking-tighter leading-none uppercase font-display">{selectedProperty.name}</h3>
                   <button className="text-on-surface-variant hover:text-primary transition-colors p-2 rounded-lg border border-white/10"><Heart size={16} /></button>
@@ -1526,29 +1526,32 @@ export default function RefinedMapEngine() {
                         <div className="text-on-surface font-black text-xl tracking-tighter">{selectedProperty.reward || '\u20B92,500'}</div>
                       </div>
                     </div>
-                    <Link href={`/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`} className="block w-full mb-3">
-                      <button className="w-full py-4 bg-primary text-on-primary rounded-lg font-black transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] shadow-lg border border-white/20 active:scale-[0.98]"><LinkIcon size={14} strokeWidth={3} /> View Details</button>
-                    </Link>
-                    <div className="mb-3">
-                      <ShareButtons
-                        listingId={selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}
-                        rent={selectedProperty.rent}
-                        bhk={selectedProperty.isStacked ? `${selectedProperty.flatCount} Units` : (selectedProperty.bhk || 'Property')}
-                        location={selectedProperty.area || selectedProperty.buildingCity || 'Hyderabad'}
-                        buildingName={selectedProperty.name}
-                        variant="compact"
-                        size="md"
-                        fullUrl={`https://${typeof window !== 'undefined' ? window.location.hostname : 'indian.rent'}/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`}
-                      />
-                    </div>
-                    {selectedProperty.ipHash === ipHash && (
-                      <button onClick={() => handleDeletePin(selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id)} className="w-full py-3 bg-red-500/10 border border-red-500/20 rounded-lg font-black text-red-400 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 transition-all hover:bg-red-500/20">
-                        <Trash2 size={12} /> Delete My Pin
-                      </button>
-                    )}
                   </>
                 )}
               </div>
+              {/* Sticky action buttons footer - always visible */}
+              {!selectedProperty.isStacked && (
+                <div className="border-t border-white/5 bg-background/80 backdrop-blur-sm p-3 space-y-2 flex-shrink-0">
+                  <Link href={`/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`} className="block w-full">
+                    <button className="w-full py-3 bg-primary text-on-primary rounded-lg font-black transition-all flex items-center justify-center gap-2 uppercase tracking-[0.2em] text-[9px] shadow-lg border border-white/20 active:scale-[0.98]"><LinkIcon size={12} strokeWidth={3} /> View Details</button>
+                  </Link>
+                  <ShareButtons
+                    listingId={selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}
+                    rent={selectedProperty.rent}
+                    bhk={selectedProperty.isStacked ? `${selectedProperty.flatCount} Units` : (selectedProperty.bhk || 'Property')}
+                    location={selectedProperty.area || selectedProperty.buildingCity || 'Hyderabad'}
+                    buildingName={selectedProperty.name}
+                    variant="compact"
+                    size="sm"
+                    fullUrl={`https://${typeof window !== 'undefined' ? window.location.hostname : 'indian.rent'}/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`}
+                  />
+                  {selectedProperty.ipHash === ipHash && (
+                    <button onClick={() => handleDeletePin(selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id)} className="w-full py-2 bg-red-500/10 border border-red-500/20 rounded-lg font-black text-red-400 uppercase tracking-[0.2em] text-[8px] flex items-center justify-center gap-2 transition-all hover:bg-red-500/20">
+                      <Trash2 size={11} /> Delete My Pin
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </motion.div>
         )}
