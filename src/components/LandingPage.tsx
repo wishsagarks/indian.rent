@@ -312,7 +312,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                    <HeroText />
                  </div>
               </div>
-              <p className="hero-subheading text-body-md text-on-surface-variant max-w-lg leading-relaxed font-medium opacity-80 uppercase tracking-widest text-[10px] font-technical">
+              <p className="hero-subheading text-body-md text-on-surface-variant max-w-sm sm:max-w-lg leading-tight sm:leading-relaxed font-medium opacity-80 uppercase tracking-wide sm:tracking-widest text-[9px] sm:text-[10px] font-technical">
                 Direct community rental protocol. Deploy nodes. Bypass middlemen. Reward intelligence.
               </p>
               <div className="hero-cta-group flex gap-4 items-center mt-6">
