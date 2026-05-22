@@ -8,6 +8,8 @@ import { getMyListings, getMySeekerPins, updateMyListing, deleteMySeekerPin, del
 import { rewardFromRent } from '@/lib/constants';
 import UnifiedMenu from './UnifiedMenu';
 import ThemeToggle from './ThemeToggle';
+import { useToast } from '@/hooks/useToast';
+import { ConfirmModal } from './ui/ConfirmModal';
 
 const STATUS_STYLE: Record<string, string> = {
   vacant: 'bg-emerald-400/10 text-emerald-400 border-emerald-400/30',
@@ -16,12 +18,17 @@ const STATUS_STYLE: Record<string, string> = {
 };
 
 export default function MyPinsDashboard() {
+  const { success, error } = useToast();
   const [listings, setListings] = useState<any[]>([]);
   const [seekerPins, setSeekerPins] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRent, setEditRent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'deleteListing' | 'deleteSeekerPin' | null>(null);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pendingRent, setPendingRent] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getMyListings(), getMySeekerPins()]).then(([l, s]) => {
@@ -31,28 +38,59 @@ export default function MyPinsDashboard() {
     });
   }, []);
 
-  const handleDeleteListing = async (id: string) => {
-    if (!confirm('Delete this listing permanently?')) return;
-    const result = await deleteOwnPin(id);
-    if (result.error) alert(result.error);
-    else setListings(prev => prev.filter(l => l.id !== id));
+  const handleDeleteListingClick = (id: string) => {
+    setPendingId(id);
+    setPendingAction('deleteListing');
+    setModalOpen(true);
   };
 
-  const handleDeleteSeekerPin = async (id: string) => {
-    if (!confirm('Remove this seeker pin?')) return;
-    const result = await deleteMySeekerPin(id);
-    if (result.error) alert(result.error);
-    else setSeekerPins(prev => prev.filter(p => p.id !== id));
+  const handleConfirmDeleteListing = async () => {
+    if (!pendingId) return;
+    const result = await deleteOwnPin(pendingId);
+    if (result.error) {
+      error(result.error);
+    } else {
+      setListings(prev => prev.filter(l => l.id !== pendingId));
+      success('Listing deleted successfully');
+    }
+    setModalOpen(false);
+    setPendingId(null);
+    setPendingAction(null);
+  };
+
+  const handleDeleteSeekerPinClick = (id: string) => {
+    setPendingId(id);
+    setPendingAction('deleteSeekerPin');
+    setModalOpen(true);
+  };
+
+  const handleConfirmDeleteSeekerPin = async () => {
+    if (!pendingId) return;
+    const result = await deleteMySeekerPin(pendingId);
+    if (result.error) {
+      error(result.error);
+    } else {
+      setSeekerPins(prev => prev.filter(p => p.id !== pendingId));
+      success('Seeker pin removed');
+    }
+    setModalOpen(false);
+    setPendingId(null);
+    setPendingAction(null);
   };
 
   const handleSaveEdit = async (id: string) => {
     const rent = parseFloat(editRent.replace(/[^0-9.]/g, ''));
-    if (!rent || rent < 1000) { alert('Enter a valid rent (min ₹1,000)'); return; }
+    if (!rent || rent < 1000) {
+      error('Enter a valid rent (minimum ₹1,000)');
+      return;
+    }
     setSaving(true);
     const result = await updateMyListing(id, { rentAmount: rent });
-    if (result.error) alert(result.error);
-    else {
+    if (result.error) {
+      error(result.error);
+    } else {
       setListings(prev => prev.map(l => l.id === id ? { ...l, rentAmount: rent } : l));
+      success('Rent updated successfully');
       setEditingId(null);
     }
     setSaving(false);
@@ -60,8 +98,14 @@ export default function MyPinsDashboard() {
 
   const handleToggleFlatmate = async (id: string, current: boolean) => {
     const result = await updateMyListing(id, { flatmateNeeded: !current });
-    if (result.error) alert(result.error);
-    else setListings(prev => prev.map(l => l.id === id ? { ...l, flatmateNeeded: !current } : l));
+    if (result.error) {
+      error(result.error);
+    } else {
+      setListings(prev => prev.map(l => l.id === id ? { ...l, flatmateNeeded: !current } : l));
+      success(
+        !current ? 'Looking for flatmates' : 'No longer looking for flatmates'
+      );
+    }
   };
 
   if (loading) {
@@ -174,7 +218,7 @@ export default function MyPinsDashboard() {
                             ₹{rewardFromRent(l.rentAmount || 0).toLocaleString()} reward
                           </span>
                           <Link href={`/flat/${l.id}`} className="px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-md text-[9px] font-black uppercase tracking-wider hover:bg-primary/20 transition-colors">View</Link>
-                          <button onClick={() => handleDeleteListing(l.id)} className="p-1.5 rounded-md bg-red-400/5 border border-red-400/20 text-red-400 hover:bg-red-400/10 transition-colors">
+                          <button onClick={() => handleDeleteListingClick(l.id)} className="p-1.5 rounded-md bg-red-400/5 border border-red-400/20 text-red-400 hover:bg-red-400/10 transition-colors">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -207,7 +251,7 @@ export default function MyPinsDashboard() {
                           Expires {new Date(p.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                         </div>
                       </div>
-                      <button onClick={() => handleDeleteSeekerPin(p.id)} className="p-2 rounded-md bg-red-400/5 border border-red-400/20 text-red-400 hover:bg-red-400/10 transition-colors shrink-0">
+                      <button onClick={() => handleDeleteSeekerPinClick(p.id)} className="p-2 rounded-md bg-red-400/5 border border-red-400/20 text-red-400 hover:bg-red-400/10 transition-colors shrink-0">
                         <Trash2 size={14} />
                       </button>
                     </motion.div>
@@ -218,6 +262,37 @@ export default function MyPinsDashboard() {
           </>
         )}
       </main>
+
+      {/* Confirmation Modals */}
+      <ConfirmModal
+        isOpen={modalOpen && pendingAction === 'deleteListing'}
+        title="Delete Listing?"
+        message="This listing will be permanently removed. This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous
+        onConfirm={handleConfirmDeleteListing}
+        onCancel={() => {
+          setModalOpen(false);
+          setPendingId(null);
+          setPendingAction(null);
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={modalOpen && pendingAction === 'deleteSeekerPin'}
+        title="Remove Seeker Pin?"
+        message="This seeker pin will be removed from your active pins."
+        confirmText="Remove"
+        cancelText="Cancel"
+        isDangerous
+        onConfirm={handleConfirmDeleteSeekerPin}
+        onCancel={() => {
+          setModalOpen(false);
+          setPendingId(null);
+          setPendingAction(null);
+        }}
+      />
     </div>
   );
 }
