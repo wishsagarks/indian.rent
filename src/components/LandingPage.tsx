@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Satellite, Loader2, CheckCircle2 } from 'lucide-react';
+import { Satellite, Loader2, CheckCircle2, Users, Zap, Award, Shield, TrendingUp, Globe } from 'lucide-react';
 import MobileScrollProgress from './animations/MobileScrollProgress';
 import { useScrollVelocity } from '@/lib/scroll-velocity-context';
 
@@ -27,6 +27,7 @@ import { CommunityBenefitsSection } from './ui-advanced/CommunityBenefitsSection
 import { StickyScrollReveal } from './ui-advanced/StickyScrollReveal';
 import { SpotlightCard } from './ui-advanced/SpotlightCard';
 import { MobileTextReveal } from './animations/MobileTextReveal';
+import { BenefitsCarousel } from './ui-advanced/BenefitsCarousel';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -366,11 +367,11 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.8 }}
-                  className="hero-subheading max-w-xs sm:max-w-lg"
+                  className="hero-subheading w-full"
                 >
                   <MobileTextReveal
                     text="Community Intelligence • Direct Rentals • Fair Pricing • Zero Middlemen"
-                    className="text-body-md text-on-surface-variant leading-snug sm:leading-relaxed font-medium opacity-70 hover:opacity-100 transition-opacity duration-500 uppercase tracking-widest text-[8px] sm:text-[10px] font-technical backdrop-blur-sm px-4 py-3 rounded-lg bg-surface/30"
+                    className="text-body-md text-on-surface-variant leading-relaxed font-medium opacity-70 hover:opacity-100 transition-opacity duration-500 uppercase tracking-widest text-[7px] sm:text-[9px] md:text-[10px] font-technical backdrop-blur-sm px-3 sm:px-4 py-2 sm:py-3 rounded-lg bg-surface/30 whitespace-normal block max-w-2xl"
                     delay={0.6}
                     staggerDuration={0.04}
                     containerDelay={0.08}
@@ -521,71 +522,88 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
               </p>
             </motion.div>
 
-            {/* Benefits using StickyScrollReveal */}
-            <StickyScrollReveal
+            {/* Benefits Carousel */}
+            <BenefitsCarousel
               items={[
                 {
+                  id: '1',
                   title: 'Community Intelligence',
                   description: 'Real rents from real people. No middlemen. Pure peer-to-peer market data.',
-                  content: (
-                    <div className="space-y-4">
-                      <div className="text-5xl font-black text-primary/30">📊</div>
-                      <p className="text-sm text-on-surface font-medium">Access verified rental data collected directly from community members, ensuring accuracy and transparency.</p>
-                    </div>
-                  )
+                  icon: <Users className="w-full h-full" strokeWidth={1.5} />,
+                  gradient: 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20',
+                  accentColor: 'bg-blue-500',
+                  details: [
+                    'Access verified rental data from community members',
+                    'Real-time price trends and market insights',
+                    'Transparent, unmanipulated market information'
+                  ]
                 },
                 {
+                  id: '2',
                   title: 'Zero Broker Friction',
-                  description: 'Direct contact with landlords. Transparent terms. No commission feeds.',
-                  content: (
-                    <div className="space-y-4">
-                      <div className="text-5xl font-black text-secondary/30">⚡</div>
-                      <p className="text-sm text-on-surface font-medium">Connect directly with property owners and skip the middleman. Save money, time, and hassle.</p>
-                    </div>
-                  )
+                  description: 'Direct contact with landlords. Transparent terms. No commission fees.',
+                  icon: <Zap className="w-full h-full" strokeWidth={1.5} />,
+                  gradient: 'bg-gradient-to-br from-amber-500/20 to-orange-500/20',
+                  accentColor: 'bg-amber-500',
+                  details: [
+                    'Connect directly with property owners',
+                    'Eliminate middleman commissions',
+                    'Save time, money, and hassle'
+                  ]
                 },
                 {
+                  id: '3',
                   title: 'Good Faith Rewards',
                   description: 'Contribute verified listings. Earn rewards. Build community value.',
-                  content: (
-                    <div className="space-y-4">
-                      <div className="text-5xl font-black text-amber-400/30">💰</div>
-                      <p className="text-sm text-on-surface font-medium">Get rewarded for contributing accurate listing data and helping other renters find their perfect home.</p>
-                    </div>
-                  )
+                  icon: <Award className="w-full h-full" strokeWidth={1.5} />,
+                  gradient: 'bg-gradient-to-br from-emerald-500/20 to-teal-500/20',
+                  accentColor: 'bg-emerald-500',
+                  details: [
+                    'Earn rewards for contributing accurate data',
+                    'Help other renters find their perfect home',
+                    'Build a stronger peer-to-peer network'
+                  ]
                 },
                 {
+                  id: '4',
                   title: 'Transparent Verification',
-                  description: 'Every rental verified by the community. Flags protect everyone.',
-                  content: (
-                    <div className="space-y-4">
-                      <div className="text-5xl font-black text-blue-400/30">🔐</div>
-                      <p className="text-sm text-on-surface font-medium">Community-driven verification ensures every listing is authentic and safe for renters and landlords.</p>
-                    </div>
-                  )
+                  description: 'Every rental verified by the community. Safety first.',
+                  icon: <Shield className="w-full h-full" strokeWidth={1.5} />,
+                  gradient: 'bg-gradient-to-br from-purple-500/20 to-pink-500/20',
+                  accentColor: 'bg-purple-500',
+                  details: [
+                    'Community-driven verification system',
+                    'Authentic listings protected by crowd wisdom',
+                    'Safe for both renters and landlords'
+                  ]
                 },
                 {
+                  id: '5',
                   title: 'Market Intelligence',
                   description: 'Area statistics, price trends, demand heatmaps. Make informed decisions.',
-                  content: (
-                    <div className="space-y-4">
-                      <div className="text-5xl font-black text-pink-400/30">📈</div>
-                      <p className="text-sm text-on-surface font-medium">Real-time market insights help you understand trends and make data-driven rental decisions.</p>
-                    </div>
-                  )
+                  icon: <TrendingUp className="w-full h-full" strokeWidth={1.5} />,
+                  gradient: 'bg-gradient-to-br from-rose-500/20 to-pink-500/20',
+                  accentColor: 'bg-rose-500',
+                  details: [
+                    'Real-time market analytics and trends',
+                    'Demand heatmaps by area and locality',
+                    'Data-driven rental decision making'
+                  ]
                 },
                 {
+                  id: '6',
                   title: 'Expanding Network',
                   description: 'Growing across metros. More cities, more rentals, stronger network.',
-                  content: (
-                    <div className="space-y-4">
-                      <div className="text-5xl font-black text-cyan-400/30">🌐</div>
-                      <p className="text-sm text-on-surface font-medium">Join a rapidly growing peer-to-peer rental network expanding to major cities across India.</p>
-                    </div>
-                  )
+                  icon: <Globe className="w-full h-full" strokeWidth={1.5} />,
+                  gradient: 'bg-gradient-to-br from-indigo-500/20 to-blue-500/20',
+                  accentColor: 'bg-indigo-500',
+                  details: [
+                    'Live in Hyderabad, Bangalore, Pune, Chennai',
+                    'Expanding to major metros across India',
+                    'Growing peer-to-peer rental revolution'
+                  ]
                 }
               ]}
-              contentClassName="text-on-surface"
             />
 
             {/* Call to Action */}

@@ -47,7 +47,7 @@ export function MobileTextReveal({
 
   return (
     <motion.div
-      className={`flex flex-wrap gap-1 ${className}`}
+      className={`inline-block ${className}`}
       variants={containerVariants}
       initial="hidden"
       whileInView="visible"
@@ -57,10 +57,9 @@ export function MobileTextReveal({
         <motion.span
           key={index}
           variants={itemVariants}
-          className="inline-block"
+          className="inline"
         >
-          {word}
-          {splitByWord && index < words.length - 1 && ' '}
+          {word}{splitByWord && index < words.length - 1 ? ' ' : ''}
         </motion.span>
       ))}
     </motion.div>
