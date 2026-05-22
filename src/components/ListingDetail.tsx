@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Banknote, Link as LinkIcon, Share2, CircleCheck as CheckCircle2,
-  ChevronLeft, Check, ShieldAlert, Star, MessageCircle, Send, Ruler,
+  ChevronLeft, ChevronRight, Check, ShieldAlert, Star, MessageCircle, Send, Ruler,
   Calendar, Sofa, Users, RefreshCcw, Home, Building2, TrendingUp,
   TrendingDown, Minus, Award, Trash2, QrCode, AlertTriangle, Info,
 } from 'lucide-react';
@@ -27,6 +27,11 @@ const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1522708323590-d24db
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
 function getPhotoUrl(listing: any): string {
+  // Use real photos if available
+  if (listing.photos && Array.isArray(listing.photos) && listing.photos.length > 0) {
+    return listing.photos[0];
+  }
+  // Fall back to Street View
   if (listing.buildingLat && listing.buildingLng && GOOGLE_MAPS_API_KEY) {
     return `https://maps.googleapis.com/maps/api/streetview?size=1200x600&location=${listing.buildingLat},${listing.buildingLng}&key=${GOOGLE_MAPS_API_KEY}`;
   }
@@ -90,6 +95,9 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
   // Contact Owner flow
   const [showMaskedPhone, setShowMaskedPhone] = useState(false);
   const [contactLoading, setContactLoading] = useState(false);
+
+  // Photo carousel
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
     getFlatDetails(id).then(data => {
@@ -301,17 +309,54 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
       <div className="relative w-full h-40 sm:h-56 md:h-72 lg:h-96 overflow-hidden mt-16 bg-surface/50">
-        <Image
-          src={photoUrl}
-          alt={listing.buildingName || 'Property photo'}
-          fill
-          className="object-cover"
-          priority
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
-          placeholder="blur"
-          blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect fill='%23222'/%3E%3C/svg%3E"
-        />
+        {listing.photos && listing.photos.length > 0 && (
+          <Image
+            src={listing.photos[currentPhotoIndex]}
+            alt={`${listing.buildingName || 'Property'} - Photo ${currentPhotoIndex + 1}`}
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect fill='%23222'/%3E%3C/svg%3E"
+          />
+        )}
+        {(!listing.photos || listing.photos.length === 0) && (
+          <Image
+            src={photoUrl}
+            alt={listing.buildingName || 'Property photo'}
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect fill='%23222'/%3E%3C/svg%3E"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+
+        {/* Photo carousel controls */}
+        {listing.photos && listing.photos.length > 1 && (
+          <>
+            <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10">
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">{currentPhotoIndex + 1} / {listing.photos.length}</span>
+            </div>
+            <button
+              onClick={() => setCurrentPhotoIndex(i => (i - 1 + listing.photos.length) % listing.photos.length)}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 transition-all z-10"
+              aria-label="Previous photo"
+            >
+              <ChevronLeft size={20} className="text-white" />
+            </button>
+            <button
+              onClick={() => setCurrentPhotoIndex(i => (i + 1) % listing.photos.length)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/40 hover:bg-black/60 border border-white/10 transition-all z-10"
+              aria-label="Next photo"
+            >
+              <ChevronRight size={20} className="text-white" />
+            </button>
+          </>
+        )}
 
         {/* Data quality badge */}
         {dq === 'cached' && (
