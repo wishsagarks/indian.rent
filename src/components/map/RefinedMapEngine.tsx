@@ -176,14 +176,14 @@ export default function RefinedMapEngine() {
       longitude: 85.8245,
       zoom: 11,
       pitch: 0,
-      bounds: [[85.4, 20.0], [86.3, 20.6]]
+      bounds: [[85.5, 19.95], [86.2, 20.65]]
     },
     cuttack: {
       latitude: 20.4625,
       longitude: 85.8830,
       zoom: 11,
       pitch: 0,
-      bounds: [[85.5, 20.2], [86.2, 20.7]]
+      bounds: [[85.65, 20.15], [86.1, 20.75]]
     }
   };
 
@@ -1438,9 +1438,9 @@ export default function RefinedMapEngine() {
       {/* Detail Card */}
       <AnimatePresence>
         {selectedProperty && !isAddingProperty && (
-          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-28 sm:bottom-36 md:bottom-auto lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[50vh] sm:max-h-[60vh] md:max-h-[65vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
+          <motion.div initial={{ opacity: 0, x: 50, scale: 0.95 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.95 }} className="fixed lg:absolute right-2 lg:right-8 left-2 lg:left-auto bottom-28 sm:bottom-36 md:bottom-auto lg:bottom-auto top-auto lg:top-24 w-auto lg:w-[380px] max-h-[55vh] sm:max-h-[60vh] md:max-h-[70vh] lg:max-h-none bg-surface rounded-lg overflow-hidden z-30 shadow-[0_40px_100px_-15px_rgba(0,0,0,0.7)] flex flex-col border border-white/10 p-1">
             <div className="bg-background rounded-lg flex flex-col h-full overflow-hidden flex-col">
-              <div className="h-24 sm:h-32 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5">
+              <div className="h-20 sm:h-28 lg:h-48 relative m-2 rounded-lg overflow-hidden border border-white/5 flex-shrink-0">
                 {selectedProperty.lat && GOOGLE_MAPS_API_KEY && !streetViewFailed ? (
                   <img
                     key={`sv-${selectedProperty.id}`}

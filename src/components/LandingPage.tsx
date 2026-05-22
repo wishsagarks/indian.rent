@@ -313,10 +313,10 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                    <HeroText />
                  </div>
               </div>
-              <p className="hero-subheading text-body-md text-on-surface-variant max-w-sm sm:max-w-lg leading-tight sm:leading-relaxed font-medium opacity-80 uppercase tracking-wide sm:tracking-widest text-[9px] sm:text-[10px] font-technical">
-                Direct community rental protocol. Deploy nodes. Bypass middlemen. Reward intelligence.
+              <p className="hero-subheading text-body-md text-on-surface-variant max-w-xs sm:max-w-lg leading-snug sm:leading-relaxed font-medium opacity-80 uppercase tracking-widest text-[8px] sm:text-[10px] font-technical">
+                Community Intelligence • Direct Rentals • Fair Pricing • Zero Middlemen
               </p>
-              <div className="hero-cta-group flex gap-4 items-center mt-6">
+              <div className="hero-cta-group flex gap-4 items-center mt-8">
                 <div className="group relative">
                   <MagneticButton>
                     <StickerButton
@@ -339,7 +339,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 1.2, duration: 0.6 }}
-                      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface-container-high text-inverse-on-surface text-[11px] rounded-md whitespace-nowrap pointer-events-none z-50 font-medium"
+                      className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface-container-high text-inverse-on-surface text-[11px] rounded-md whitespace-nowrap pointer-events-none z-50 font-medium"
                     >
                       Explore map & listings
                       <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-surface-container-high rotate-45"></div>

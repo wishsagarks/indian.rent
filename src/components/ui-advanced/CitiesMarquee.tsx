@@ -6,14 +6,14 @@ import gsap from 'gsap';
 import { MapPin, Zap } from 'lucide-react';
 
 const cities = [
-  { name: 'BENGALURU', active: true },
-  { name: 'HYDERABAD', active: true },
-  { name: 'BHUBANESWAR', active: true },
-  { name: 'CUTTACK', active: true },
-  { name: 'Mumbai', active: false, comingSoon: true },
-  { name: 'Delhi', active: false, comingSoon: true },
-  { name: 'Chennai', active: false, comingSoon: true },
-  { name: 'Pune', active: false, comingSoon: true },
+  { name: 'BLR', fullName: 'BENGALURU', active: true },
+  { name: 'HYD', fullName: 'HYDERABAD', active: true },
+  { name: 'BBSR', fullName: 'BHUBANESWAR', active: true },
+  { name: 'CTC', fullName: 'CUTTACK', active: true },
+  { name: 'BOM', fullName: 'MUMBAI', active: false, comingSoon: true },
+  { name: 'DEL', fullName: 'DELHI', active: false, comingSoon: true },
+  { name: 'CHE', fullName: 'CHENNAI', active: false, comingSoon: true },
+  { name: 'PUN', fullName: 'PUNE', active: false, comingSoon: true },
 ];
 
 export function CitiesMarquee() {
@@ -128,7 +128,8 @@ export function CitiesMarquee() {
                       className="w-2 h-2 bg-primary rounded-full"
                     />
                   )}
-                  <span className="text-xs md:text-sm">{city.name}</span>
+                  <span className="text-xs md:text-sm font-black">{city.name}</span>
+                  <span className="text-[7px] md:text-[8px] text-on-surface-variant/40 font-technical">{city.fullName}</span>
                   {city.comingSoon && (
                     <span className="text-[7px] md:text-[8px] ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black tracking-wider">
                       Soon
