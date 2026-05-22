@@ -136,7 +136,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
   // ── Nav ────────────────────────────────────────────────────────────────────
   const navBar = (
-    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background backdrop-blur-xl border-b border-primary/20 shadow-2xl px-3 sm:px-4 md:px-8">
+    <nav className="fixed top-0 w-full z-50 flex justify-center h-16 bg-background backdrop-blur-xl border-b border-primary/20 shadow-2xl px-2 sm:px-4 md:px-8">
       <div className="max-w-5xl flex justify-between items-center w-full gap-2">
         <div className="flex items-center gap-1 sm:gap-3 min-w-0">
           <UnifiedMenu />
@@ -251,7 +251,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
       {navBar}
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div className="relative w-full h-56 sm:h-72 md:h-96 overflow-hidden mt-16">
+      <div className="relative w-full h-40 sm:h-56 md:h-72 lg:h-96 overflow-hidden mt-16">
         <Image src={photoUrl} alt={listing.buildingName || 'Property'} fill className="object-cover" priority />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
@@ -270,7 +270,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
         )}
 
         {/* Building name overlay */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 sm:px-8 pb-5 md:pb-8">
+        <div className="absolute bottom-0 left-0 right-0 px-3 sm:px-6 md:px-8 pb-4 sm:pb-5 md:pb-8">
           <div className="max-w-5xl mx-auto">
             {listing.isTransparencyPin && (
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 mb-2 rounded-full bg-amber-400/20 border border-amber-400/30">
@@ -291,7 +291,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
       </div>
 
       {/* ── Status badges ──────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-8 py-3 max-w-5xl mx-auto flex flex-wrap gap-2">
+      <div className="px-3 sm:px-6 md:px-8 py-3 max-w-5xl mx-auto flex flex-wrap gap-2">
         <span className="bg-secondary/10 border border-secondary/20 text-secondary px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider flex items-center gap-1.5">
           <CheckCircle2 size={11} /> Verified · {relativeDate(listing.createdAt)}
         </span>
@@ -319,14 +319,14 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
       {/* ── Removed warning ────────────────────────────────────────────────── */}
       {listing.isRemoved && (
-        <div className="mx-4 sm:mx-8 max-w-5xl mx-auto mb-4 bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3">
+        <div className="mx-3 sm:mx-6 md:mx-8 max-w-5xl mx-auto mb-4 bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle size={18} className="text-red-400 shrink-0" />
           <p className="text-sm text-red-400 font-medium">This listing has been removed and may no longer be available.</p>
         </div>
       )}
 
       {/* ── Main two-column layout ─────────────────────────────────────────── */}
-      <main className="px-4 sm:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 pb-24">
+      <main className="px-3 sm:px-6 md:px-8 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-4 md:gap-6 pb-20 md:pb-24">
 
         {/* ── LEFT: specs + analytics + community ─────────────────────────── */}
         <div className="space-y-5">
@@ -399,7 +399,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
               )}
 
               {/* BHK breakdown */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {[1, 2, 3].map(bhk => {
                   const avg = bhk === 1 ? areaStats.avg_rent_1bhk : bhk === 2 ? areaStats.avg_rent_2bhk : areaStats.avg_rent_3bhk;
                   if (!avg) return null;
@@ -506,7 +506,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
 
         {/* ── RIGHT: Sticky pricing + actions ──────────────────────────────── */}
         <motion.div initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 }}
-          className="lg:sticky lg:top-24 h-fit space-y-4 pb-8 lg:pb-0">
+          className="sticky top-20 sm:top-24 md:top-24 lg:top-24 h-fit space-y-4 pb-8 lg:pb-0 z-30">
 
           {/* Pricing card */}
           <div className="bg-surface border border-outline/20 rounded-xl p-5 shadow-xl">
