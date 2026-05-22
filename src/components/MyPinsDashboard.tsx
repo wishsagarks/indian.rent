@@ -121,8 +121,8 @@ export default function MyPinsDashboard() {
                         <div className="flex items-center gap-2 shrink-0">
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${STATUS_STYLE[l.status] || ''}`}>{l.status}</span>
                           {l.intelFlags > 0 && (
-                            <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border bg-red-400/10 text-red-400 border-red-400/30">
-                              <AlertTriangle size={10} />{l.intelFlags} flags
+                            <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider border bg-gradient-to-r from-red-500/30 to-orange-600/20 text-red-400 border-red-400/50 shadow-[0_0_12px_rgba(239,68,68,0.2)]">
+                              <AlertTriangle size={12} />🚨 {l.intelFlags}/3 flags
                             </span>
                           )}
                         </div>
