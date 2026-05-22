@@ -1214,35 +1214,41 @@ export default function RefinedMapEngine() {
               <p className="text-on-surface-variant text-sm mb-6 text-center">Get emailed when new listings appear near this location</p>
               <div className="space-y-4">
                 <div>
-                  <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Your Email</label>
+                  <label htmlFor="notify-email" className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Your Email</label>
                   <input
+                    id="notify-email"
                     type="email"
                     value={notifyEmail}
                     onChange={e => setNotifyEmail(e.target.value)}
                     placeholder="name@example.com"
-                    className="w-full mt-2 bg-surface-container-low border border-white/5 rounded-lg px-4 py-2.5 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary outline-none"
+                    autoComplete="email"
+                    inputMode="email"
+                    aria-label="Email address for notifications"
+                    className="w-full mt-2 bg-surface-container-low border border-white/5 rounded-lg px-4 py-3 sm:py-2.5 text-on-surface placeholder:text-on-surface-variant/30 focus:border-primary focus:bg-surface outline-none transition-colors min-h-[44px] sm:min-h-auto text-base sm:text-sm"
                   />
                 </div>
                 <div>
-                  <label className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Radius: {notifyRadius} km</label>
+                  <label htmlFor="notify-radius" className="font-technical text-[9px] uppercase tracking-widest text-on-surface-variant font-black">Radius: {notifyRadius} km</label>
                   <input
+                    id="notify-radius"
                     type="range"
                     min="1"
                     max="10"
                     value={notifyRadius}
                     onChange={e => setNotifyRadius(Number(e.target.value))}
-                    className="w-full mt-2"
+                    aria-label="Notification radius in kilometers"
+                    className="w-full mt-2 cursor-pointer"
                   />
                 </div>
               </div>
               <button
                 onClick={handleSubscribeToArea}
                 disabled={notifySubmitting}
-                className="w-full mt-6 py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full mt-6 py-3 sm:py-3 bg-primary text-on-primary rounded-lg font-black uppercase tracking-[0.2em] text-[10px] sm:text-[9px] flex items-center justify-center gap-2 disabled:opacity-50 min-h-[48px] sm:min-h-auto transition-all active:scale-95"
               >
                 <Bell size={14} /> {notifySubmitting ? 'Subscribing...' : 'Subscribe'}
               </button>
-              <button onClick={() => setShowNotifyModal(false)} className="w-full mt-2 py-3 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] text-on-surface-variant">Close</button>
+              <button onClick={() => setShowNotifyModal(false)} className="w-full mt-2 py-3 sm:py-3 bg-white/5 border border-white/10 rounded-lg font-black uppercase tracking-[0.2em] text-[10px] sm:text-[9px] text-on-surface-variant min-h-[44px] sm:min-h-auto transition-all active:scale-95">Close</button>
             </motion.div>
           </motion.div>
         )}
@@ -1380,9 +1386,9 @@ export default function RefinedMapEngine() {
             <motion.button
               animate={{
                 boxShadow: [
-                  '0 0 20px rgba(0, 102, 255, 0.4)',
-                  '0 0 40px rgba(0, 102, 255, 0.8)',
-                  '0 0 20px rgba(0, 102, 255, 0.4)'
+                  '0 0 20px rgba(16, 185, 129, 0.4)',
+                  '0 0 40px rgba(16, 185, 129, 0.8)',
+                  '0 0 20px rgba(16, 185, 129, 0.4)'
                 ],
                 scale: [1, 1.05, 1]
               }}
@@ -1394,11 +1400,11 @@ export default function RefinedMapEngine() {
               whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.95 }}
               data-tour="analytics-button"
-              className="bg-gradient-to-br from-primary to-blue-600 text-on-primary w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl flex flex-col items-center justify-center border border-white/40 relative overflow-hidden group"
+              className="bg-emerald-500 text-white w-12 h-12 sm:w-16 sm:h-16 rounded-lg sm:rounded-xl flex flex-col items-center justify-center border border-emerald-500/20 relative overflow-hidden group"
               title="Market Analytics Dashboard"
             >
               {/* Animated shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 bg-emerald-500/20 animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity" />
 
               <motion.div
                 animate={{ rotate: 360 }}

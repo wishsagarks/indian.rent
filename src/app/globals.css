@@ -376,3 +376,41 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Safe Area Support for Notched Devices (iPhone 14+, Dynamic Island, etc.) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  /* Fixed top navbar - respect top notch */
+  nav[aria-label="Main navigation"],
+  .fixed.top-0 {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  /* Fixed bottom bar - respect home indicator */
+  .fixed.bottom-0 {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Landscape orientation fixes */
+@media (orientation: landscape) and (max-height: 600px) {
+  nav[aria-label="Main navigation"],
+  .fixed.top-0 {
+    height: auto;
+    padding: max(0.5rem, env(safe-area-inset-top)) 0;
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+body {
+  overflow-x: hidden;
+}
+
+/* Touch-action to prevent accidental double-tap zoom */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}

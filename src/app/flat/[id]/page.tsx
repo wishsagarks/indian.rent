@@ -4,9 +4,10 @@ import { getFlatDetails } from "@/app/actions/map-actions";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const listing = await getFlatDetails(id);
-  if (!listing) return { title: 'Listing Not Found — indian.rent by WishLabs' };
+  const result = await getFlatDetails(id);
+  if (result.error || !result.data) return { title: 'Listing Not Found — indian.rent by WishLabs' };
 
+  const listing = result.data;
   const rent = listing.rentAmount ? `₹${Number(listing.rentAmount).toLocaleString()}/mo` : '';
   const bhk = listing.bhk ? `${listing.bhk} BHK` : '';
   const location = listing.buildingAddress || listing.buildingCity || 'Hyderabad';

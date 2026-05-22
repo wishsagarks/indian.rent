@@ -251,8 +251,17 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
       {navBar}
 
       {/* ── Hero ──────────────────────────────────────────────────────────── */}
-      <div className="relative w-full h-40 sm:h-56 md:h-72 lg:h-96 overflow-hidden mt-16">
-        <Image src={photoUrl} alt={listing.buildingName || 'Property'} fill className="object-cover" priority />
+      <div className="relative w-full h-40 sm:h-56 md:h-72 lg:h-96 overflow-hidden mt-16 bg-surface/50">
+        <Image
+          src={photoUrl}
+          alt={listing.buildingName || 'Property photo'}
+          fill
+          className="object-cover"
+          priority
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
+          placeholder="blur"
+          blurDataURL="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect fill='%23222'/%3E%3C/svg%3E"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
 
         {/* Data quality badge */}
@@ -626,7 +635,7 @@ export default function ListingDetail({ id, type }: ListingPageProps) {
                     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(upiLink)}&size=180x180`;
                     return (
                       <>
-                        <Image src={qrUrl} alt="UPI QR Code" width={140} height={140} className="mx-auto rounded-md" />
+                        <Image src={qrUrl} alt="UPI payment QR code" width={140} height={140} className="mx-auto rounded-md bg-white p-2" placeholder="empty" unoptimized />
                         <div className="font-technical text-[10px] uppercase tracking-widest text-primary font-black">Suggested Reward (Optional)</div>
                         <div className="text-2xl font-black text-on-surface tracking-tighter">₹{reward.toLocaleString()}</div>
                         <a href={upiLink} className="w-full block">

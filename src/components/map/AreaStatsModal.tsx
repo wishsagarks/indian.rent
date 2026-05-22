@@ -63,7 +63,7 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
           <BarChart3 size={16} className="text-primary" />
           <span className="font-technical text-[9px] sm:text-[10px] text-primary font-black uppercase tracking-[0.2em]">Area Stats</span>
         </div>
-        <button onClick={onClose} className="p-1 sm:p-1.5 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all"><X size={16} /></button>
+        <button onClick={onClose} className="p-2 sm:p-1.5 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto flex items-center justify-center" aria-label="Close area stats"><X size={16} /></button>
       </div>
 
       <div className="p-3 sm:p-5 overflow-y-auto max-h-[calc(75vh-50px)]">
@@ -80,12 +80,12 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
             {/* Filter toggle */}
             <div className="grid grid-cols-3 gap-2">
               {([['all', 'All'], ['gated', 'Gated'], ['non-gated', 'Non-Gated']] as const).map(([id, label]) => (
-                <button key={id} onClick={() => setFilter(id)} className={`py-1.5 sm:py-2 rounded-md font-black text-[8px] sm:text-[9px] uppercase tracking-wider border transition-all ${filter === id ? 'bg-primary text-background border-primary' : 'bg-white/5 border-white/5'}`}>{label}</button>
+                <button key={id} onClick={() => setFilter(id)} className={`py-1.5 sm:py-2 rounded-md font-black text-[8px] sm:text-[9px] uppercase tracking-wider border transition-all ${filter === id ? 'bg-primary text-background border-primary' : 'bg-background/50 border-primary/20 hover:bg-background/70'}`}>{label}</button>
               ))}
             </div>
 
             {/* Total Count */}
-            <div className="bg-white/5 border border-white/5 rounded-lg p-3 sm:p-4 text-center">
+            <div className="bg-background/50 border border-primary/20 rounded-lg p-3 sm:p-4 text-center hover:bg-background/70 transition-colors">
               <div className="text-2xl sm:text-3xl font-black text-on-surface tracking-tighter">
                 {filter === 'gated' ? stats.total_flats_gated : filter === 'non-gated' ? stats.total_flats_non_gated : stats.total_flats}
               </div>
@@ -112,7 +112,7 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
                     value: filter === 'gated' ? stats.avg_rent_3bhk_gated : filter === 'non-gated' ? stats.avg_rent_3bhk_non_gated : stats.avg_rent_3bhk,
                   },
                 ].map(item => (
-                  <div key={item.label} className="bg-white/5 border border-white/5 rounded-lg p-2 sm:p-3 text-center">
+                  <div key={item.label} className="bg-background/50 border border-primary/20 rounded-lg p-2 sm:p-3 text-center hover:bg-background/70 transition-colors">
                     <div className="text-base sm:text-lg font-black text-primary tracking-tighter">{item.value ? `₹${(item.value / 1000).toFixed(0)}k` : '—'}</div>
                     <div className="font-technical text-[7px] sm:text-[8px] text-on-surface-variant uppercase tracking-wider mt-1">{item.label}</div>
                   </div>
@@ -122,13 +122,13 @@ export default function AreaStatsModal({ bounds, onClose }: AreaStatsModalProps)
 
             {/* Gated vs Non-Gated */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white/5 border border-white/5 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-lg sm:text-xl font-black text-blue-400">{stats.gated_count}</div>
-                <div className="font-technical text-[7px] sm:text-[8px] text-on-surface-variant uppercase tracking-wider mt-1">Gated</div>
+              <div className="bg-primary/10 border border-primary/30 rounded-lg p-2 sm:p-3 text-center hover:bg-primary/15 transition-colors">
+                <div className="text-lg sm:text-xl font-black text-primary">{stats.gated_count}</div>
+                <div className="font-technical text-[7px] sm:text-[8px] text-primary/70 uppercase tracking-wider mt-1">Gated</div>
               </div>
-              <div className="bg-white/5 border border-white/5 rounded-lg p-2 sm:p-3 text-center">
-                <div className="text-lg sm:text-xl font-black text-orange-400">{stats.non_gated_count}</div>
-                <div className="font-technical text-[7px] sm:text-[8px] text-on-surface-variant uppercase tracking-wider mt-1">Non-Gated</div>
+              <div className="bg-secondary/10 border border-secondary/30 rounded-lg p-2 sm:p-3 text-center hover:bg-secondary/15 transition-colors">
+                <div className="text-lg sm:text-xl font-black text-secondary">{stats.non_gated_count}</div>
+                <div className="font-technical text-[7px] sm:text-[8px] text-secondary/70 uppercase tracking-wider mt-1">Non-Gated</div>
               </div>
             </div>
 

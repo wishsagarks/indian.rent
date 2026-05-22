@@ -357,7 +357,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5, duration: 0.8 }}
-                  className="hero-cta-group flex gap-4 items-center mt-8"
+                  className="hero-cta-group flex gap-4 items-center mt-12 sm:mt-8"
                 >
                   <div className="group relative">
                     <MagneticButton>

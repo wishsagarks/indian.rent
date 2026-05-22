@@ -57,17 +57,17 @@ export default function CircleAreaSelector({ center, onClose }: CircleAreaSelect
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="fixed left-2 right-2 top-20 lg:left-4 lg:right-auto lg:top-1/2 w-auto lg:w-80 lg:-translate-y-1/2 bg-surface/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl z-50"
+      className="fixed left-2 right-2 top-20 lg:left-4 lg:right-auto lg:top-1/2 w-auto lg:w-80 lg:-translate-y-1/2 bg-background backdrop-blur-xl border border-primary/20 rounded-lg shadow-2xl z-50"
     >
       {/* Header */}
-      <div className="p-4 border-b border-white/5 flex items-center justify-between">
+      <div className="p-4 border-b border-primary/10 sticky top-0 bg-background/80 backdrop-blur-sm flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BarChart3 size={16} className="text-primary" />
           <span className="font-technical text-xs text-primary font-black uppercase">Area Stats</span>
         </div>
         <button
           onClick={onClose}
-          className="p-1 rounded-lg hover:bg-white/5"
+          className="p-1 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all"
         >
           <X size={16} />
         </button>
@@ -85,9 +85,9 @@ export default function CircleAreaSelector({ center, onClose }: CircleAreaSelect
           <div className="flex gap-2">
             <button
               onClick={() => setRadius(Math.max(0.5, radius - 0.5))}
-              className="flex-1 py-2 px-3 bg-white/5 border border-white/10 rounded hover:bg-white/10 transition"
+              className="flex-1 py-2 px-3 bg-background/50 border border-primary/20 rounded hover:bg-background/70 transition-colors"
             >
-              <Minus size={14} className="mx-auto" />
+              <Minus size={14} className="mx-auto text-on-surface" />
             </button>
             <div className="flex-1 flex items-center justify-center">
               <input
@@ -102,9 +102,9 @@ export default function CircleAreaSelector({ center, onClose }: CircleAreaSelect
             </div>
             <button
               onClick={() => setRadius(Math.min(5, radius + 0.5))}
-              className="flex-1 py-2 px-3 bg-white/5 border border-white/10 rounded hover:bg-white/10 transition"
+              className="flex-1 py-2 px-3 bg-background/50 border border-primary/20 rounded hover:bg-background/70 transition-colors"
             >
-              <Plus size={14} className="mx-auto" />
+              <Plus size={14} className="mx-auto text-on-surface" />
             </button>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function CircleAreaSelector({ center, onClose }: CircleAreaSelect
         )}
 
         {/* Info */}
-        <div className="text-[10px] text-on-surface-variant bg-white/5 rounded p-2 text-center border border-white/5">
+        <div className="text-[10px] text-on-surface-variant bg-background/50 rounded p-2 text-center border border-primary/10">
           Adjust radius to see market insights for different areas
         </div>
       </div>

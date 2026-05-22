@@ -1,27 +1,17 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
+import * as analyticsRepo from '@/lib/repositories/analytics-repository';
 
 export async function getSimpleAnalytics(city: string) {
   const supabase = await createClient();
 
   try {
-    // Get listings by BHK (use flats_with_city view which includes city from buildings)
-    const { data: listingsByBhk } = await supabase
-      .from('flats_with_city')
-      .select('bhk, rent_amount, created_at')
-      .eq('city', city);
+    const analyticsData = await analyticsRepo.fetchSimpleAnalyticsData(supabase, city);
 
-    // Get basic stats
-    const { data: buildingStats } = await supabase
-      .from('buildings')
-      .select('city')
-      .eq('city', city);
-
-    // Get seeker pins
-    const { data: seekerPins } = await supabase
-      .from('seeker_pins')
-      .select('id, created_at');
+    const listingsByBhk = analyticsData.flats;
+    const buildingStats = analyticsData.buildings;
+    const seekerPins = analyticsData.seekers;
 
     // Transform to chart data
     const supplyTrend = transformSupplyTrend(listingsByBhk || []);

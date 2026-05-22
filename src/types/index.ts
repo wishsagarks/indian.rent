@@ -1,4 +1,43 @@
-export type PropertyCategory = 'gated' | 'semi-gated' | 'standalone' | 'pg' | 'hostel';
+/**
+ * Re-export all new domain types from src/lib/types for unified import path
+ */
+import type {
+  ServerResult,
+  DataQuality,
+  PropertyStatus,
+  PropertyCategory,
+  Furnishing,
+  TenantPreference,
+  AreaStats,
+  ListingData,
+  MapPin,
+  FlatSummary,
+  FlatRatings,
+  CityMetric,
+  CityMetricsUI,
+} from '@/lib/types';
+
+export type {
+  ServerResult,
+  DataQuality,
+  PropertyStatus,
+  PropertyCategory,
+  Furnishing,
+  TenantPreference,
+  AreaStats,
+  ListingData,
+  MapPin,
+  FlatSummary,
+  FlatRatings,
+  CityMetric,
+  CityMetricsUI,
+};
+
+/**
+ * Legacy database row types - kept for backward compatibility
+ * Consumers should migrate to the new camelCase types in src/lib/types
+ */
+export type LegacyPropertyCategory = 'gated' | 'semi-gated' | 'standalone' | 'pg' | 'hostel';
 
 export interface SeekerPin {
   id: string;

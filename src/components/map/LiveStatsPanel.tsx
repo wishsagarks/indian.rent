@@ -59,7 +59,7 @@ export default function LiveStatsPanel({ points, onClose }: LiveStatsPanelProps)
           <BarChart3 size={18} className="text-primary" />
           <span className="font-technical text-[10px] sm:text-xs text-primary font-black uppercase tracking-[0.15em]">Live Stats</span>
         </div>
-        <button onClick={onClose} className="p-1 sm:p-1.5 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all"><X size={18} /></button>
+        <button onClick={onClose} className="p-2 sm:p-1.5 rounded-lg hover:bg-primary/10 text-on-surface-variant hover:text-primary transition-all min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto flex items-center justify-center" aria-label="Close live stats"><X size={18} /></button>
       </div>
 
       {/* Tabs */}
