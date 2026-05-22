@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       card: 'summary_large_image',
       title,
       description,
-      image: `/flat/${id}/og-image`,
+      images: [`/flat/${id}/og-image`],
     },
   };
 }

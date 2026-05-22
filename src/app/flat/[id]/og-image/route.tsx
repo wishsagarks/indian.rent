@@ -7,9 +7,9 @@ export const revalidate = 3600; // Cache for 1 hour
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const flatData = await getFlatDetails(id);
+    const result = await getFlatDetails(id);
 
-    if (!flatData) {
+    if (result.error || !result.data) {
       return new ImageResponse(
         (
           <div style={{
@@ -34,6 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       );
     }
 
+    const flatData = result.data;
     const bhkText = flatData.bhk ? `${flatData.bhk} BHK` : 'Property';
     const rentText = flatData.rentAmount ? `₹${(flatData.rentAmount / 1000).toFixed(0)}k/mo` : 'Rent TBD';
     const locality = flatData.buildingAddress || flatData.buildingCity || 'Hyderabad';

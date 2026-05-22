@@ -369,10 +369,10 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                         disabled={isDeploying || deploySuccess}
                       >
                         <span className="font-black uppercase tracking-[0.3em] text-[12px]">
-                          {isDeploying ? 'Connecting...' : deploySuccess ? 'Connected' : 'Deploy Interface'}
+                          {isDeploying ? 'Loading...' : deploySuccess ? 'Exploring' : 'Explore Flats'}
                         </span>
                         {!isDeploying && !deploySuccess && (
-                          <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform font-black text-sm">radar</span>
+                          <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform font-black text-sm">arrow_forward</span>
                         )}
                       </StickerButton>
                     </MagneticButton>
@@ -642,7 +642,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                 disabled={isDeploying || deploySuccess}
               >
                 <span className="px-8 font-black uppercase tracking-[0.4em] text-sm">
-                  {isDeploying ? 'Connecting...' : deploySuccess ? 'Connected' : 'Deploy Now →'}
+                  {isDeploying ? 'Loading...' : deploySuccess ? 'Exploring' : 'Explore Flats →'}
                 </span>
               </StickerButton>
            </div>
