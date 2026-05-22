@@ -98,7 +98,9 @@ export default function RefinedMapEngine() {
   const [selectedCity, setSelectedCity] = useState<'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack'>(() => {
     if (typeof window === 'undefined') return 'hyderabad';
     const saved = localStorage.getItem('ir_city');
-    return (saved as 'bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack' | null) ?? 'hyderabad';
+    const validCities: ('bengaluru' | 'hyderabad' | 'bhubaneswar' | 'cuttack')[] = ['bengaluru', 'hyderabad', 'bhubaneswar', 'cuttack'];
+    const city = saved as any;
+    return validCities.includes(city) ? city : 'hyderabad';
   });
   const geocodeCacheRef = useRef<Map<string, string>>(new Map());
   const [mapToast, setMapToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -118,12 +120,20 @@ export default function RefinedMapEngine() {
     }
   }, [mapToast]);
 
-  // Persist city selection to localStorage
+  // Persist city selection to localStorage; ensure city selector stays in sync with map
   useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('ir_city', selectedCity);
     }
   }, [selectedCity]);
+
+  // Reset to hyderabad on first visit if no valid city in localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && shouldShowTour) {
+      localStorage.removeItem('ir_city');
+      setSelectedCity('hyderabad');
+    }
+  }, [shouldShowTour]);
 
   // Persist filters to localStorage
   useEffect(() => {
@@ -313,6 +323,13 @@ export default function RefinedMapEngine() {
   useEffect(() => {
     const config = cityConfig[selectedCity];
     setGoogleBounds([config.bounds[0][0], config.bounds[0][1], config.bounds[1][0], config.bounds[1][1]]);
+    // Sync map center to selected city
+    setViewState({
+      longitude: config.longitude,
+      latitude: config.latitude,
+      zoom: config.zoom,
+      pitch: config.pitch
+    });
   }, [selectedCity]);
 
   // Keepalive: Wake DB on mount to avoid cold-start hangs
