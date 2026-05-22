@@ -120,21 +120,23 @@ export function CitiesMarquee() {
                     : 'border border-white/15 bg-surface/40 text-on-surface-variant/50 hover:bg-surface/60 hover:border-white/25'
                 } rounded-xl`}
               >
-                <div className="flex items-center gap-2">
-                  {city.active && (
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className="w-2 h-2 bg-primary rounded-full"
-                    />
-                  )}
-                  <span className="text-xs md:text-sm font-black">{city.name}</span>
-                  <span className="text-[7px] md:text-[8px] text-on-surface-variant/40 font-technical">{city.fullName}</span>
-                  {city.comingSoon && (
-                    <span className="text-[7px] md:text-[8px] ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black tracking-wider">
-                      Soon
-                    </span>
-                  )}
+                <div className="flex flex-col items-start gap-1">
+                  <div className="flex items-center gap-2 w-full">
+                    {city.active && (
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="w-2 h-2 bg-primary rounded-full flex-shrink-0"
+                      />
+                    )}
+                    <span className="text-sm md:text-base font-black tracking-tight">{city.name}</span>
+                    {city.comingSoon && (
+                      <span className="text-[7px] md:text-[8px] px-1.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black tracking-wider ml-auto">
+                        SOON
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[7px] md:text-[8px] text-on-surface-variant/50 font-technical uppercase tracking-widest">{city.fullName}</span>
                 </div>
 
                 {/* Hover shine effect for active */}
