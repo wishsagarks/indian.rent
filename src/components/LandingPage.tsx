@@ -24,6 +24,9 @@ import HeroText from './ui-advanced/HeroText';
 import { useTheme } from '@/hooks/useTheme';
 import { TourHelpButton } from './TourHelpButton';
 import { CommunityBenefitsSection } from './ui-advanced/CommunityBenefitsSection';
+import { StickyScrollReveal } from './ui-advanced/StickyScrollReveal';
+import { SpotlightCard } from './ui-advanced/SpotlightCard';
+import { MobileTextReveal } from './animations/MobileTextReveal';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -358,15 +361,22 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                   </motion.div>
                 </div>
 
-                {/* Subheading with Adaptive Opacity */}
-                <motion.p
+                {/* Subheading with Dynamic Text Reveal */}
+                <motion.div
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4, duration: 0.8 }}
-                  className="hero-subheading text-body-md text-on-surface-variant max-w-xs sm:max-w-lg leading-snug sm:leading-relaxed font-medium opacity-70 hover:opacity-100 transition-opacity duration-500 uppercase tracking-widest text-[8px] sm:text-[10px] font-technical backdrop-blur-sm px-4 py-3 rounded-lg bg-surface/30"
+                  className="hero-subheading max-w-xs sm:max-w-lg"
                 >
-                  Community Intelligence • Direct Rentals • Fair Pricing • Zero Middlemen
-                </motion.p>
+                  <MobileTextReveal
+                    text="Community Intelligence • Direct Rentals • Fair Pricing • Zero Middlemen"
+                    className="text-body-md text-on-surface-variant leading-snug sm:leading-relaxed font-medium opacity-70 hover:opacity-100 transition-opacity duration-500 uppercase tracking-widest text-[8px] sm:text-[10px] font-technical backdrop-blur-sm px-4 py-3 rounded-lg bg-surface/30"
+                    delay={0.6}
+                    staggerDuration={0.04}
+                    containerDelay={0.08}
+                    splitByWord={true}
+                  />
+                </motion.div>
 
                 {/* CTA Button Group */}
                 <motion.div
@@ -480,8 +490,121 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
           </div>
         </section>
 
-        {/* Community Benefits Section with GSAP */}
-        <CommunityBenefitsSection />
+        {/* Community Benefits Section - Enhanced with Aceternity */}
+        <section className="py-16 md:py-32 lg:py-40 px-mobile md:px-desktop relative z-10 w-full overflow-hidden">
+          {/* Background gradient */}
+          <div className="absolute inset-0 -z-10">
+            <div className="absolute top-0 left-1/4 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-primary/5 rounded-full blur-3xl opacity-20" />
+            <div className="absolute bottom-0 right-1/4 w-48 sm:w-64 md:w-96 h-48 sm:h-64 md:h-96 bg-secondary/5 rounded-full blur-3xl opacity-20" />
+          </div>
+
+          <div className="max-w-container mx-auto">
+            {/* Section Header */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="mb-12 md:mb-24 text-center max-w-2xl mx-auto"
+            >
+              <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full border border-primary/20 bg-primary/5">
+                <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                <span className="text-[9px] md:text-[10px] font-technical uppercase tracking-[0.3em] text-primary font-black">
+                  Community-Driven Intelligence
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-on-surface uppercase tracking-tight leading-tight mb-4">
+                Why Community Matters
+              </h2>
+              <p className="text-sm md:text-base text-on-surface-variant/70 font-medium leading-relaxed">
+                Built by renters, for renters. Every feature designed to strengthen the peer-to-peer network and reward community participation.
+              </p>
+            </motion.div>
+
+            {/* Benefits using StickyScrollReveal */}
+            <StickyScrollReveal
+              items={[
+                {
+                  title: 'Community Intelligence',
+                  description: 'Real rents from real people. No middlemen. Pure peer-to-peer market data.',
+                  content: (
+                    <div className="space-y-4">
+                      <div className="text-5xl font-black text-primary/30">📊</div>
+                      <p className="text-sm text-on-surface font-medium">Access verified rental data collected directly from community members, ensuring accuracy and transparency.</p>
+                    </div>
+                  )
+                },
+                {
+                  title: 'Zero Broker Friction',
+                  description: 'Direct contact with landlords. Transparent terms. No commission feeds.',
+                  content: (
+                    <div className="space-y-4">
+                      <div className="text-5xl font-black text-secondary/30">⚡</div>
+                      <p className="text-sm text-on-surface font-medium">Connect directly with property owners and skip the middleman. Save money, time, and hassle.</p>
+                    </div>
+                  )
+                },
+                {
+                  title: 'Good Faith Rewards',
+                  description: 'Contribute verified listings. Earn rewards. Build community value.',
+                  content: (
+                    <div className="space-y-4">
+                      <div className="text-5xl font-black text-amber-400/30">💰</div>
+                      <p className="text-sm text-on-surface font-medium">Get rewarded for contributing accurate listing data and helping other renters find their perfect home.</p>
+                    </div>
+                  )
+                },
+                {
+                  title: 'Transparent Verification',
+                  description: 'Every rental verified by the community. Flags protect everyone.',
+                  content: (
+                    <div className="space-y-4">
+                      <div className="text-5xl font-black text-blue-400/30">🔐</div>
+                      <p className="text-sm text-on-surface font-medium">Community-driven verification ensures every listing is authentic and safe for renters and landlords.</p>
+                    </div>
+                  )
+                },
+                {
+                  title: 'Market Intelligence',
+                  description: 'Area statistics, price trends, demand heatmaps. Make informed decisions.',
+                  content: (
+                    <div className="space-y-4">
+                      <div className="text-5xl font-black text-pink-400/30">📈</div>
+                      <p className="text-sm text-on-surface font-medium">Real-time market insights help you understand trends and make data-driven rental decisions.</p>
+                    </div>
+                  )
+                },
+                {
+                  title: 'Expanding Network',
+                  description: 'Growing across metros. More cities, more rentals, stronger network.',
+                  content: (
+                    <div className="space-y-4">
+                      <div className="text-5xl font-black text-cyan-400/30">🌐</div>
+                      <p className="text-sm text-on-surface font-medium">Join a rapidly growing peer-to-peer rental network expanding to major cities across India.</p>
+                    </div>
+                  )
+                }
+              ]}
+              contentClassName="text-on-surface"
+            />
+
+            {/* Call to Action */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mt-12 md:mt-20 p-5 md:p-8 rounded-lg md:rounded-2xl border border-primary/20 bg-primary/5 text-center"
+            >
+              <p className="text-sm md:text-base text-on-surface font-medium mb-1.5">
+                Every listing verified. Every contributor rewarded.
+              </p>
+              <p className="text-xs text-on-surface-variant/60 font-technical uppercase tracking-[0.2em]">
+                Join the peer-to-peer revolution
+              </p>
+            </motion.div>
+          </div>
+        </section>
 
         {/* Tactical Stats */}
         <section className="tactical-stats py-20 md:py-40 px-mobile md:px-desktop border-y border-white/5 bg-surface-container-lowest/50 w-full">
