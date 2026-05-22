@@ -361,7 +361,7 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
         {/* Cities Marquee - Live Coverage */}
         <CitiesMarquee />
 
-        {/* Anti-Broker Loop Section */}
+        {/* Community Network Section */}
         <section className="anti-broker-section py-16 md:py-32 lg:py-40 px-mobile md:px-desktop relative z-10 w-full">
           <div className="max-w-container w-full mx-auto">
             <div className="mb-24 flex flex-col items-start space-y-6">
@@ -371,14 +371,14 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
                 viewport={{ once: true }}
                 className="px-6 py-2 rounded-full border border-primary/20 bg-primary/5 font-technical text-technical-sm uppercase tracking-[0.5em] text-primary font-black"
               >
-                Strategic Protocol
+                How It Works
               </motion.div>
               <h2 className="anti-broker-heading text-headline-lg md:text-display-hero font-black text-on-background tracking-tighter uppercase leading-[0.9] text-left font-display">
                 <span className="word-reveal-1 inline-block">The</span>
                 {' '}
-                <span className="word-reveal-2 inline-block">Anti-Broker</span>
+                <span className="word-reveal-2 inline-block">Community</span>
                 {' '}
-                <span className="word-reveal-3 inline-block">Loop</span>
+                <span className="word-reveal-3 inline-block">Network</span>
               </h2>
             </div>
             <BentoGrid />

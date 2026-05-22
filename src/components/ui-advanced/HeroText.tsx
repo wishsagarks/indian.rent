@@ -11,7 +11,7 @@ export default function HeroText() {
   useGSAP(() => {
     if (!textRef.current) return;
 
-    const text = "Bypass Brokers. Find Homes. Reward the Community.";
+    const text = "Build Community. Bypass Brokers. Own Markets.";
     const words = text.split(' ');
 
     // Clear existing content
@@ -42,7 +42,7 @@ export default function HeroText() {
   return (
     <div ref={containerRef} className="max-w-4xl text-left">
       <h1 ref={textRef} className="font-display text-5xl md:text-[80px] text-on-background font-extrabold tracking-[-0.04em] leading-[1.1] uppercase">
-        Bypass Brokers. Find Homes. Reward the Community.
+        Build Community. Bypass Brokers. Own Markets.
       </h1>
     </div>
   );
