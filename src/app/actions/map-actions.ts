@@ -308,7 +308,9 @@ export async function getFlatDetails(flatId: string) {
 
   if (error || !data) {
     if (error) {
-      console.warn('getFlatDetails query error (trying cache):', error.message);
+      console.warn('getFlatDetails query error:', error.message);
+    } else {
+      console.log('getFlatDetails: primary query returned null (no error), trying fallbacks');
     }
 
     // Fallback 1: try to fetch from map_snapshot cache
@@ -375,7 +377,7 @@ export async function getFlatDetails(flatId: string) {
 
     // Fallback 2: Fetch bare flat record without building details
     // This ensures we show SOMETHING instead of 404
-    console.log('Trying fallback: fetch bare flat record');
+    console.log('Trying fallback: fetch bare flat record for', flatId.substring(0, 8));
     const { data: bareFlat, error: bareError } = await supabase
       .from('flats')
       .select('*')
@@ -388,7 +390,7 @@ export async function getFlatDetails(flatId: string) {
     }
 
     if (bareFlat) {
-      console.log('Returning partial flat data (no building details)');
+      console.log('✅ Bare fallback succeeded - returning partial flat data');
       return {
         id: bareFlat.id,
         flatNumber: bareFlat.flat_number || 'N/A',
@@ -423,6 +425,8 @@ export async function getFlatDetails(flatId: string) {
       };
     }
 
+    // All fallbacks exhausted - flat doesn't exist
+    console.log('❌ All fallbacks failed - flat does not exist:', flatId.substring(0, 8));
     return null;
   }
 

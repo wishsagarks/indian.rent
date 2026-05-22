@@ -91,7 +91,7 @@ export async function GET(req: Request) {
     return Response.json({
       totalRecords: count,
       oldestRecords: oldRecords?.map(r => ({
-        id: r.id.substring(0, 12),
+        id: r.id, // Full ID for testing
         created: r.created_at.substring(0, 10),
         floorId: r.floor_id ? 'set' : null,
         flatNumber: r.flat_number,
