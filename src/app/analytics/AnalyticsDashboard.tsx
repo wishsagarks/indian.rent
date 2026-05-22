@@ -317,7 +317,14 @@ export default function AnalyticsDashboard({ stats }: { stats: PlatformStatsData
             <h3 className="text-xl font-black uppercase tracking-tight mb-8">Grid Distribution</h3>
             {(() => {
               const areaData = (stats.areaDistribution || []).slice(0, 6);
-              const colors = ['bg-primary shadow-glow-blue-sm', 'bg-secondary shadow-glow-green-sm', 'bg-primary/80 shadow-glow-blue-sm', 'bg-secondary/80 shadow-glow-green-sm', 'bg-primary/60 shadow-glow-blue-sm', 'bg-secondary/60 shadow-glow-green-sm'];
+              const colors = [
+                'bg-gradient-to-r from-primary to-blue-500 shadow-glow-blue',
+                'bg-gradient-to-r from-secondary to-emerald-400 shadow-glow-green',
+                'bg-gradient-to-r from-primary/90 to-blue-600 shadow-glow-blue-sm',
+                'bg-gradient-to-r from-secondary/90 to-emerald-500 shadow-glow-green-sm',
+                'bg-gradient-to-r from-cyan-500 to-primary/70 shadow-[0_0_12px_rgba(0,200,255,0.4)]',
+                'bg-gradient-to-r from-teal-400 to-secondary/70 shadow-[0_0_12px_rgba(0,200,150,0.4)]'
+              ];
 
               return (
                 <>
