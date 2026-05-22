@@ -1531,7 +1531,7 @@ export default function RefinedMapEngine() {
               </div>
               {/* Sticky action buttons footer - always visible */}
               {!selectedProperty.isStacked && (
-                <div className="border-t border-white/5 bg-background/80 backdrop-blur-sm p-3 sm:p-4 space-y-2 flex-shrink-0">
+                <div className="border-t border-white/5 bg-background/80 backdrop-blur-sm p-3 sm:p-4 pb-5 sm:pb-6 space-y-2 flex-shrink-0 relative z-40">
                   <Link href={`/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`} className="block w-full">
                     <button className="w-full py-3 bg-primary text-on-primary rounded-lg font-black transition-all flex items-center justify-center gap-2 uppercase tracking-[0.2em] text-[9px] shadow-lg border border-white/20 active:scale-[0.98]"><LinkIcon size={12} strokeWidth={3} /> View Details</button>
                   </Link>

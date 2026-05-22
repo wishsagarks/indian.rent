@@ -112,11 +112,11 @@ export default function ShareButtons({
         <AnimatePresence>
           {showMenu && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+              initial={{ opacity: 0, scale: 0.95, y: 5 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+              exit={{ opacity: 0, scale: 0.95, y: 5 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 right-0 top-full mt-2 bg-surface-container border border-outline/40 rounded-lg shadow-2xl z-50 overflow-hidden"
+              className="absolute left-0 right-0 bottom-full mb-2 bg-surface-container border border-outline/40 rounded-lg shadow-2xl z-50 overflow-hidden"
             >
               <button
                 onClick={() => { handleWhatsApp(); setShowMenu(false); }}

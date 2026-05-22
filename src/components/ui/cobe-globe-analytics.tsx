@@ -147,8 +147,9 @@ export function GlobeAnalytics({
         opacity: 0.8,
       })
       function animate() {
+        if (!globeRef.current) return
         if (!isPausedRef.current) phi += speed
-        globeRef.current!.update({
+        globeRef.current.update({
           phi: phi + phiOffsetRef.current + dragOffset.current.phi,
           theta: 0.2 + thetaOffsetRef.current + dragOffset.current.theta,
           arcs: arcPairs[currentArcIndexRef.current],

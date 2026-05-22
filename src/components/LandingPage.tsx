@@ -167,10 +167,11 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
 
     gsap.from('.hero-subheading', {
       opacity: 0,
-      y: 50,
-      duration: 0.7,
+      y: 60,
+      duration: 0.9,
       ease: 'back.out',
-      delay: 0.3
+      delay: 0.4,
+      clearProps: 'all'
     });
 
     // Parallax text depth on hero (mobile: 0.15x, tablet: 0.35x, desktop: 0.8x)
