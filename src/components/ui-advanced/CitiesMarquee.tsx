@@ -8,10 +8,12 @@ import { MapPin, Zap } from 'lucide-react';
 const cities = [
   { name: 'BENGALURU', active: true },
   { name: 'HYDERABAD', active: true },
-  { name: 'Mumbai', active: false },
-  { name: 'Delhi', active: false },
-  { name: 'Chennai', active: false },
-  { name: 'Pune', active: false },
+  { name: 'BHUBANESWAR', active: true },
+  { name: 'CUTTACK', active: true },
+  { name: 'Mumbai', active: false, comingSoon: true },
+  { name: 'Delhi', active: false, comingSoon: true },
+  { name: 'Chennai', active: false, comingSoon: true },
+  { name: 'Pune', active: false, comingSoon: true },
 ];
 
 export function CitiesMarquee() {
@@ -127,6 +129,11 @@ export function CitiesMarquee() {
                     />
                   )}
                   <span className="text-xs md:text-sm">{city.name}</span>
+                  {city.comingSoon && (
+                    <span className="text-[7px] md:text-[8px] ml-2 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-400 font-black tracking-wider">
+                      Soon
+                    </span>
+                  )}
                 </div>
 
                 {/* Hover shine effect for active */}
