@@ -301,88 +301,156 @@ export default function LandingPage({ platformStats }: { platformStats?: Platfor
       </nav>
 
       <TracingBeam checkpoints={[0, 0.2, 0.5, 0.8, 1]}>
-        {/* Hero Section */}
-        <section id="main-content" data-tour="hero-section" className="hero-section relative min-h-auto md:min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-8 md:pb-20 px-mobile md:px-desktop overflow-hidden w-full">
-          <div className="max-w-container w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center mx-auto">
-            <div className="flex flex-col gap-10 order-1 md:order-1">
-              <div className="space-y-4">
-                 <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="font-technical text-[10px] font-black uppercase tracking-[0.4em] text-primary"
-                 >
-                    Tactical Protocol // Active
-                 </motion.div>
-                 <div className="hero-headline">
-                   <HeroText />
-                 </div>
-              </div>
-              <p className="hero-subheading text-body-md text-on-surface-variant max-w-xs sm:max-w-lg leading-snug sm:leading-relaxed font-medium opacity-80 uppercase tracking-widest text-[8px] sm:text-[10px] font-technical">
-                Community Intelligence • Direct Rentals • Fair Pricing • Zero Middlemen
-              </p>
-              <div className="hero-cta-group flex gap-4 items-center mt-8">
-                <div className="group relative">
-                  <MagneticButton>
-                    <StickerButton
-                      data-tour="explore-button"
-                      onClick={handleDeploy}
-                      isLoading={isDeploying}
-                      isSuccess={deploySuccess}
-                      disabled={isDeploying || deploySuccess}
-                    >
-                      <span className="font-black uppercase tracking-[0.3em] text-[12px]">
-                        {isDeploying ? 'Connecting...' : deploySuccess ? 'Connected' : 'Deploy Interface'}
-                      </span>
-                      {!isDeploying && !deploySuccess && (
-                        <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform font-black text-sm">radar</span>
-                      )}
-                    </StickerButton>
-                  </MagneticButton>
-                  {!isDeploying && !deploySuccess && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 1.2, duration: 0.6 }}
-                      className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface-container-high text-inverse-on-surface text-[11px] rounded-md whitespace-nowrap pointer-events-none z-50 font-medium"
-                    >
-                      Explore map & listings
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-surface-container-high rotate-45"></div>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile Globe - Visible on all screens */}
+        {/* Hero Section - Sophisticated Background Globe Design */}
+        <section id="main-content" data-tour="hero-section" className="hero-section relative w-full min-h-screen flex items-center justify-center pt-8 md:pt-12 pb-8 md:pb-20 px-mobile md:px-desktop overflow-hidden">
+          {/* Background Globe Layer - Behind Everything */}
+          <div className="absolute inset-0 -z-20 overflow-hidden">
             <motion.div
-              initial={{ opacity: 0, scale: 0.8, y: 30 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: false, margin: '-100px' }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              className="flex items-center justify-center relative w-full group order-2 md:order-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.2, delay: 0.3 }}
+              className="absolute inset-0 flex items-center justify-center"
             >
-               {/* Gradient glow background */}
-               <motion.div
-                 className="absolute w-[250px] h-[250px] sm:w-[350px] sm:h-[350px] md:w-[400px] md:h-[400px] lg:w-[600px] lg:h-[600px] bg-primary/5 blur-[100px] sm:blur-[120px] md:blur-[150px] rounded-full pointer-events-none"
-                 animate={{
-                   scale: [1, 1.1, 1],
-                 }}
-                 transition={{
-                   duration: 6,
-                   repeat: Infinity,
-                   ease: 'easeInOut'
-                 }}
-               />
-               {/* Globe Container */}
-               <motion.div
-                 className="w-full max-w-[250px] sm:max-w-[350px] md:max-w-[400px] lg:max-w-[600px] aspect-square relative z-10"
-                 whileHover={{ scale: 1.05 }}
-                 transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-               >
-                 <GlobeAnalytics className="w-full h-full" />
-               </motion.div>
+              {/* Globe positioned in background */}
+              <div className="absolute w-[600px] h-[600px] md:w-[900px] md:h-[900px] lg:w-[1200px] lg:h-[1200px] opacity-20 md:opacity-30 pointer-events-none">
+                <GlobeAnalytics className="w-full h-full" />
+              </div>
+
+              {/* Radial gradient fade mask - smooth blend */}
+              <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-background" />
+              <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
             </motion.div>
           </div>
+
+          {/* Content Layer - Foreground */}
+          <div className="max-w-container w-full mx-auto relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
+              {/* Text Content - Left Side */}
+              <motion.div
+                initial={{ opacity: 0, x: -40 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+                className="flex flex-col gap-10"
+              >
+                {/* Label */}
+                <div className="space-y-4">
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.2, duration: 0.7 }}
+                    className="font-technical text-[10px] font-black uppercase tracking-[0.4em] text-primary"
+                  >
+                    Tactical Protocol // Active
+                  </motion.div>
+
+                  {/* Hero Headline with Glass Effect Background */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                    className="relative"
+                  >
+                    {/* Subtle glass background behind text */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-lg blur-2xl -z-10" />
+                    <div className="hero-headline relative">
+                      <HeroText />
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Subheading with Adaptive Opacity */}
+                <motion.p
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.8 }}
+                  className="hero-subheading text-body-md text-on-surface-variant max-w-xs sm:max-w-lg leading-snug sm:leading-relaxed font-medium opacity-70 hover:opacity-100 transition-opacity duration-500 uppercase tracking-widest text-[8px] sm:text-[10px] font-technical backdrop-blur-sm px-4 py-3 rounded-lg bg-surface/30"
+                >
+                  Community Intelligence • Direct Rentals • Fair Pricing • Zero Middlemen
+                </motion.p>
+
+                {/* CTA Button Group */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.8 }}
+                  className="hero-cta-group flex gap-4 items-center mt-8"
+                >
+                  <div className="group relative">
+                    <MagneticButton>
+                      <StickerButton
+                        data-tour="explore-button"
+                        onClick={handleDeploy}
+                        isLoading={isDeploying}
+                        isSuccess={deploySuccess}
+                        disabled={isDeploying || deploySuccess}
+                      >
+                        <span className="font-black uppercase tracking-[0.3em] text-[12px]">
+                          {isDeploying ? 'Connecting...' : deploySuccess ? 'Connected' : 'Deploy Interface'}
+                        </span>
+                        {!isDeploying && !deploySuccess && (
+                          <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform font-black text-sm">radar</span>
+                        )}
+                      </StickerButton>
+                    </MagneticButton>
+                    {!isDeploying && !deploySuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.2, duration: 0.6 }}
+                        className="hidden sm:block absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-surface-container-high text-inverse-on-surface text-[11px] rounded-md whitespace-nowrap pointer-events-none z-50 font-medium"
+                      >
+                        Explore map & listings
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 w-2 h-2 bg-surface-container-high rotate-45"></div>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+
+              {/* Right Side - Information Density (Hidden on mobile, visible on lg) */}
+              <motion.div
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.9, ease: 'easeOut', delay: 0.2 }}
+                className="hidden lg:flex flex-col gap-8 items-end"
+              >
+                {/* Network Stats Cards - Overlaid on Globe */}
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                  className="backdrop-blur-lg bg-surface/40 border border-primary/20 rounded-lg p-6 shadow-2xl hover:shadow-primary/20 transition-shadow"
+                >
+                  <div className="font-technical text-[10px] text-primary/70 mb-2">NETWORK STATUS</div>
+                  <div className="text-3xl font-black text-primary">4 Cities</div>
+                  <div className="text-xs text-on-surface-variant/60 mt-2">Live Network Nodes</div>
+                </motion.div>
+
+                <motion.div
+                  whileHover={{ y: -8 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.1 }}
+                  className="backdrop-blur-lg bg-secondary/40 border border-secondary/20 rounded-lg p-6 shadow-2xl hover:shadow-secondary/20 transition-shadow"
+                >
+                  <div className="font-technical text-[10px] text-secondary/70 mb-2">EXPANSION LANE</div>
+                  <div className="text-3xl font-black text-secondary">4 Cities</div>
+                  <div className="text-xs text-on-surface-variant/60 mt-2">Coming Soon</div>
+                </motion.div>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Floating Accent Elements */}
+          <motion.div
+            className="absolute bottom-10 right-10 w-20 h-20 bg-primary/10 rounded-full blur-3xl pointer-events-none"
+            animate={{
+              y: [0, 20, 0],
+              scale: [1, 1.2, 1]
+            }}
+            transition={{
+              duration: 6,
+              repeat: Infinity,
+              ease: 'easeInOut'
+            }}
+          />
         </section>
 
         {/* Cities Marquee - Live Coverage */}
