@@ -473,11 +473,12 @@ export async function flagIntel(flatId: string, userAgent?: string) {
     const flagCount = flat?.intel_flags || 0;
 
     // Log the flag event
-    await supabase.from('flag_events').insert({
+    const { error: flagEventError } = await supabase.from('flag_events').insert({
       flat_id: flatId,
       user_agent: userAgent,
       created_at: new Date().toISOString(),
-    }).catch(err => console.warn('Failed to log flag event:', err));
+    });
+    if (flagEventError) console.warn('Failed to log flag event:', flagEventError);
 
     // If flags reach 3, move to moderation queue and mark as removed
     if (flagCount >= 3) {
@@ -496,11 +497,11 @@ export async function flagIntel(flatId: string, userAgent?: string) {
 
       if (!modError) {
         // Mark flat as removed
-        await supabase
+        const { error: updateError } = await supabase
           .from('flats')
           .update({ is_removed: true, updated_at: new Date().toISOString() })
-          .eq('id', flatId)
-          .catch(err => console.warn('Failed to mark flat as removed:', err));
+          .eq('id', flatId);
+        if (updateError) console.warn('Failed to mark flat as removed:', updateError);
       }
 
       return {
