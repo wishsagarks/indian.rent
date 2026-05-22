@@ -1509,23 +1509,23 @@ export default function RefinedMapEngine() {
                         <div className="text-on-surface font-black text-xl tracking-tighter">{selectedProperty.reward || '\u20B92,500'}</div>
                       </div>
                     </div>
-                    <Link href={`/flat/${selectedProperty.id}`} className="block w-full mb-3">
+                    <Link href={`/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`} className="block w-full mb-3">
                       <button className="w-full py-4 bg-primary text-on-primary rounded-lg font-black transition-all flex items-center justify-center gap-3 uppercase tracking-[0.2em] text-[10px] shadow-lg border border-white/20 active:scale-[0.98]"><LinkIcon size={14} strokeWidth={3} /> View Details</button>
                     </Link>
                     <div className="mb-3">
                       <ShareButtons
-                        listingId={selectedProperty.id}
+                        listingId={selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}
                         rent={selectedProperty.rent}
                         bhk={selectedProperty.isStacked ? `${selectedProperty.flatCount} Units` : (selectedProperty.bhk || 'Property')}
                         location={selectedProperty.area || selectedProperty.buildingCity || 'Hyderabad'}
                         buildingName={selectedProperty.name}
                         variant="compact"
                         size="md"
-                        fullUrl={`https://${typeof window !== 'undefined' ? window.location.hostname : 'indian.rent'}/flat/${selectedProperty.id}`}
+                        fullUrl={`https://${typeof window !== 'undefined' ? window.location.hostname : 'indian.rent'}/flat/${selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id}`}
                       />
                     </div>
                     {selectedProperty.ipHash === ipHash && (
-                      <button onClick={() => handleDeletePin(selectedProperty.id)} className="w-full py-3 bg-red-500/10 border border-red-500/20 rounded-lg font-black text-red-400 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 transition-all hover:bg-red-500/20">
+                      <button onClick={() => handleDeletePin(selectedProperty.matchedFlats?.[0]?.id ?? selectedProperty.id)} className="w-full py-3 bg-red-500/10 border border-red-500/20 rounded-lg font-black text-red-400 uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 transition-all hover:bg-red-500/20">
                         <Trash2 size={12} /> Delete My Pin
                       </button>
                     )}

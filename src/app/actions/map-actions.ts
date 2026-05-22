@@ -252,223 +252,136 @@ function parseLocation(location: any): { lat?: number; lng?: number } {
   return {};
 }
 
-/**
- * Fetch full details for a single flat by ID, joining building and floor info
- * NOTE: Does not return ipHash or contributorUpiId (use getContributorPaymentDetails for UPI)
- */
-export async function getFlatDetails(flatId: string) {
-  // Validate UUID format
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(flatId)) {
+async function _fetchAreaStats(supabase: any, lat: number, lng: number) {
+  const d = 0.009;
+  try {
+    const { data, error } = await supabase.rpc('get_area_stats', {
+      min_lat: lat - d, min_lng: lng - d, max_lat: lat + d, max_lng: lng + d,
+    });
+    if (error || !data) return null;
+    return data as {
+      total_flats: number; avg_rent: number;
+      avg_rent_1bhk: number; avg_rent_2bhk: number; avg_rent_3bhk: number;
+      gated_count: number; non_gated_count: number;
+    };
+  } catch {
     return null;
   }
+}
+
+/**
+ * Fetch full details for a single flat by ID, joining building and floor info.
+ * Three-tier fallback: primary query → map_snapshot cache → bare flat record.
+ * Returns dataQuality: 'full' | 'cached' | 'partial', plus areaStats when coords available.
+ */
+export async function getFlatDetails(flatId: string) {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(flatId)) return null;
 
   const supabase = await createClient();
+
+  // Tier 1 — primary query with joins
   const { data, error } = await supabase
     .from('flats')
     .select(`
-      id,
-      flat_number,
-      status,
-      rent_amount,
-      bhk,
-      furnishing,
-      size_sqft,
-      maintenance_extra,
-      maintenance_amount,
-      tenant_preference,
-      pets_allowed,
-      deposit_months,
-      is_transparency_pin,
-      is_removed,
-      availability_date,
-      flatmate_needed,
-      no_broker_link,
-      flatmates_link,
-      contributor_name,
-      intel_flags,
-      created_at,
-      updated_at,
-      floor_id,
+      id, flat_number, status, rent_amount, bhk, furnishing, size_sqft,
+      maintenance_extra, maintenance_amount, tenant_preference, pets_allowed,
+      deposit_months, is_transparency_pin, is_removed, availability_date,
+      flatmate_needed, no_broker_link, flatmates_link, contributor_name,
+      intel_flags, created_at, updated_at, floor_id,
       floors (
-        floor_number,
-        building_id,
-        buildings (
-          id,
-          name,
-          category,
-          address,
-          city,
-          location
-        )
+        floor_number, building_id,
+        buildings ( id, name, category, address, city, location )
       )
     `)
     .eq('id', flatId)
     .maybeSingle();
 
-  if (error || !data) {
-    if (error) {
-      console.warn('getFlatDetails query error:', error.message);
-    } else {
-      console.log('getFlatDetails: primary query returned null (no error), trying fallbacks');
-    }
-
-    // Fallback 1: try to fetch from map_snapshot cache
-    const { data: snapshotData } = await supabase
-      .from('map_snapshot')
-      .select('data')
-      .eq('id', 1)
-      .maybeSingle();
-
-    if (snapshotData?.data && Array.isArray(snapshotData.data)) {
-      // Snapshot is building-centric: buildings[].floors[].flats[]
-      // Walk the structure to find flat by ID
-      let cachedFlat: any = null;
-      let cachedBuilding: any = null;
-      let cachedFloor: any = null;
-
-      for (const building of snapshotData.data) {
-        for (const floor of building.floors || []) {
-          const flat = (floor.flats || []).find((f: any) => f.id === flatId);
-          if (flat) {
-            cachedFlat = flat;
-            cachedBuilding = building;
-            cachedFloor = floor;
-            break;
-          }
-        }
-        if (cachedFlat) break;
-      }
-
-      if (cachedFlat) {
-        console.log('Found flat in map_snapshot cache');
-        const { lat, lng } = parseLocation(cachedBuilding.location);
-        return {
-          id: cachedFlat.id,
-          flatNumber: cachedFlat.flat_number || 'N/A',
-          status: cachedFlat.status || 'vacant',
-          rentAmount: cachedFlat.rent_amount,
-          bhk: cachedFlat.bhk,
-          furnishing: cachedFlat.furnishing,
-          sizeSqft: cachedFlat.size_sqft,
-          maintenanceExtra: cachedFlat.maintenance_extra,
-          maintenanceAmount: cachedFlat.maintenance_amount,
-          tenantPreference: cachedFlat.tenant_preference,
-          petsAllowed: cachedFlat.pets_allowed,
-          depositMonths: cachedFlat.deposit_months,
-          isTransparencyPin: cachedFlat.is_transparency_pin,
-          noBrokerLink: cachedFlat.no_broker_link,
-          flatmatesLink: cachedFlat.flatmates_link,
-          contributorName: cachedFlat.contributor_name,
-          createdAt: cachedFlat.created_at,
-          floorNumber: cachedFloor.floor_number,
-          buildingId: cachedBuilding.id,
-          buildingName: cachedBuilding.name,
-          buildingCity: cachedBuilding.city,
-          buildingAddress: cachedBuilding.address,
-          buildingCategory: cachedBuilding.category,
-          buildingLat: lat,
-          buildingLng: lng,
-          isCached: true, // Flag to show banner
-          isPartial: false, // Cache has full data
-        };
-      }
-    }
-
-    // Fallback 2: Fetch bare flat record without building details
-    // This ensures we show SOMETHING instead of 404
-    console.log('Trying fallback: fetch bare flat record for', flatId.substring(0, 8));
-    const { data: bareFlat, error: bareError } = await supabase
-      .from('flats')
-      .select('*')
-      .eq('id', flatId)
-      .maybeSingle();
-
-    if (bareError) {
-      console.warn('Even bare fetch failed:', bareError.message);
-      return null;
-    }
-
-    if (bareFlat) {
-      console.log('✅ Bare fallback succeeded - returning partial flat data');
-      return {
-        id: bareFlat.id,
-        flatNumber: bareFlat.flat_number || 'N/A',
-        status: bareFlat.status || 'vacant',
-        rentAmount: bareFlat.rent_amount,
-        bhk: bareFlat.bhk,
-        furnishing: bareFlat.furnishing,
-        sizeSqft: bareFlat.size_sqft,
-        maintenanceExtra: bareFlat.maintenance_extra,
-        maintenanceAmount: bareFlat.maintenance_amount,
-        tenantPreference: bareFlat.tenant_preference,
-        petsAllowed: bareFlat.pets_allowed,
-        depositMonths: bareFlat.deposit_months,
-        isTransparencyPin: bareFlat.is_transparency_pin,
-        isRemoved: bareFlat.is_removed,
-        availabilityDate: bareFlat.availability_date,
-        flatmateNeeded: bareFlat.flatmate_needed,
-        noBrokerLink: bareFlat.no_broker_link,
-        flatmatesLink: bareFlat.flatmates_link,
-        contributorName: bareFlat.contributor_name,
-        intelFlags: bareFlat.intel_flags,
-        createdAt: bareFlat.created_at,
-        updatedAt: bareFlat.updated_at,
-        floorNumber: null,
-        buildingId: null,
-        buildingName: 'Building details unavailable',
-        buildingCity: null,
-        buildingAddress: null,
-        buildingCategory: null,
-        isCached: false,
-        isPartial: true, // Flag showing this is incomplete data
-      };
-    }
-
-    // All fallbacks exhausted - flat doesn't exist
-    console.log('❌ All fallbacks failed - flat does not exist:', flatId.substring(0, 8));
-    return null;
+  if (!error && data) {
+    const floorsArray = Array.isArray(data.floors) ? data.floors : [data.floors];
+    const floor = floorsArray?.[0];
+    const buildingsArray = Array.isArray(floor?.buildings) ? floor?.buildings : [floor?.buildings];
+    const building = buildingsArray?.[0];
+    const { lat, lng } = parseLocation(building?.location);
+    const areaStats = (lat && lng) ? await _fetchAreaStats(supabase, lat, lng) : null;
+    return {
+      id: data.id, flatNumber: data.flat_number, status: data.status,
+      rentAmount: data.rent_amount, bhk: data.bhk, furnishing: data.furnishing,
+      sizeSqft: data.size_sqft, maintenanceExtra: data.maintenance_extra,
+      maintenanceAmount: data.maintenance_amount, tenantPreference: data.tenant_preference,
+      petsAllowed: data.pets_allowed, depositMonths: data.deposit_months,
+      isTransparencyPin: data.is_transparency_pin, isRemoved: data.is_removed,
+      availabilityDate: data.availability_date, flatmateNeeded: data.flatmate_needed,
+      noBrokerLink: data.no_broker_link, flatmatesLink: data.flatmates_link,
+      contributorName: data.contributor_name, intelFlags: data.intel_flags,
+      createdAt: data.created_at, updatedAt: data.updated_at,
+      floorNumber: floor?.floor_number ?? null,
+      buildingId: building?.id ?? null, buildingName: building?.name ?? null,
+      buildingCategory: building?.category ?? null, buildingAddress: building?.address ?? null,
+      buildingCity: building?.city ?? null, buildingLat: lat ?? null, buildingLng: lng ?? null,
+      dataQuality: 'full' as const, isCached: false, isPartial: false, areaStats,
+    };
   }
 
-  const floorsArray = Array.isArray(data.floors) ? data.floors : [data.floors];
-  const floor = floorsArray?.[0];
-  const buildingsArray = Array.isArray(floor?.buildings) ? floor?.buildings : [floor?.buildings];
-  const building = buildingsArray?.[0];
-  const { lat, lng } = parseLocation(building?.location);
+  // Tier 2 — map_snapshot cache
+  const { data: snapshotData } = await supabase
+    .from('map_snapshot').select('data').eq('id', 1).maybeSingle();
+
+  if (snapshotData?.data && Array.isArray(snapshotData.data)) {
+    let cachedFlat: any = null, cachedBuilding: any = null, cachedFloor: any = null;
+    for (const building of snapshotData.data) {
+      for (const floor of building.floors || []) {
+        const flat = (floor.flats || []).find((f: any) => f.id === flatId);
+        if (flat) { cachedFlat = flat; cachedBuilding = building; cachedFloor = floor; break; }
+      }
+      if (cachedFlat) break;
+    }
+    if (cachedFlat) {
+      const { lat, lng } = parseLocation(cachedBuilding.location);
+      const areaStats = (lat && lng) ? await _fetchAreaStats(supabase, lat, lng) : null;
+      return {
+        id: cachedFlat.id, flatNumber: cachedFlat.flat_number || 'N/A',
+        status: cachedFlat.status || 'vacant', rentAmount: cachedFlat.rent_amount,
+        bhk: cachedFlat.bhk, furnishing: cachedFlat.furnishing, sizeSqft: cachedFlat.size_sqft,
+        maintenanceExtra: cachedFlat.maintenance_extra, maintenanceAmount: cachedFlat.maintenance_amount,
+        tenantPreference: cachedFlat.tenant_preference, petsAllowed: cachedFlat.pets_allowed,
+        depositMonths: cachedFlat.deposit_months, isTransparencyPin: cachedFlat.is_transparency_pin,
+        isRemoved: cachedFlat.is_removed, availabilityDate: cachedFlat.availability_date,
+        flatmateNeeded: cachedFlat.flatmate_needed, noBrokerLink: cachedFlat.no_broker_link,
+        flatmatesLink: cachedFlat.flatmates_link, contributorName: cachedFlat.contributor_name,
+        intelFlags: cachedFlat.intel_flags, createdAt: cachedFlat.created_at,
+        updatedAt: cachedFlat.updated_at,
+        floorNumber: cachedFloor.floor_number ?? null,
+        buildingId: cachedBuilding.id, buildingName: cachedBuilding.name,
+        buildingCity: cachedBuilding.city, buildingAddress: cachedBuilding.address,
+        buildingCategory: cachedBuilding.category,
+        buildingLat: lat ?? null, buildingLng: lng ?? null,
+        dataQuality: 'cached' as const, isCached: true, isPartial: false, areaStats,
+      };
+    }
+  }
+
+  // Tier 3 — bare flat record (no building info)
+  const { data: bareFlat, error: bareError } = await supabase
+    .from('flats').select('*').eq('id', flatId).maybeSingle();
+
+  if (bareError || !bareFlat) return null;
 
   return {
-    id: data.id,
-    flatNumber: data.flat_number,
-    status: data.status,
-    rentAmount: data.rent_amount,
-    bhk: data.bhk,
-    furnishing: data.furnishing,
-    sizeSqft: data.size_sqft,
-    maintenanceExtra: data.maintenance_extra,
-    maintenanceAmount: data.maintenance_amount,
-    tenantPreference: data.tenant_preference,
-    petsAllowed: data.pets_allowed,
-    depositMonths: data.deposit_months,
-    isTransparencyPin: data.is_transparency_pin,
-    isRemoved: data.is_removed,
-    availabilityDate: data.availability_date,
-    flatmateNeeded: data.flatmate_needed,
-    noBrokerLink: data.no_broker_link,
-    flatmatesLink: data.flatmates_link,
-    contributorName: data.contributor_name,
-    intelFlags: data.intel_flags,
-    createdAt: data.created_at,
-    updatedAt: data.updated_at,
-    floorNumber: floor?.floor_number,
-    buildingId: building?.id,
-    buildingName: building?.name,
-    buildingCategory: building?.category,
-    buildingAddress: building?.address,
-    buildingCity: building?.city,
-    buildingLat: lat,
-    buildingLng: lng,
-    isCached: false,
-    isPartial: false, // Full data loaded successfully
+    id: bareFlat.id, flatNumber: bareFlat.flat_number || 'N/A',
+    status: bareFlat.status || 'vacant', rentAmount: bareFlat.rent_amount,
+    bhk: bareFlat.bhk, furnishing: bareFlat.furnishing, sizeSqft: bareFlat.size_sqft,
+    maintenanceExtra: bareFlat.maintenance_extra, maintenanceAmount: bareFlat.maintenance_amount,
+    tenantPreference: bareFlat.tenant_preference, petsAllowed: bareFlat.pets_allowed,
+    depositMonths: bareFlat.deposit_months, isTransparencyPin: bareFlat.is_transparency_pin,
+    isRemoved: bareFlat.is_removed, availabilityDate: bareFlat.availability_date,
+    flatmateNeeded: bareFlat.flatmate_needed, noBrokerLink: bareFlat.no_broker_link,
+    flatmatesLink: bareFlat.flatmates_link, contributorName: bareFlat.contributor_name,
+    intelFlags: bareFlat.intel_flags, createdAt: bareFlat.created_at, updatedAt: bareFlat.updated_at,
+    floorNumber: null, buildingId: null, buildingName: null,
+    buildingCategory: null, buildingAddress: null, buildingCity: null,
+    buildingLat: null, buildingLng: null,
+    dataQuality: 'partial' as const, isCached: false, isPartial: true, areaStats: null,
   };
 }
 
