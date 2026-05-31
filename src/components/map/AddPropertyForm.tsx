@@ -642,7 +642,7 @@ export default function AddPropertyForm({ onClose, onSubmit, lat, lng, initialDa
           )}
           <button
             type="button"
-            onClick={step === 4 ? () => onSubmit(formData) : nextStep}
+            onClick={step === 4 ? () => onSubmit({ ...formData, lat, lng }) : nextStep}
             disabled={(step === 1 && !formData.existingBuildingId && (!formData.category || !formData.buildingName.trim())) || (step === 2 && (!formData.floor || !formData.flatNumber)) || isSubmitting}
             className="flex-[2] py-3 sm:py-4 bg-primary text-background rounded-lg font-black uppercase tracking-[0.3em] text-[9px] sm:text-[10px] shadow-lg shadow-primary/20 hover:bg-blue-400 transition-all flex items-center justify-center gap-2 disabled:opacity-20 border border-white/10 min-h-[44px] sm:min-h-[48px]"
           >
